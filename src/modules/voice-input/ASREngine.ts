@@ -23,12 +23,26 @@ const ERROR_MESSAGES: Record<string, string> = {
   'no-speech': '未检测到语音，请再试一次',
   'aborted': '语音识别已中止',
   'audio-capture': '无法捕获音频，请检查麦克风是否连接',
-  'network': '网络错误，语音识别服务不可用',
+  'network': '语音识别服务连接失败，请检查网络或使用下方文字输入',
   'not-allowed': '麦克风权限被拒绝，请在浏览器设置中允许麦克风访问',
-  'service-not-allowed': '语音识别服务不可用',
+  'service-not-allowed': '语音识别服务不可用，请使用下方文字输入',
   'bad-grammar': '语音识别语法错误',
   'language-not-supported': '不支持的语言',
 };
+
+/** Errors that should not surface as user-facing failures. */
+const SILENT_ERROR_CODES = new Set(['aborted']);
+
+/** Errors that are recoverable and should not block the rest of the app. */
+const RECOVERABLE_ERROR_CODES = new Set(['no-speech', 'network', 'service-not-allowed']);
+
+export function isSilentSpeechError(code: string): boolean {
+  return SILENT_ERROR_CODES.has(code);
+}
+
+export function isRecoverableSpeechError(code: string): boolean {
+  return RECOVERABLE_ERROR_CODES.has(code);
+}
 
 /** Default speech recognition language (Simplified Chinese). */
 const DEFAULT_LANG = 'zh-CN';
@@ -59,7 +73,7 @@ export class ASREngine {
   private recognition: SpeechRecognition | null = null;
   private lang: string;
   private resultCallbacks: Array<(result: ASRResult) => void> = [];
-  private errorCallbacks: Array<(error: string) => void> = [];
+  private errorCallbacks: Array<(error: string, code: string) => void> = [];
   private endCallbacks: Array<() => void> = [];
 
   /**
@@ -129,7 +143,7 @@ export class ASREngine {
    * Register a callback for recognition errors.
    * @param callback - Called with a Chinese error message string.
    */
-  onError(callback: (error: string) => void): void {
+  onError(callback: (error: string, code: string) => void): void {
     this.errorCallbacks.push(callback);
   }
 
@@ -193,8 +207,11 @@ export class ASREngine {
 
     // -- Error event ---------------------------------------------------------
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      if (isSilentSpeechError(event.error)) {
+        return;
+      }
       const message = ERROR_MESSAGES[event.error] ?? `语音识别错误: ${event.error}`;
-      this.errorCallbacks.forEach((cb) => cb(message));
+      this.errorCallbacks.forEach((cb) => cb(message, event.error));
     };
 
     // -- End event -----------------------------------------------------------
