@@ -326,20 +326,15 @@ export class ConversationManager {
         content: response.content,
       });
     } else if (response.type === 'function_call' && response.function) {
-      // Store a human-readable summary of the function call
-      const argsSummary = Object.entries(response.function.arguments)
-        .map(([key, value]) => {
-          // For nested objects, show a brief representation
-          if (typeof value === 'object' && value !== null) {
-            return `${key}: ${JSON.stringify(value)}`;
-          }
-          return `${key}: ${value}`;
-        })
-        .join(', ');
-
       this.messages.push({
         role: 'assistant',
-        content: `[调用工具: ${response.function.name}(${argsSummary})]`,
+        content: `[调用工具: ${response.function.name}]`,
+      });
+    } else if (response.type === 'tool_calls' && response.tool_calls?.length) {
+      const names = response.tool_calls.map((c) => c.name).join(', ');
+      this.messages.push({
+        role: 'assistant',
+        content: `[调用工具: ${names}]`,
       });
     }
   }

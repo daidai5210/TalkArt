@@ -6,7 +6,34 @@
  * They also provide color parsing (Chinese color names → hex) and ID generation.
  */
 
-import { SemanticPosition, SemanticSize } from './types';
+import { CoordinateUnit, SemanticPosition, SemanticSize } from './types';
+
+/** Web standard DPI for mm↔px conversion. */
+export const DPI = 96;
+export const MM_PER_INCH = 25.4;
+
+/** Convert millimeters to pixels at 96 DPI. */
+export function mmToPx(mm: number): number {
+  return (mm * DPI) / MM_PER_INCH;
+}
+
+/** Convert pixels to millimeters at 96 DPI. */
+export function pxToMm(px: number): number {
+  return (px * MM_PER_INCH) / DPI;
+}
+
+/** Convert a value to pixels based on unit. */
+export function toPx(value: number, unit: CoordinateUnit = 'px'): number {
+  return unit === 'mm' ? mmToPx(value) : value;
+}
+
+/** Resolve unit from explicit param, canvas default, or px fallback. */
+export function resolveUnit(
+  explicit?: CoordinateUnit,
+  canvasDefault?: CoordinateUnit,
+): CoordinateUnit {
+  return explicit ?? canvasDefault ?? 'px';
+}
 
 /** Margin from canvas edges for positioned elements (in pixels) */
 const EDGE_MARGIN = 40;
@@ -62,10 +89,12 @@ export function resolvePosition(
   canvasHeight: number,
   elementWidth: number,
   elementHeight: number,
+  defaultUnit: CoordinateUnit = 'px',
 ): { x: number; y: number } {
-  // If exact coordinates are provided, use them directly
+  // If exact coordinates are provided, convert by unit
   if (position.x !== undefined && position.y !== undefined) {
-    return { x: position.x, y: position.y };
+    const unit = resolveUnit(position.unit, defaultUnit);
+    return { x: toPx(position.x, unit), y: toPx(position.y, unit) };
   }
 
   const semantic = position.semantic || 'center';
@@ -138,10 +167,12 @@ export function resolveSize(
   size: SemanticSize,
   _canvasWidth: number,
   _canvasHeight: number,
+  defaultUnit: CoordinateUnit = 'px',
 ): { width: number; height: number } {
-  // If exact dimensions are provided, use them directly
+  // If exact dimensions are provided, convert by unit
   if (size.width !== undefined && size.height !== undefined) {
-    return { width: size.width, height: size.height };
+    const unit = resolveUnit(size.unit, defaultUnit);
+    return { width: toPx(size.width, unit), height: toPx(size.height, unit) };
   }
 
   const semantic = size.semantic || 'medium';

@@ -51,6 +51,9 @@ function buildSystemPrompt(canvasContext?: CanvasContext): string {
     ? `${canvasContext.elements.length} 个元素: ${JSON.stringify(canvasContext.elements)}`
     : '空画布';
 
+  const mmWidth = ((width * 25.4) / 96).toFixed(1);
+  const mmHeight = ((height * 25.4) / 96).toFixed(1);
+
   return `你是 TalkArt 的 AI 绘图助手，名字叫"小智"。
 你的任务是理解用户的绘图需求，通过多轮对话确认后，调用绘图工具执行。
 
@@ -63,9 +66,11 @@ function buildSystemPrompt(canvasContext?: CanvasContext): string {
 6. 空间描述（"中间"、"左边"、"右上角"）使用语义位置参数
 7. 确认工具调用前说一句简短确认语
 8. 对话语气自然、友好、简洁
+9. 复杂多步场景优先使用 executeDrawingPlan 一次提交所有步骤
+10. 精确尺寸优先使用 unit:"mm"，96 DPI 换算：1mm ≈ 3.78px
 
 画布上下文：
-- 画布大小: ${width}×${height}
+- 画布大小: ${width}×${height}px（约 ${mmWidth}×${mmHeight}mm）
 - 选中元素: ${selectedElement}
 - 现有元素: ${elementsSummary}`;
 }
@@ -231,25 +236,31 @@ export default async function handler(
     const toolCalls = rawToolCalls ?? null;
 
     if (toolCalls && Array.isArray(toolCalls) && toolCalls.length > 0) {
-      // Use the first tool call
-      const firstTool = toolCalls[0];
-      const toolFunction = firstTool.function as {
-        name: string;
-        arguments: string;
-      };
-      let args: Record<string, unknown>;
-      try {
-        args = JSON.parse(toolFunction.arguments);
-      } catch {
-        args = { _raw: toolFunction.arguments };
+      const parsedCalls = toolCalls.map((toolCall) => {
+        const toolFunction = toolCall.function as {
+          name: string;
+          arguments: string;
+        };
+        let args: Record<string, unknown>;
+        try {
+          args = JSON.parse(toolFunction.arguments);
+        } catch {
+          args = { _raw: toolFunction.arguments };
+        }
+        return { name: toolFunction.name, arguments: args };
+      });
+
+      if (parsedCalls.length === 1) {
+        res.status(200).json({
+          type: 'function_call',
+          function: parsedCalls[0],
+        });
+        return;
       }
 
       res.status(200).json({
-        type: 'function_call',
-        function: {
-          name: toolFunction.name,
-          arguments: args,
-        },
+        type: 'tool_calls',
+        tool_calls: parsedCalls,
       });
       return;
     }

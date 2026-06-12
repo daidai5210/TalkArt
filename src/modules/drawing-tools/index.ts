@@ -23,6 +23,10 @@ export {
   resolveCircleRadius,
   parseColor,
   generateId,
+  mmToPx,
+  pxToMm,
+  toPx,
+  DPI,
 } from './coordinate-utils';
 
 // Basic shape drawing functions
@@ -50,6 +54,8 @@ export {
   clearCanvas,
   undoAction,
   exportImage,
+  setCanvasSize,
+  setCanvasUnit,
 } from './canvas-ops';
 
 // Tool definitions for LLM function calling

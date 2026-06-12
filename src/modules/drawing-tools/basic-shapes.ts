@@ -25,6 +25,8 @@ import {
   resolveCircleRadius,
   resolvePosition,
   resolveSize,
+  resolveUnit,
+  toPx,
 } from './coordinate-utils';
 
 /** Default fill color for shapes */
@@ -56,10 +58,16 @@ export function drawCircle(
   try {
     const { position, style } = params;
 
+    const defaultUnit = context.defaultUnit ?? 'px';
+
     // Determine radius: explicit r > computed from semantic size > default
     let r: number;
     if (params.r !== undefined) {
-      r = params.r;
+      const rUnit = resolveUnit(
+        (params as { unit?: typeof defaultUnit }).unit,
+        defaultUnit,
+      );
+      r = toPx(params.r, rUnit);
     } else if (params.size) {
       const semantic = params.size.semantic || 'medium';
       r = resolveCircleRadius(semantic);
@@ -70,7 +78,14 @@ export function drawCircle(
     const diameter = r * 2;
 
     // Resolve position based on the circle's bounding box
-    const pos = resolvePosition(position, context.width, context.height, diameter, diameter);
+    const pos = resolvePosition(
+      position,
+      context.width,
+      context.height,
+      diameter,
+      diameter,
+      defaultUnit,
+    );
 
     // Compute center from top-left of bounding box
     const cx = pos.x + r;
@@ -122,12 +137,20 @@ export function drawRect(
 ): ToolResult {
   try {
     const { position, size, style } = params;
+    const defaultUnit = context.defaultUnit ?? 'px';
 
     // Resolve size
-    const resolvedSize = resolveSize(size, context.width, context.height);
+    const resolvedSize = resolveSize(size, context.width, context.height, defaultUnit);
 
     // Resolve position
-    const pos = resolvePosition(position, context.width, context.height, resolvedSize.width, resolvedSize.height);
+    const pos = resolvePosition(
+      position,
+      context.width,
+      context.height,
+      resolvedSize.width,
+      resolvedSize.height,
+      defaultUnit,
+    );
 
     const id = generateId('rect');
 
@@ -145,8 +168,12 @@ export function drawRect(
           fill: parseColor(style?.fill || DEFAULT_FILL),
           stroke: style?.stroke || 'none',
           strokeWidth: style?.strokeWidth || 0,
-          rx: style?.cornerRadius || 0,
-          ry: style?.cornerRadius || 0,
+          rx: style?.cornerRadius
+            ? toPx(style.cornerRadius, resolveUnit(style.unit, defaultUnit))
+            : 0,
+          ry: style?.cornerRadius
+            ? toPx(style.cornerRadius, resolveUnit(style.unit, defaultUnit))
+            : 0,
         },
       },
     };
@@ -185,16 +212,21 @@ export function drawEllipse(
 ): ToolResult {
   try {
     const { position, style } = params;
+    const defaultUnit = context.defaultUnit ?? 'px';
 
     // Determine radii: explicit rx/ry > computed from semantic size > defaults
     let rx: number;
     let ry: number;
 
     if (params.rx !== undefined && params.ry !== undefined) {
-      rx = params.rx;
-      ry = params.ry;
+      const unit = resolveUnit(
+        (params as { unit?: typeof defaultUnit }).unit,
+        defaultUnit,
+      );
+      rx = toPx(params.rx, unit);
+      ry = toPx(params.ry, unit);
     } else if (params.size) {
-      const resolvedSize = resolveSize(params.size, context.width, context.height);
+      const resolvedSize = resolveSize(params.size, context.width, context.height, defaultUnit);
       rx = resolvedSize.width / 2;
       ry = resolvedSize.height / 2;
     } else {
@@ -206,7 +238,14 @@ export function drawEllipse(
     const boundingHeight = ry * 2;
 
     // Resolve position based on the ellipse's bounding box
-    const pos = resolvePosition(position, context.width, context.height, boundingWidth, boundingHeight);
+    const pos = resolvePosition(
+      position,
+      context.width,
+      context.height,
+      boundingWidth,
+      boundingHeight,
+      defaultUnit,
+    );
 
     // Compute center from top-left of bounding box
     const cx = pos.x + rx;
@@ -264,6 +303,7 @@ export function drawLine(
 ): ToolResult {
   try {
     const { start, end } = params;
+    const defaultUnit = context.defaultUnit ?? 'px';
 
     // Default start/end if not provided
     const startSemantic = start.semantic || 'left';
@@ -274,8 +314,9 @@ export function drawLine(
     let y1: number;
 
     if (start.x !== undefined && start.y !== undefined) {
-      x1 = start.x;
-      y1 = start.y;
+      const unit = resolveUnit(start.unit, defaultUnit);
+      x1 = toPx(start.x, unit);
+      y1 = toPx(start.y, unit);
     } else {
       // Lines are point-based, so use a 1x1 bounding box for position resolution
       const startPos = resolvePosition(
@@ -294,8 +335,9 @@ export function drawLine(
     let y2: number;
 
     if (end.x !== undefined && end.y !== undefined) {
-      x2 = end.x;
-      y2 = end.y;
+      const unit = resolveUnit(end.unit, defaultUnit);
+      x2 = toPx(end.x, unit);
+      y2 = toPx(end.y, unit);
     } else {
       const endPos = resolvePosition(
         { semantic: endSemantic as SemanticPosition['semantic'] },
@@ -358,6 +400,7 @@ export function drawText(
 ): ToolResult {
   try {
     const { position, text } = params;
+    const defaultUnit = context.defaultUnit ?? 'px';
 
     if (!text) {
       return {
@@ -375,7 +418,14 @@ export function drawText(
     const estimatedWidth = text.length * fontSize * 0.6;
     const estimatedHeight = fontSize * 1.2;
 
-    const pos = resolvePosition(position, context.width, context.height, estimatedWidth, estimatedHeight);
+    const pos = resolvePosition(
+      position,
+      context.width,
+      context.height,
+      estimatedWidth,
+      estimatedHeight,
+      defaultUnit,
+    );
 
     const id = generateId('text');
 
@@ -427,13 +477,21 @@ export function drawTriangle(
 ): ToolResult {
   try {
     const { position, style } = params;
+    const defaultUnit = context.defaultUnit ?? 'px';
 
     // Resolve size (default to medium)
     const size = params.size || { semantic: 'medium' };
-    const resolvedSize = resolveSize(size, context.width, context.height);
+    const resolvedSize = resolveSize(size, context.width, context.height, defaultUnit);
 
     // Resolve position
-    const pos = resolvePosition(position, context.width, context.height, resolvedSize.width, resolvedSize.height);
+    const pos = resolvePosition(
+      position,
+      context.width,
+      context.height,
+      resolvedSize.width,
+      resolvedSize.height,
+      defaultUnit,
+    );
 
     // Compute equilateral triangle vertices from bounding box
     const x1 = pos.x + resolvedSize.width / 2; // top-center
