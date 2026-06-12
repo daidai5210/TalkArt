@@ -9,6 +9,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { VoiceManager } from '../VoiceManager';
 import { ASREngine } from '../ASREngine';
+import type { ASREngineLike } from '../ASREngineInterface';
 import type { ASRResult, VoiceManagerState } from '../types';
 
 // ---------------------------------------------------------------------------
@@ -54,6 +55,49 @@ const mockGetUserMedia = vi.fn().mockResolvedValue({
   getTracks: () => [{ stop: vi.fn() }],
 });
 
+type MockEngine = ASREngineLike & {
+  emitResult: (result: ASRResult) => void;
+  emitError: (error: string, code?: string) => void;
+  emitEnd: () => void;
+  startMock: ReturnType<typeof vi.fn>;
+  stopMock: ReturnType<typeof vi.fn>;
+};
+
+function createMockEngine(isSupported = true): MockEngine {
+  const resultCallbacks: Array<(result: ASRResult) => void> = [];
+  const errorCallbacks: Array<(error: string, code: string) => void> = [];
+  const endCallbacks: Array<() => void> = [];
+  const startMock = vi.fn().mockResolvedValue(undefined);
+  const stopMock = vi.fn();
+
+  return {
+    start: startMock,
+    stop: stopMock,
+    abort: vi.fn(),
+    onResult: (callback) => {
+      resultCallbacks.push(callback);
+    },
+    onError: (callback) => {
+      errorCallbacks.push(callback);
+    },
+    onEnd: (callback) => {
+      endCallbacks.push(callback);
+    },
+    isSupported: () => isSupported,
+    emitResult: (result) => {
+      resultCallbacks.forEach((cb) => cb(result));
+    },
+    emitError: (error, code = 'test') => {
+      errorCallbacks.forEach((cb) => cb(error, code));
+    },
+    emitEnd: () => {
+      endCallbacks.forEach((cb) => cb());
+    },
+    startMock,
+    stopMock,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Test setup / teardown
 // ---------------------------------------------------------------------------
@@ -73,6 +117,17 @@ beforeEach(() => {
     writable: true,
     configurable: true,
   });
+
+  class MockMediaRecorder {
+    static isTypeSupported = vi.fn().mockReturnValue(true);
+    start = vi.fn();
+    stop = vi.fn();
+    ondataavailable: ((event: { data: Blob }) => void) | null = null;
+    onstop: (() => void) | null = null;
+    state = 'inactive';
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (globalThis as any).MediaRecorder = MockMediaRecorder;
 
   // Reset all mocks
   vi.clearAllMocks();
@@ -132,9 +187,9 @@ describe('ASREngine', () => {
     expect(mockRecognitionInstance.lang).toBe('en-US');
   });
 
-  it('should call recognition.start() on start()', () => {
+  it('should call recognition.start() on start()', async () => {
     const engine = new ASREngine();
-    engine.start();
+    await engine.start();
     expect(mockRecognitionInstance.start).toHaveBeenCalled();
   });
 
@@ -292,23 +347,18 @@ describe('ASREngine', () => {
 // ---------------------------------------------------------------------------
 
 describe('VoiceManager', () => {
-  it('should report isSupported=true when SpeechRecognition is available', () => {
-    const manager = new VoiceManager();
+  it('should report isSupported=true when the ASR engine is available', () => {
+    const manager = new VoiceManager(createMockEngine(true));
     expect(manager.isSupported()).toBe(true);
   });
 
-  it('should report isSupported=false when SpeechRecognition is not available', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (window as any).SpeechRecognition;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (window as any).webkitSpeechRecognition;
-
-    const manager = new VoiceManager();
+  it('should report isSupported=false when the ASR engine is unavailable', () => {
+    const manager = new VoiceManager(createMockEngine(false));
     expect(manager.isSupported()).toBe(false);
   });
 
   it('should initialize with correct default state', () => {
-    const manager = new VoiceManager();
+    const manager = new VoiceManager(createMockEngine());
     const state = manager.getState();
     expect(state.isListening).toBe(false);
     expect(state.isSupported).toBe(true);
@@ -316,34 +366,38 @@ describe('VoiceManager', () => {
   });
 
   it('should call getUserMedia when startListening is called', async () => {
-    const manager = new VoiceManager();
+    const engine = createMockEngine();
+    const manager = new VoiceManager(engine);
     await manager.startListening();
 
     expect(mockGetUserMedia).toHaveBeenCalledWith({ audio: true });
+    expect(engine.startMock).toHaveBeenCalled();
   });
 
   it('should set isListening=true after startListening succeeds', async () => {
-    const manager = new VoiceManager();
+    const manager = new VoiceManager(createMockEngine());
     await manager.startListening();
 
     expect(manager.getState().isListening).toBe(true);
   });
 
-  it('should call recognition.start() after getUserMedia succeeds', async () => {
-    const manager = new VoiceManager();
+  it('should call engine.start() after getUserMedia succeeds', async () => {
+    const engine = createMockEngine();
+    const manager = new VoiceManager(engine);
     await manager.startListening();
 
-    expect(mockRecognitionInstance.start).toHaveBeenCalled();
+    expect(engine.startMock).toHaveBeenCalled();
   });
 
   it('should set isListening=false after stopListening', async () => {
-    const manager = new VoiceManager();
+    const engine = createMockEngine();
+    const manager = new VoiceManager(engine);
     await manager.startListening();
     manager.stopListening();
 
     expect(manager.getState().isListening).toBe(false);
     expect(manager.getState().error).toBeNull();
-    expect(mockRecognitionInstance.stop).toHaveBeenCalled();
+    expect(engine.stopMock).toHaveBeenCalled();
   });
 
   it('should handle permission denied error', async () => {
@@ -351,7 +405,7 @@ describe('VoiceManager', () => {
       new DOMException('Permission denied', 'NotAllowedError'),
     );
 
-    const manager = new VoiceManager();
+    const manager = new VoiceManager(createMockEngine());
     const errorCallback = vi.fn();
     manager.onError(errorCallback);
 
@@ -370,7 +424,7 @@ describe('VoiceManager', () => {
       new DOMException('Not found', 'NotFoundError'),
     );
 
-    const manager = new VoiceManager();
+    const manager = new VoiceManager(createMockEngine());
     const errorCallback = vi.fn();
     manager.onError(errorCallback);
 
@@ -381,62 +435,44 @@ describe('VoiceManager', () => {
   });
 
   it('should forward ASR results to onSpeechResult callback', async () => {
-    const manager = new VoiceManager();
+    const engine = createMockEngine();
+    const manager = new VoiceManager(engine);
     const speechCallback = vi.fn();
     manager.onSpeechResult(speechCallback);
 
     await manager.startListening();
-
-    // Simulate a result from the engine
-    const mockEvent = {
-      resultIndex: 0,
-      results: {
-        length: 1,
-        0: {
-          isFinal: true,
-          0: { transcript: '画一个红色的圆', confidence: 0.92 },
-          length: 1,
-        },
-      },
-    } as unknown as SpeechRecognitionEvent;
-
-    mockRecognitionInstance.onresult!(mockEvent);
+    engine.emitResult({
+      transcript: '画一个红色的圆',
+      isFinal: true,
+      confidence: 0.92,
+    });
 
     expect(speechCallback).toHaveBeenCalledWith('画一个红色的圆', true);
   });
 
   it('should forward interim results to onSpeechResult callback', async () => {
-    const manager = new VoiceManager();
+    const engine = createMockEngine();
+    const manager = new VoiceManager(engine);
     const speechCallback = vi.fn();
     manager.onSpeechResult(speechCallback);
 
     await manager.startListening();
-
-    const mockEvent = {
-      resultIndex: 0,
-      results: {
-        length: 1,
-        0: {
-          isFinal: false,
-          0: { transcript: '画一个', confidence: 0.6 },
-          length: 1,
-        },
-      },
-    } as unknown as SpeechRecognitionEvent;
-
-    mockRecognitionInstance.onresult!(mockEvent);
+    engine.emitResult({
+      transcript: '画一个',
+      isFinal: false,
+      confidence: 0.6,
+    });
 
     expect(speechCallback).toHaveBeenCalledWith('画一个', false);
   });
 
   it('should notify state change callbacks when state changes', async () => {
-    const manager = new VoiceManager();
+    const manager = new VoiceManager(createMockEngine());
     const stateCallback = vi.fn();
     manager.onStateChange(stateCallback);
 
     await manager.startListening();
 
-    // Should have been called at least once with isListening=true
     const listeningCall = stateCallback.mock.calls.find(
       (call: [VoiceManagerState]) => call[0].isListening === true,
     );
@@ -444,24 +480,18 @@ describe('VoiceManager', () => {
   });
 
   it('should update state when recognition ends on its own', async () => {
-    const manager = new VoiceManager();
+    const engine = createMockEngine();
+    const manager = new VoiceManager(engine);
     await manager.startListening();
 
     expect(manager.getState().isListening).toBe(true);
-
-    // Simulate the engine ending on its own (e.g. silence timeout)
-    mockRecognitionInstance.onend!();
+    engine.emitEnd();
 
     expect(manager.getState().isListening).toBe(false);
   });
 
   it('should not start listening when browser is not supported', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (window as any).SpeechRecognition;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (window as any).webkitSpeechRecognition;
-
-    const manager = new VoiceManager();
+    const manager = new VoiceManager(createMockEngine(false));
     const errorCallback = vi.fn();
     manager.onError(errorCallback);
 
@@ -473,31 +503,27 @@ describe('VoiceManager', () => {
   });
 
   it('should not call startListening twice if already listening', async () => {
-    const manager = new VoiceManager();
+    const manager = new VoiceManager(createMockEngine());
     await manager.startListening();
     await manager.startListening();
 
-    // getUserMedia should only be called once
     expect(mockGetUserMedia).toHaveBeenCalledTimes(1);
   });
 
   it('should not call stopListening if not listening', () => {
-    const manager = new VoiceManager();
-    // Should not throw
+    const manager = new VoiceManager(createMockEngine());
     manager.stopListening();
   });
 
   it('should clear previous error on successful startListening', async () => {
-    const manager = new VoiceManager();
+    const manager = new VoiceManager(createMockEngine());
 
-    // First, cause a permission error
     mockGetUserMedia.mockRejectedValueOnce(
       new DOMException('Permission denied', 'NotAllowedError'),
     );
     await manager.startListening();
     expect(manager.getState().error).not.toBeNull();
 
-    // Then, succeed
     mockGetUserMedia.mockResolvedValueOnce({
       getTracks: () => [{ stop: vi.fn() }],
     });

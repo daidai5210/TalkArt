@@ -13,6 +13,7 @@
  * before using this engine.
  */
 
+import type { ASREngineLike } from './ASREngineInterface';
 import type { ASRResult } from './types';
 
 /**
@@ -69,7 +70,7 @@ function getSpeechRecognitionCtor(): (new () => SpeechRecognition) | null {
  * engine.start();
  * ```
  */
-export class ASREngine {
+export class ASREngine implements ASREngineLike {
   private recognition: SpeechRecognition | null = null;
   private lang: string;
   private resultCallbacks: Array<(result: ASRResult) => void> = [];
@@ -95,7 +96,7 @@ export class ASREngine {
    * then a fresh instance is created (the Web Speech API does not
    * reliably support restarting the same instance after `stop()`).
    */
-  start(): void {
+  async start(_stream?: MediaStream): Promise<void> {
     if (!this.isSupported()) return;
 
     // Re-create the instance every time we start – the Web Speech API
