@@ -239,7 +239,7 @@ const TalkArt: React.FC = () => {
         </form>
         <p className="text-xs text-gray-500 mt-1">
           {isSupported
-            ? '语音交互：麦克风录音 → 小米 MiMo 转写（STT）+ 浏览器播报（TTS）；也可直接使用文字输入'
+            ? '语音交互：麦克风录音 → 小米 MiMo 转写；也可直接使用文字输入'
             : '当前浏览器不支持麦克风录音，请使用文字输入'}
         </p>
       </div>

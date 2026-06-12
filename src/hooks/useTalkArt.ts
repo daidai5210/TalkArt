@@ -15,7 +15,6 @@
  * Also handles:
  * - Manual start/stop listening (fallback to wake word)
  * - Browser STT input (microphone recording + cloud transcription)
- * - Browser TTS playback for AI confirmation replies
  * - Text input fallback when microphone is not supported
  * - Export functionality (SVG/PNG)
  */
@@ -25,7 +24,6 @@ import { useStore } from '@/store';
 import { VoiceManager } from '@/modules/voice-input/VoiceManager';
 import { WakeWordDetector } from '@/modules/voice-input/WakeWordDetector';
 import { EndPhraseDetector } from '@/modules/voice-input/EndPhraseDetector';
-import { TTSPlayer } from '@/modules/voice-output';
 import { exportSVG, exportPNG } from '@/modules/export';
 import type { AgentState } from '@/modules/ai-agent/types';
 import type { SVGElement } from '@/store/canvas-slice';
@@ -44,8 +42,6 @@ export interface TalkArtState {
   isListening: boolean;
   /** Whether the browser supports microphone STT input. */
   isSupported: boolean;
-  /** Whether the browser supports TTS playback. */
-  isTTSSupported: boolean;
   /** Agent-level error message, or null if no error. */
   error: string | null;
   /** Voice-specific warning (does not block the app). */
@@ -118,11 +114,11 @@ export function useTalkArt(): TalkArtState {
   // Singleton instances (persist across re-renders)
   // ---------------------------------------------------------------------------
   const voiceManagerRef = useRef<VoiceManager | null>(null);
-  const ttsPlayerRef = useRef<TTSPlayer | null>(null);
   const wakeWordDetectorRef = useRef<WakeWordDetector | null>(null);
   const endPhraseDetectorRef = useRef<EndPhraseDetector | null>(null);
   const isListeningRef = useRef(false);
   const isProcessingRef = useRef(false);
+  const [isListening, setIsListening] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
 
   // Refs to always have the latest store actions in callbacks
@@ -153,12 +149,8 @@ export function useTalkArt(): TalkArtState {
   if (!endPhraseDetectorRef.current) {
     endPhraseDetectorRef.current = new EndPhraseDetector();
   }
-  if (!ttsPlayerRef.current) {
-    ttsPlayerRef.current = new TTSPlayer();
-  }
 
   const voiceManager = voiceManagerRef.current;
-  const ttsPlayer = ttsPlayerRef.current;
   const wakeWordDetector = wakeWordDetectorRef.current;
   const endPhraseDetector = endPhraseDetectorRef.current;
 
@@ -183,8 +175,9 @@ export function useTalkArt(): TalkArtState {
           setAgentStateRef.current('wake_word');
           // Start listening after wake word detection
           setAgentStateRef.current('listening');
-          voiceManager.startListening();
+          void voiceManager.startListening();
           isListeningRef.current = true;
+          setIsListening(true);
           return;
         }
       }
@@ -205,6 +198,7 @@ export function useTalkArt(): TalkArtState {
           if (agentStateRef.current === 'confirming') {
             setAgentStateRef.current('executing');
             isListeningRef.current = false;
+            setIsListening(false);
             voiceManager.stopListening();
             processConfirmationRef.current(text).catch((err) => {
               setErrorRef.current(err instanceof Error ? err.message : '执行失败');
@@ -232,13 +226,17 @@ export function useTalkArt(): TalkArtState {
     // State change: track listening state only (voice errors handled separately)
     voiceManager.onStateChange((state) => {
       isListeningRef.current = state.isListening;
+      setIsListening(state.isListening);
     });
 
-    // Voice errors stay local — do not pollute the global agent error state
-    voiceManager.onError((errorMsg) => {
+    // Voice errors stay local — recoverable STT errors keep the session alive
+    voiceManager.onError((errorMsg, code) => {
       setVoiceError(errorMsg);
-      isListeningRef.current = false;
-      setAgentStateRef.current('idle');
+      if (!voiceManager.isRecoverableError(code)) {
+        isListeningRef.current = false;
+        setIsListening(false);
+        setAgentStateRef.current('idle');
+      }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -248,8 +246,9 @@ export function useTalkArt(): TalkArtState {
     wakeWordDetector.onWake(() => {
       setAgentStateRef.current('wake_word');
       setAgentStateRef.current('listening');
-      voiceManager.startListening();
+      void voiceManager.startListening();
       isListeningRef.current = true;
+      setIsListening(true);
     });
   }, [voiceManager, wakeWordDetector]);
 
@@ -263,20 +262,6 @@ export function useTalkArt(): TalkArtState {
     }
   }, [agentState, wakeWordDetector]);
 
-  // Play AI confirmation via browser TTS when entering confirming state
-  useEffect(() => {
-    if (agentState === 'confirming' && confirmationText) {
-      ttsPlayer.speak(confirmationText);
-    }
-  }, [agentState, confirmationText, ttsPlayer]);
-
-  // Stop TTS when user starts speaking again
-  useEffect(() => {
-    if (agentState === 'listening' || agentState === 'wake_word') {
-      ttsPlayer.stop();
-    }
-  }, [agentState, ttsPlayer]);
-
   // ---------------------------------------------------------------------------
   // Actions
   // ---------------------------------------------------------------------------
@@ -287,8 +272,10 @@ export function useTalkArt(): TalkArtState {
       wakeWordDetector.reset();
       setVoiceError(null);
       setAgentState('listening');
-      voiceManager.startListening().then(() => {
-        isListeningRef.current = voiceManager.getState().isListening;
+      void voiceManager.startListening().then(() => {
+        const listening = voiceManager.getState().isListening;
+        isListeningRef.current = listening;
+        setIsListening(listening);
       });
     }
   }, [voiceManager, wakeWordDetector, setAgentState]);
@@ -297,6 +284,7 @@ export function useTalkArt(): TalkArtState {
   const stopListening = useCallback(() => {
     voiceManager.stopListening();
     isListeningRef.current = false;
+    setIsListening(false);
     setVoiceError(null);
     setAgentState('idle');
     setTranscript('');
@@ -377,9 +365,8 @@ export function useTalkArt(): TalkArtState {
     agentState,
     currentTranscript,
     confirmationText,
-    isListening: isListeningRef.current,
+    isListening,
     isSupported: voiceManager.isSupported(),
-    isTTSSupported: ttsPlayer.isSupported(),
     error,
     voiceError,
 
