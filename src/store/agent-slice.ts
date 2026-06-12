@@ -1,0 +1,420 @@
+/**
+ * @module store/agent-slice
+ * Zustand slice for the AI Agent state management.
+ *
+ * This slice manages:
+ * - The agent's state machine (idle → listening → confirming → executing → idle)
+ * - Conversation history with the LLM
+ * - Current voice transcript
+ * - Confirmation text to display to the user
+ * - Error state
+ *
+ * Async actions (processVoiceInput, processConfirmation) coordinate with
+ * ConversationManager and ToolDispatcher to handle the full
+ * confirm-then-execute workflow.
+ *
+ * The handleFunctionCall helper dispatches tool results to the appropriate
+ * Zustand store actions based on the tool type:
+ * - Drawing tools → addElement
+ * - Element operations → updateElement, deleteElement, selectElement
+ * - Canvas operations → clearCanvas, undo
+ */
+
+import { StateCreator } from 'zustand';
+import {
+  AgentState,
+  LLMResponse,
+  ConversationManager,
+  ToolDispatcher,
+} from '../modules/ai-agent';
+import type { ExtendedToolResult } from '../modules/ai-agent/ToolDispatcher';
+import { TOOL_DEFINITIONS } from '../modules/drawing-tools';
+import type { CanvasContext } from '../modules/drawing-tools/types';
+import type { CanvasSlice } from './canvas-slice';
+
+/** Conversation message with metadata for UI display. */
+export interface ConversationMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: number;
+}
+
+/** The agent slice state and actions. */
+export interface AgentSlice {
+  // State
+  /** Conversation history for UI display. */
+  conversation: ConversationMessage[];
+  /** Current state of the agent state machine. */
+  agentState: AgentState;
+  /** Current voice transcript (interim + final). */
+  currentTranscript: string;
+  /** Confirmation text from the LLM to display to the user. */
+  confirmationText: string;
+  /** Error message, or null if no error. */
+  error: string | null;
+
+  // Synchronous actions
+  /** Set the agent state machine state. */
+  setAgentState: (state: AgentState) => void;
+  /** Update the current voice transcript. */
+  setTranscript: (text: string) => void;
+  /** Set the confirmation text to display. */
+  setConfirmation: (text: string) => void;
+  /** Set or clear the error message. */
+  setError: (error: string | null) => void;
+  /** Add a message to the conversation history. */
+  addMessage: (msg: Omit<ConversationMessage, 'id' | 'timestamp'>) => void;
+  /** Clear the conversation history and reset state. Also resets ConversationManager. */
+  resetConversation: () => void;
+  /** Clear the current transcript only. */
+  clearTranscript: () => void;
+
+  // Async actions
+  /**
+   * Process voice input from the user.
+   *
+   * Sends the user's text to the LLM via ConversationManager.
+   * If the LLM returns a confirmation, updates agentState to 'confirming'
+   * and displays the confirmation text.
+   * If the LLM returns a function_call (rare on first message), executes
+   * the tool and applies the result to the canvas.
+   *
+   * @param text - The user's spoken text (final transcript from ASR)
+   */
+  processVoiceInput: (text: string) => Promise<void>;
+
+  /**
+   * Process a user confirmation.
+   *
+   * Called when the user confirms a drawing intent (e.g., "开始吧", "可以了").
+   * Sends the confirmation to the LLM, which should return a function_call.
+   * Executes the tool and applies the result to the canvas store.
+   *
+   * @param text - The user's confirmation text
+   */
+  processConfirmation: (text: string) => Promise<void>;
+}
+
+// ---------------------------------------------------------------------------
+// Singleton instances
+// ---------------------------------------------------------------------------
+
+/**
+ * Singleton ConversationManager instance.
+ * Created lazily on first use to avoid import-time side effects.
+ */
+let conversationManager: ConversationManager | null = null;
+
+/**
+ * Singleton ToolDispatcher instance.
+ * Created lazily on first use.
+ */
+let toolDispatcher: ToolDispatcher | null = null;
+
+/**
+ * Get or create the singleton ConversationManager.
+ */
+function getConversationManager(): ConversationManager {
+  if (!conversationManager) {
+    // The BFF injects the main system prompt with canvas context,
+    // so we pass an empty supplementary prompt here.
+    conversationManager = new ConversationManager('', [...TOOL_DEFINITIONS]);
+  }
+  return conversationManager;
+}
+
+/**
+ * Get or create the singleton ToolDispatcher.
+ * Updates the canvas context from the current store state.
+ */
+function getToolDispatcher(canvasContext: CanvasContext): ToolDispatcher {
+  if (!toolDispatcher) {
+    toolDispatcher = new ToolDispatcher(canvasContext);
+  } else {
+    // Always update context to reflect current canvas state
+    toolDispatcher.updateContext(canvasContext);
+  }
+  return toolDispatcher;
+}
+
+// ---------------------------------------------------------------------------
+// Canvas context builder
+// ---------------------------------------------------------------------------
+
+/**
+ * Build a CanvasContext from the current store state.
+ */
+function buildCanvasContext(get: () => CanvasSlice & AgentSlice): CanvasContext {
+  const state = get();
+  return {
+    width: 800, // Default canvas width; could be made dynamic
+    height: 600, // Default canvas height; could be made dynamic
+    elements: state.elements.map((el) => ({
+      id: el.id,
+      type: el.type,
+      ...el.props,
+    })),
+    selectedId: state.selectedId,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Tool result handler
+// ---------------------------------------------------------------------------
+
+/**
+ * Handle a function_call response from the LLM.
+ *
+ * Dispatches the tool call via ToolDispatcher, then applies the result
+ * to the Zustand canvas store based on the tool type:
+ *
+ * - Drawing tools (drawCircle, drawRect, etc.):
+ *   Add the new element to the canvas.
+ *
+ * - Element operations (selectElement, updateElement, deleteElement,
+ *   moveElement, scaleElement, duplicateElement):
+ *   Apply the appropriate store action (select, update, delete, add).
+ *
+ * - Canvas operations (clearCanvas, undoAction, exportImage):
+ *   Apply the appropriate store action (clear, undo) or trigger export.
+ *
+ * @param functionName - The tool name to call
+ * @param args - The parsed arguments
+ * @param dispatcher - The ToolDispatcher instance
+ * @param get - Zustand getter for accessing canvas store
+ * @returns The ExtendedToolResult from execution
+ */
+function handleFunctionCall(
+  functionName: string,
+  args: Record<string, any>,
+  dispatcher: ToolDispatcher,
+  get: () => CanvasSlice & AgentSlice,
+): ExtendedToolResult {
+  const result = dispatcher.execute(functionName, args);
+
+  if (!result.success) {
+    return result;
+  }
+
+  const store = get();
+  const elementId = result.elementId;
+  const element = result.element;
+
+  // Determine if this is an "update existing element" operation.
+  // updateElement, moveElement, and scaleElement return result.element
+  // with the updated props — we apply these via store.updateElement().
+  const isUpdateOperation =
+    functionName === 'updateElement' ||
+    functionName === 'moveElement' ||
+    functionName === 'scaleElement';
+
+  // --- Element update operations: update existing element ---
+  if (isUpdateOperation && elementId && element) {
+    store.updateElement(elementId, element.props);
+    return result;
+  }
+
+  // --- Drawing tools and duplicateElement: add new element to canvas ---
+  // These return result.element with a NEW id that doesn't exist in the store yet.
+  if (element) {
+    store.addElement({
+      id: element.id,
+      type: element.type as 'rect' | 'circle' | 'ellipse' | 'line' | 'text' | 'triangle',
+      props: element.props,
+    });
+    return result;
+  }
+
+  // --- Canvas operations ---
+  if (result.action === 'clear') {
+    store.clearCanvas();
+    return result;
+  }
+
+  if (result.action === 'undo') {
+    store.undo();
+    return result;
+  }
+
+  if (result.action === 'export') {
+    // Export is handled by the UI layer (e.g., serialize SVG DOM).
+    // For now, we just acknowledge success; the UI can read the
+    // format and filename from the result.
+    // TODO: Trigger actual export via a callback or event
+    return result;
+  }
+
+  // --- Element operations (no element data, just elementId) ---
+  // selectElement: select the element
+  if (functionName === 'selectElement' && elementId) {
+    store.selectElement(elementId);
+    return result;
+  }
+
+  // deleteElement: remove the element
+  if (functionName === 'deleteElement' && elementId) {
+    store.deleteElement(elementId);
+    return result;
+  }
+
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// Agent slice creation
+// ---------------------------------------------------------------------------
+
+/**
+ * Create the agent slice for the Zustand store.
+ */
+export const createAgentSlice: StateCreator<CanvasSlice & AgentSlice, [], [], AgentSlice> = (set, get) => ({
+  // Initial state
+  conversation: [],
+  agentState: 'idle',
+  currentTranscript: '',
+  confirmationText: '',
+  error: null,
+
+  // Synchronous actions
+  setAgentState: (agentState: AgentState) => {
+    set({ agentState });
+  },
+
+  setTranscript: (currentTranscript: string) => {
+    set({ currentTranscript });
+  },
+
+  setConfirmation: (confirmationText: string) => {
+    set({ confirmationText });
+  },
+
+  setError: (error: string | null) => {
+    set({ error });
+  },
+
+  addMessage: (message) => {
+    set((state) => ({
+      conversation: [
+        ...state.conversation,
+        {
+          ...message,
+          id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          timestamp: Date.now(),
+        },
+      ],
+    }));
+  },
+
+  resetConversation: () => {
+    // Reset the ConversationManager as well
+    if (conversationManager) {
+      conversationManager.reset();
+    }
+    set({ conversation: [], confirmationText: '', error: null, currentTranscript: '' });
+  },
+
+  clearTranscript: () => {
+    set({ currentTranscript: '' });
+  },
+
+  // Async actions
+  processVoiceInput: async (text: string) => {
+    const { addMessage, setAgentState, setConfirmation, setError } = get();
+
+    // Add user message to UI conversation
+    addMessage({ role: 'user', content: text });
+
+    // Transition to listening state
+    setAgentState('listening');
+    setError(null);
+
+    try {
+      const manager = getConversationManager();
+      const canvasContext = buildCanvasContext(get);
+      const dispatcher = getToolDispatcher(canvasContext);
+
+      // Send user message to LLM
+      const response: LLMResponse = await manager.processUserMessage(text, canvasContext);
+
+      if (response.type === 'confirmation') {
+        // LLM is asking the user to confirm
+        const content = response.content || '请确认是否继续？';
+        addMessage({ role: 'assistant', content });
+        setConfirmation(content);
+        setAgentState('confirming');
+      } else if (response.type === 'function_call' && response.function) {
+        // LLM directly called a tool (rare on first message)
+        const { name, arguments: args } = response.function;
+        addMessage({
+          role: 'assistant',
+          content: `[执行: ${name}]`,
+        });
+
+        const result = handleFunctionCall(name, args, dispatcher, get);
+
+        if (result.success) {
+          setAgentState('idle');
+          setConfirmation('');
+        } else {
+          setError(result.error || '绘图执行失败');
+          setAgentState('error');
+        }
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '处理语音输入时出错';
+      setError(message);
+      setAgentState('error');
+    }
+  },
+
+  processConfirmation: async (text: string) => {
+    const { addMessage, setAgentState, setConfirmation, setError } = get();
+
+    // Add user confirmation to UI conversation
+    addMessage({ role: 'user', content: text });
+
+    // Transition to executing state
+    setAgentState('executing');
+    setError(null);
+
+    try {
+      const manager = getConversationManager();
+      const canvasContext = buildCanvasContext(get);
+      const dispatcher = getToolDispatcher(canvasContext);
+
+      // Send confirmation to LLM
+      const response: LLMResponse = await manager.processConfirmation(text, canvasContext);
+
+      if (response.type === 'function_call' && response.function) {
+        // LLM called a tool — execute it
+        const { name, arguments: args } = response.function;
+        addMessage({
+          role: 'assistant',
+          content: `[执行: ${name}]`,
+        });
+
+        const result = handleFunctionCall(name, args, dispatcher, get);
+
+        if (result.success) {
+          setAgentState('idle');
+          setConfirmation('');
+        } else {
+          setError(result.error || '绘图执行失败');
+          setAgentState('error');
+        }
+      } else if (response.type === 'confirmation') {
+        // LLM returned another confirmation instead of a function call.
+        // This can happen if the LLM needs more information.
+        const content = response.content || '请提供更多信息。';
+        addMessage({ role: 'assistant', content });
+        setConfirmation(content);
+        setAgentState('confirming');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '处理确认时出错';
+      setError(message);
+      setAgentState('error');
+    }
+  },
+});
