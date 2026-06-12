@@ -8,6 +8,7 @@ import { ToolDispatcher } from '../../ai-agent/ToolDispatcher';
 import { mmToPx, pxToMm } from '../coordinate-utils';
 import { executeDrawingPlan } from '../v2/plan-executor';
 import { KANGSHIFU_PLAN_FIXTURE } from './kangshifu-plan.fixture';
+import { OLYMPIC_FLAG_PLAN_FIXTURE } from './olympic-plan.fixture';
 import type { CanvasContext } from '../types';
 
 function createContext(): CanvasContext {
@@ -114,6 +115,17 @@ describe('executeDrawingPlan', () => {
     expect(result.success).toBe(true);
     expect(result.elements).toHaveLength(3);
     expect(result.planResult?.completedSteps).toBe(3);
+  });
+
+  it('executes olympic rings + flag plan fixture (iter 4)', () => {
+    const context = createContext();
+    const dispatcher = new ToolDispatcher(context);
+
+    const result = dispatcher.execute('executeDrawingPlan', OLYMPIC_FLAG_PLAN_FIXTURE);
+
+    expect(result.success).toBe(true);
+    expect(result.planResult?.completedSteps).toBe(7);
+    expect(result.elements?.length).toBeGreaterThanOrEqual(7);
   });
 
   it('executes kangshifu package plan fixture (phase 6)', () => {
