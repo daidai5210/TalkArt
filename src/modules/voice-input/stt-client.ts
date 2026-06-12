@@ -1,5 +1,5 @@
 /**
- * Client for the TalkArt BFF ASR route (/api/asr).
+ * Client for the TalkArt BFF STT route (/api/stt).
  */
 
 const REQUEST_TIMEOUT_MS = 20_000;
@@ -13,7 +13,7 @@ export async function transcribeAudioBlob(
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
-    const response = await fetch('/api/asr', {
+    const response = await fetch('/api/stt', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -25,7 +25,7 @@ export async function transcribeAudioBlob(
     });
 
     if (!response.ok) {
-      let message = '语音识别失败，请稍后重试';
+      let message = '语音转写失败，请稍后重试';
       try {
         const body = await response.json();
         if (body?.message) message = body.message;
