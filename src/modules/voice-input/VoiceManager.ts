@@ -89,6 +89,10 @@ export class VoiceManager {
   }
 
   private handleSTTError(error: string, code: string): void {
+    if (this.isRecoverableError(code)) {
+      this.notifyError(error, code);
+      return;
+    }
     this.updateState({ isListening: false, error });
     this.notifyError(error, code);
   }
