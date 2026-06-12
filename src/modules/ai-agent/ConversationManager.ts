@@ -38,6 +38,7 @@ import type { Message, LLMResponse } from './types';
 import type { CanvasContext } from '../drawing-tools/types';
 import { sendToLLM } from './llm-client';
 import { normalizeVoiceTranscript } from '../voice-input/normalize-transcript';
+import { isComplexDrawingRequest, selectToolsForRequest } from './llm-tool-selector';
 
 /** Maximum number of messages to keep in conversation history. */
 const MAX_HISTORY_LENGTH = 20;
@@ -205,10 +206,9 @@ export class ConversationManager {
     // Update canvas context
     this.canvasContext = canvasContext;
 
-    // Send to LLM with auto tool choice
     const response = await sendToLLM(
       this.buildRequestMessages(),
-      this.tools,
+      selectToolsForRequest(this.tools, cleaned) as typeof this.tools,
       canvasContext,
     );
 
@@ -246,9 +246,10 @@ export class ConversationManager {
     // after user confirmation, so we use 'auto' tool_choice.
     // The BFF handles adding the system prompt that instructs the LLM
     // to call tools when the user confirms.
+    const tools = this.resolveToolsForTurn(cleaned);
     const response = await sendToLLM(
       this.buildRequestMessages(),
-      this.tools,
+      tools as typeof this.tools,
       canvasContext,
     );
 
@@ -347,6 +348,20 @@ export class ConversationManager {
    * messages when possible. Never trims below 2 messages to maintain
    * at least one exchange of context.
    */
+  /** Pick compact tools when the current or recent user turn is a complex scene. */
+  private resolveToolsForTurn(userText: string): unknown[] {
+    if (isComplexDrawingRequest(userText)) {
+      return selectToolsForRequest(this.tools, userText);
+    }
+    for (let i = this.messages.length - 1; i >= 0; i--) {
+      const msg = this.messages[i];
+      if (msg.role === 'user' && msg.content.length > 3) {
+        return selectToolsForRequest(this.tools, msg.content);
+      }
+    }
+    return this.tools;
+  }
+
   private trimHistory(): void {
     if (this.messages.length <= MAX_HISTORY_LENGTH) {
       return;
