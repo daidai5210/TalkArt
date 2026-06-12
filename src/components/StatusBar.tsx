@@ -45,8 +45,9 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   elementCount,
   error,
 }) => {
-  const label = error ? '出错了' : STATE_LABELS[agentState];
-  const dotColor = STATE_DOT_COLORS[agentState];
+  const showError = agentState === 'error' && error;
+  const label = showError ? STATE_LABELS.error : STATE_LABELS[agentState];
+  const dotColor = showError ? STATE_DOT_COLORS.error : STATE_DOT_COLORS[agentState];
 
   return (
     <div
@@ -59,7 +60,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       <div className="flex items-center gap-2">
         <span className={`w-2.5 h-2.5 rounded-full ${dotColor}`} />
         <span className="text-sm text-gray-300">{label}</span>
-        {error && (
+        {showError && (
           <span className="text-xs text-talkart-error ml-1">({error})</span>
         )}
       </div>

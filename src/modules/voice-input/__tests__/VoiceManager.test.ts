@@ -214,7 +214,24 @@ describe('ASREngine', () => {
 
     mockRecognitionInstance.onerror!(mockErrorEvent);
 
-    expect(callback).toHaveBeenCalledWith('麦克风权限被拒绝，请在浏览器设置中允许麦克风访问');
+    expect(callback).toHaveBeenCalledWith(
+      '麦克风权限被拒绝，请在浏览器设置中允许麦克风访问',
+      'not-allowed',
+    );
+  });
+
+  it('should ignore aborted errors when recognition is stopped', () => {
+    const engine = new ASREngine();
+    const callback = vi.fn();
+    engine.onError(callback);
+
+    const mockErrorEvent = {
+      error: 'aborted',
+    } as unknown as SpeechRecognitionErrorEvent;
+
+    mockRecognitionInstance.onerror!(mockErrorEvent);
+
+    expect(callback).not.toHaveBeenCalled();
   });
 
   it('should provide a fallback Chinese message for unknown errors', () => {
@@ -228,7 +245,10 @@ describe('ASREngine', () => {
 
     mockRecognitionInstance.onerror!(mockErrorEvent);
 
-    expect(callback).toHaveBeenCalledWith('语音识别错误: some-unknown-error');
+    expect(callback).toHaveBeenCalledWith(
+      '语音识别错误: some-unknown-error',
+      'some-unknown-error',
+    );
   });
 
   it('should invoke onEnd callback when recognition ends', () => {
@@ -322,6 +342,7 @@ describe('VoiceManager', () => {
     manager.stopListening();
 
     expect(manager.getState().isListening).toBe(false);
+    expect(manager.getState().error).toBeNull();
     expect(mockRecognitionInstance.stop).toHaveBeenCalled();
   });
 
@@ -340,6 +361,7 @@ describe('VoiceManager', () => {
     expect(manager.getState().error).toContain('权限被拒绝');
     expect(errorCallback).toHaveBeenCalledWith(
       expect.stringContaining('权限被拒绝'),
+      'unknown',
     );
   });
 
