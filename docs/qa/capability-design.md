@@ -154,7 +154,32 @@
 
 ---
 
-## 八、未实现功能及原因
+## 八、v0.2 阶段四能力（纯语音演示）
+
+| 指令/能力 | 计划 | 实现 | 说明 |
+|---|---|---|---|
+| 演示模式 `?demo=1` | ✅ | ✅ | 隐藏文字输入、工具栏、顶部导出 |
+| TTS 确认播报 | ✅ | ✅ | confirming 状态朗读确认语 |
+| 语音「撤销」 | ✅ | ✅ | VoiceCommandRouter → undo |
+| 语音「导出」 | ✅ | ✅ | 导出 SVG + TTS 反馈 |
+| redoAction 工具 | ✅ | ✅ | LLM 可调用重做 |
+| voice-demo-script | ✅ | ✅ | 演示脚本文档 |
+
+---
+
+## 九、v0.2 阶段五能力（素材与样式）
+
+| 指令/工具 | 计划 | 实现 | 说明 |
+|---|---|---|---|
+| insertImage | ✅ | ✅ | presetId bowl / URL，mm 尺寸 |
+| setFillGradient | ✅ | ✅ | 矩形线性渐变 |
+| bowl-placeholder.svg | ✅ | ✅ | public/assets/presets |
+| drawArc | ✅ | ⬜ | 阶段五未纳入 |
+| setBackground | ✅ | ⬜ | 阶段五未纳入 |
+
+---
+
+## 十、未实现功能及原因
 
 | 功能 | 计划优先级 | 未实现原因 |
 |---|---|---|
