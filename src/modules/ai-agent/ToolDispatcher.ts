@@ -65,6 +65,15 @@ import { TOOL_DEFINITIONS } from '../drawing-tools/tool-definitions';
 import { EXECUTE_DRAWING_PLAN_DEFINITION } from '../drawing-tools/v2/tool-schema-skeleton';
 import { executeDrawingPlanAsTool } from '../drawing-tools/v2/plan-executor';
 import type { ExecuteDrawingPlanInput } from '../drawing-tools/v2/execute-drawing-plan.types';
+import { drawPath, drawPolyline, drawPolygon } from '../drawing-tools/v2/path-tools';
+import {
+  createLayer,
+  deleteLayer,
+  renameLayer,
+  setLayerVisibility,
+  setLayerOrder,
+  moveElementToLayer,
+} from '../drawing-tools/v2/layer-tools';
 
 /**
  * Extended ToolResult that includes canvas-level action descriptors
@@ -137,6 +146,17 @@ const TOOL_REGISTRY: Record<string, ToolFunction> = {
   exportImage: exportImage as ToolFunction,
   setCanvasSize: setCanvasSize as ToolFunction,
   setCanvasUnit: setCanvasUnit as ToolFunction,
+  // Phase 3 path tools
+  drawPath: drawPath as ToolFunction,
+  drawPolyline: drawPolyline as ToolFunction,
+  drawPolygon: drawPolygon as ToolFunction,
+  // Phase 3 layer tools
+  createLayer: createLayer as ToolFunction,
+  deleteLayer: deleteLayer as ToolFunction,
+  renameLayer: renameLayer as ToolFunction,
+  setLayerVisibility: setLayerVisibility as ToolFunction,
+  setLayerOrder: setLayerOrder as ToolFunction,
+  moveElementToLayer: moveElementToLayer as ToolFunction,
 };
 
 /**

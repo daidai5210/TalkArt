@@ -158,6 +158,7 @@ function buildCanvasContext(get: () => CanvasSlice & AgentSlice): CanvasContext 
     widthMm: state.widthMm,
     heightMm: state.heightMm,
     defaultUnit: state.defaultUnit,
+    layers: state.layers,
     elements: state.elements.map((el) => ({
       id: el.id,
       type: el.type,
@@ -229,9 +230,36 @@ function handleFunctionCall(
       result.elements.map((el) => ({
         id: el.id,
         type: el.type as SVGElement['type'],
+        layerId: (el.props.layerId as string) ?? 'layer-default',
         props: el.props,
       })),
     );
+    return result;
+  }
+
+  // --- Layer operations ---
+  if (result.action === 'createLayer' && result.layer) {
+    store.createLayer(result.layer);
+    return result;
+  }
+  if (result.action === 'deleteLayer' && result.layerId) {
+    store.deleteLayer(result.layerId);
+    return result;
+  }
+  if (result.action === 'renameLayer' && result.layerId && result.layerName) {
+    store.renameLayer(result.layerId, result.layerName);
+    return result;
+  }
+  if (result.action === 'setLayerVisibility' && result.layerId !== undefined) {
+    store.setLayerVisibility(result.layerId, result.layerVisible ?? true);
+    return result;
+  }
+  if (result.action === 'setLayerOrder' && result.layerId !== undefined) {
+    store.setLayerOrder(result.layerId, result.layerZIndex ?? 0);
+    return result;
+  }
+  if (result.action === 'moveElementToLayer' && result.elementId && result.layerId) {
+    store.moveElementToLayer(result.elementId, result.layerId);
     return result;
   }
 
@@ -240,7 +268,8 @@ function handleFunctionCall(
   if (element) {
     store.addElement({
       id: element.id,
-      type: element.type as 'rect' | 'circle' | 'ellipse' | 'line' | 'text' | 'triangle',
+      type: element.type as SVGElement['type'],
+      layerId: (element.props.layerId as string) ?? 'layer-default',
       props: element.props,
     });
     return result;

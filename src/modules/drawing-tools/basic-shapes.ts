@@ -133,6 +133,7 @@ export function drawRect(
     position: SemanticPosition;
     size: SemanticSize;
     style?: ShapeStyle;
+    layerId?: string;
   },
 ): ToolResult {
   try {
@@ -174,6 +175,7 @@ export function drawRect(
           ry: style?.cornerRadius
             ? toPx(style.cornerRadius, resolveUnit(style.unit, defaultUnit))
             : 0,
+          layerId: params.layerId ?? 'layer-default',
         },
       },
     };

@@ -67,8 +67,25 @@ export interface ToolResult {
     type: string;
     props: Record<string, unknown>;
   }>;
+  /** Layer operation fields */
+  layer?: LayerInfo;
+  layerId?: string;
+  layerName?: string;
+  layerVisible?: boolean;
+  layerZIndex?: number;
   /** Action descriptor for canvas operations (e.g., 'undo', 'export', 'clear') */
-  action?: 'undo' | 'export' | 'clear' | 'setCanvasSize' | 'setCanvasUnit';
+  action?:
+    | 'undo'
+    | 'export'
+    | 'clear'
+    | 'setCanvasSize'
+    | 'setCanvasUnit'
+    | 'createLayer'
+    | 'deleteLayer'
+    | 'renameLayer'
+    | 'setLayerVisibility'
+    | 'setLayerOrder'
+    | 'moveElementToLayer';
   /** Export format (only when action is 'export') */
   format?: 'svg' | 'png';
   /** Export filename (only when action is 'export') */
@@ -90,6 +107,13 @@ export interface ToolResult {
  * Canvas context passed to all drawing tool functions.
  * Provides canvas dimensions and current element state.
  */
+export interface LayerInfo {
+  id: string;
+  name: string;
+  visible: boolean;
+  zIndex: number;
+}
+
 export interface CanvasContext {
   width: number;
   height: number;
@@ -99,6 +123,8 @@ export interface CanvasContext {
   heightMm?: number;
   /** Default coordinate unit for bare numeric values. */
   defaultUnit?: CoordinateUnit;
+  /** Layer stack for v0.2. */
+  layers?: LayerInfo[];
   elements: Array<{
     id: string;
     type: string;
