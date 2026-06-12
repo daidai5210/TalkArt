@@ -1,14 +1,13 @@
 /**
  * @module voice-input
- * Barrel export for the TalkArt voice input module.
+ * Browser STT input: microphone recording + cloud transcription.
  */
 
 export { VoiceManager } from './VoiceManager';
-export { ASREngine } from './ASREngine';
-export { WhisperASREngine } from './WhisperASREngine';
-export { transcribeAudioBlob } from './asr-client';
-export type { ASREngineLike } from './ASREngineInterface';
+export { BrowserSTTEngine } from './BrowserSTTEngine';
+export { transcribeAudioBlob } from './stt-client';
+export type { STTEngineLike, STTResult } from './STTEngine';
 export { WakeWordDetector } from './WakeWordDetector';
 export { EndPhraseDetector } from './EndPhraseDetector';
 export type { PhraseType } from './EndPhraseDetector';
-export type { VoiceManagerState, ASRResult } from './types';
+export type { VoiceManagerState } from './types';

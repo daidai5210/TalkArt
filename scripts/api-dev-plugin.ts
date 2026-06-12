@@ -59,7 +59,7 @@ export function apiDevPlugin(env: Record<string, string>): Plugin {
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         const url = req.url?.split('?')[0];
-        if (url !== '/api/llm' && url !== '/api/asr') {
+        if (url !== '/api/llm' && url !== '/api/stt') {
           return next();
         }
 
@@ -73,8 +73,8 @@ export function apiDevPlugin(env: Record<string, string>): Plugin {
 
         try {
           const body = await readBody(req);
-          const handler = url === '/api/asr'
-            ? (await import('../api/asr')).default
+          const handler = url === '/api/stt'
+            ? (await import('../api/stt')).default
             : (await import('../api/llm')).default;
           const vercelReq = Object.assign(req, {
             body,
@@ -87,9 +87,9 @@ export function apiDevPlugin(env: Record<string, string>): Plugin {
           console.error('[talkart-api-dev]', err);
           res.statusCode = 500;
           res.setHeader('Content-Type', 'application/json');
-          const errorType = url === '/api/asr' ? 'asr_error' : 'llm_error';
-          const message = url === '/api/asr'
-            ? '语音识别服务暂时不可用，请稍后重试'
+          const errorType = url === '/api/stt' ? 'stt_error' : 'llm_error';
+          const message = url === '/api/stt'
+            ? '语音转写服务暂时不可用，请稍后重试'
             : 'AI 服务暂时不可用，请稍后重试';
           res.end(JSON.stringify({ error: errorType, message }));
         }

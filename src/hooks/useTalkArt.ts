@@ -14,8 +14,9 @@
  *
  * Also handles:
  * - Manual start/stop listening (fallback to wake word)
- * - Browser support detection for Web Speech API
- * - Text input fallback when voice is not supported
+ * - Browser STT input (microphone recording + cloud transcription)
+ * - Browser TTS playback for AI confirmation replies
+ * - Text input fallback when microphone is not supported
  * - Export functionality (SVG/PNG)
  */
 
@@ -24,6 +25,7 @@ import { useStore } from '@/store';
 import { VoiceManager } from '@/modules/voice-input/VoiceManager';
 import { WakeWordDetector } from '@/modules/voice-input/WakeWordDetector';
 import { EndPhraseDetector } from '@/modules/voice-input/EndPhraseDetector';
+import { TTSPlayer } from '@/modules/voice-output';
 import { exportSVG, exportPNG } from '@/modules/export';
 import type { AgentState } from '@/modules/ai-agent/types';
 import type { SVGElement } from '@/store/canvas-slice';
@@ -40,8 +42,10 @@ export interface TalkArtState {
   confirmationText: string;
   /** Whether the microphone is currently active. */
   isListening: boolean;
-  /** Whether the browser supports Web Speech API. */
+  /** Whether the browser supports microphone STT input. */
   isSupported: boolean;
+  /** Whether the browser supports TTS playback. */
+  isTTSSupported: boolean;
   /** Agent-level error message, or null if no error. */
   error: string | null;
   /** Voice-specific warning (does not block the app). */
@@ -114,6 +118,7 @@ export function useTalkArt(): TalkArtState {
   // Singleton instances (persist across re-renders)
   // ---------------------------------------------------------------------------
   const voiceManagerRef = useRef<VoiceManager | null>(null);
+  const ttsPlayerRef = useRef<TTSPlayer | null>(null);
   const wakeWordDetectorRef = useRef<WakeWordDetector | null>(null);
   const endPhraseDetectorRef = useRef<EndPhraseDetector | null>(null);
   const isListeningRef = useRef(false);
@@ -148,8 +153,12 @@ export function useTalkArt(): TalkArtState {
   if (!endPhraseDetectorRef.current) {
     endPhraseDetectorRef.current = new EndPhraseDetector();
   }
+  if (!ttsPlayerRef.current) {
+    ttsPlayerRef.current = new TTSPlayer();
+  }
 
   const voiceManager = voiceManagerRef.current;
+  const ttsPlayer = ttsPlayerRef.current;
   const wakeWordDetector = wakeWordDetectorRef.current;
   const endPhraseDetector = endPhraseDetectorRef.current;
 
@@ -254,6 +263,20 @@ export function useTalkArt(): TalkArtState {
     }
   }, [agentState, wakeWordDetector]);
 
+  // Play AI confirmation via browser TTS when entering confirming state
+  useEffect(() => {
+    if (agentState === 'confirming' && confirmationText) {
+      ttsPlayer.speak(confirmationText);
+    }
+  }, [agentState, confirmationText, ttsPlayer]);
+
+  // Stop TTS when user starts speaking again
+  useEffect(() => {
+    if (agentState === 'listening' || agentState === 'wake_word') {
+      ttsPlayer.stop();
+    }
+  }, [agentState, ttsPlayer]);
+
   // ---------------------------------------------------------------------------
   // Actions
   // ---------------------------------------------------------------------------
@@ -356,6 +379,7 @@ export function useTalkArt(): TalkArtState {
     confirmationText,
     isListening: isListeningRef.current,
     isSupported: voiceManager.isSupported(),
+    isTTSSupported: ttsPlayer.isSupported(),
     error,
     voiceError,
 

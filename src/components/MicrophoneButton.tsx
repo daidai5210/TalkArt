@@ -20,7 +20,7 @@ interface MicrophoneButtonProps {
   agentState: AgentState;
   /** Whether the microphone is currently active. */
   isListening: boolean;
-  /** Whether the browser supports Web Speech API. */
+  /** Whether the browser supports microphone STT input. */
   isSupported: boolean;
   /** Callback to start listening. */
   onStartListening: () => void;
