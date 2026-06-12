@@ -19,6 +19,7 @@ import {
   ShapeStyle,
   ToolResult,
 } from './types';
+import type { CoordinateUnit } from './types';
 import {
   generateId,
   parseColor,
@@ -305,9 +306,11 @@ export function drawLine(
 ): ToolResult {
   try {
     const { start, end } = params;
+    if (!start || !end) {
+      return { success: false, error: 'drawLine 需要 start 与 end 坐标' };
+    }
     const defaultUnit = context.defaultUnit ?? 'px';
 
-    // Default start/end if not provided
     const startSemantic = start.semantic || 'left';
     const endSemantic = end.semantic || 'right';
 
@@ -475,33 +478,49 @@ export function drawTriangle(
     position: SemanticPosition;
     size?: SemanticSize;
     style?: ShapeStyle;
+    vertices?: Array<{ x: number; y: number; unit?: CoordinateUnit }>;
   },
 ): ToolResult {
   try {
     const { position, style } = params;
     const defaultUnit = context.defaultUnit ?? 'px';
 
-    // Resolve size (default to medium)
-    const size = params.size || { semantic: 'medium' };
-    const resolvedSize = resolveSize(size, context.width, context.height, defaultUnit);
+    let x1: number;
+    let y1: number;
+    let x2: number;
+    let y2: number;
+    let x3: number;
+    let y3: number;
 
-    // Resolve position
-    const pos = resolvePosition(
-      position,
-      context.width,
-      context.height,
-      resolvedSize.width,
-      resolvedSize.height,
-      defaultUnit,
-    );
-
-    // Compute equilateral triangle vertices from bounding box
-    const x1 = pos.x + resolvedSize.width / 2; // top-center
-    const y1 = pos.y;
-    const x2 = pos.x;                          // bottom-left
-    const y2 = pos.y + resolvedSize.height;
-    const x3 = pos.x + resolvedSize.width;     // bottom-right
-    const y3 = pos.y + resolvedSize.height;
+    if (params.vertices && params.vertices.length === 3) {
+      const pts = params.vertices.map((v) => {
+        const unit = resolveUnit(v.unit, defaultUnit);
+        return { x: toPx(v.x, unit), y: toPx(v.y, unit) };
+      });
+      x1 = pts[0].x;
+      y1 = pts[0].y;
+      x2 = pts[1].x;
+      y2 = pts[1].y;
+      x3 = pts[2].x;
+      y3 = pts[2].y;
+    } else {
+      const size = params.size || { width: 15, height: 15, unit: 'mm' as const };
+      const resolvedSize = resolveSize(size, context.width, context.height, defaultUnit);
+      const pos = resolvePosition(
+        position,
+        context.width,
+        context.height,
+        resolvedSize.width,
+        resolvedSize.height,
+        defaultUnit,
+      );
+      x1 = pos.x + resolvedSize.width / 2;
+      y1 = pos.y;
+      x2 = pos.x;
+      y2 = pos.y + resolvedSize.height;
+      x3 = pos.x + resolvedSize.width;
+      y3 = pos.y + resolvedSize.height;
+    }
 
     const id = generateId('triangle');
 

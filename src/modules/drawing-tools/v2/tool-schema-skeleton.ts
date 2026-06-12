@@ -120,6 +120,7 @@ export const EXECUTE_DRAWING_PLAN_DEFINITION: ToolDefinition = {
                   'drawRect',
                   'drawTriangle',
                   'drawLine',
+                  'drawPolyline',
                   'drawText',
                   'clearCanvas',
                 ],

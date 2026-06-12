@@ -1,0 +1,332 @@
+{
+  "steps": [
+    {
+      "tool": "drawEllipse",
+      "args": {
+        "position": {
+          "x": 81,
+          "y": 75,
+          "unit": "mm"
+        },
+        "size": {
+          "width": 50,
+          "height": 30,
+          "unit": "mm"
+        },
+        "fillColor": "#FFD700",
+        "strokeColor": "#CC9900",
+        "strokeWidth": 1.5
+      },
+      "label": "1. 黄色身体椭圆"
+    },
+    {
+      "tool": "drawCircle",
+      "args": {
+        "position": {
+          "x": 91,
+          "y": 50,
+          "unit": "mm"
+        },
+        "r": 15,
+        "unit": "mm",
+        "fillColor": "#FFD700",
+        "strokeColor": "#CC9900",
+        "strokeWidth": 1.5
+      },
+      "label": "2. 黄色头部圆"
+    },
+    {
+      "tool": "drawTriangle",
+      "args": {
+        "point1": {
+          "x": 84,
+          "y": 53,
+          "unit": "mm"
+        },
+        "point2": {
+          "x": 78,
+          "y": 35,
+          "unit": "mm"
+        },
+        "point3": {
+          "x": 96,
+          "y": 50,
+          "unit": "mm"
+        },
+        "fillColor": "#FFD700",
+        "strokeColor": "#CC9900",
+        "strokeWidth": 1.5
+      },
+      "label": "3. 左耳三角形"
+    },
+    {
+      "tool": "drawTriangle",
+      "args": {
+        "point1": {
+          "x": 128,
+          "y": 53,
+          "unit": "mm"
+        },
+        "point2": {
+          "x": 134,
+          "y": 35,
+          "unit": "mm"
+        },
+        "point3": {
+          "x": 116,
+          "y": 50,
+          "unit": "mm"
+        },
+        "fillColor": "#FFD700",
+        "strokeColor": "#CC9900",
+        "strokeWidth": 1.5
+      },
+      "label": "4. 右耳三角形"
+    },
+    {
+      "tool": "drawCircle",
+      "args": {
+        "position": {
+          "x": 97,
+          "y": 60,
+          "unit": "mm"
+        },
+        "r": 2.5,
+        "unit": "mm",
+        "fillColor": "#000000"
+      },
+      "label": "5. 左眼小黑圆"
+    },
+    {
+      "tool": "drawCircle",
+      "args": {
+        "position": {
+          "x": 112,
+          "y": 60,
+          "unit": "mm"
+        },
+        "r": 2.5,
+        "unit": "mm",
+        "fillColor": "#000000"
+      },
+      "label": "6. 右眼小黑圆"
+    },
+    {
+      "tool": "drawTriangle",
+      "args": {
+        "point1": {
+          "x": 104,
+          "y": 66,
+          "unit": "mm"
+        },
+        "point2": {
+          "x": 108,
+          "y": 66,
+          "unit": "mm"
+        },
+        "point3": {
+          "x": 106,
+          "y": 69,
+          "unit": "mm"
+        },
+        "fillColor": "#FFB6C1",
+        "strokeColor": "#FFB6C1",
+        "strokeWidth": 1
+      },
+      "label": "7. 粉色小鼻子三角形"
+    },
+    {
+      "tool": "drawLine",
+      "args": {
+        "start": {
+          "x": 106,
+          "y": 69,
+          "unit": "mm"
+        },
+        "end": {
+          "x": 106,
+          "y": 74,
+          "unit": "mm"
+        },
+        "strokeColor": "#CC9900",
+        "strokeWidth": 1.5
+      },
+      "label": "8. 嘴巴竖中线"
+    },
+    {
+      "tool": "drawLine",
+      "args": {
+        "start": {
+          "x": 106,
+          "y": 74,
+          "unit": "mm"
+        },
+        "end": {
+          "x": 100,
+          "y": 76,
+          "unit": "mm"
+        },
+        "strokeColor": "#CC9900",
+        "strokeWidth": 1.5
+      },
+      "label": "9. 左嘴角线"
+    },
+    {
+      "tool": "drawLine",
+      "args": {
+        "start": {
+          "x": 106,
+          "y": 74,
+          "unit": "mm"
+        },
+        "end": {
+          "x": 112,
+          "y": 76,
+          "unit": "mm"
+        },
+        "strokeColor": "#CC9900",
+        "strokeWidth": 1.5
+      },
+      "label": "10. 右嘴角线"
+    },
+    {
+      "tool": "drawLine",
+      "args": {
+        "start": {
+          "x": 93,
+          "y": 65,
+          "unit": "mm"
+        },
+        "end": {
+          "x": 84,
+          "y": 63,
+          "unit": "mm"
+        },
+        "strokeColor": "#CC9900",
+        "strokeWidth": 1.2
+      },
+      "label": "11. 左胡须上"
+    },
+    {
+      "tool": "drawLine",
+      "args": {
+        "start": {
+          "x": 93,
+          "y": 68,
+          "unit": "mm"
+        },
+        "end": {
+          "x": 82,
+          "y": 68,
+          "unit": "mm"
+        },
+        "strokeColor": "#CC9900",
+        "strokeWidth": 1.2
+      },
+      "label": "12. 左胡须中"
+    },
+    {
+      "tool": "drawLine",
+      "args": {
+        "start": {
+          "x": 93,
+          "y": 71,
+          "unit": "mm"
+        },
+        "end": {
+          "x": 84,
+          "y": 73,
+          "unit": "mm"
+        },
+        "strokeColor": "#CC9900",
+        "strokeWidth": 1.2
+      },
+      "label": "13. 左胡须下"
+    },
+    {
+      "tool": "drawLine",
+      "args": {
+        "start": {
+          "x": 119,
+          "y": 65,
+          "unit": "mm"
+        },
+        "end": {
+          "x": 128,
+          "y": 63,
+          "unit": "mm"
+        },
+        "strokeColor": "#CC9900",
+        "strokeWidth": 1.2
+      },
+      "label": "14. 右胡须上"
+    },
+    {
+      "tool": "drawLine",
+      "args": {
+        "start": {
+          "x": 119,
+          "y": 68,
+          "unit": "mm"
+        },
+        "end": {
+          "x": 130,
+          "y": 68,
+          "unit": "mm"
+        },
+        "strokeColor": "#CC9900",
+        "strokeWidth": 1.2
+      },
+      "label": "15. 右胡须中"
+    },
+    {
+      "tool": "drawLine",
+      "args": {
+        "start": {
+          "x": 119,
+          "y": 71,
+          "unit": "mm"
+        },
+        "end": {
+          "x": 128,
+          "y": 73,
+          "unit": "mm"
+        },
+        "strokeColor": "#CC9900",
+        "strokeWidth": 1.2
+      },
+      "label": "16. 右胡须下"
+    },
+    {
+      "tool": "drawPolyline",
+      "args": {
+        "points": [
+          {
+            "x": 128,
+            "y": 80,
+            "unit": "mm"
+          },
+          {
+            "x": 138,
+            "y": 76,
+            "unit": "mm"
+          },
+          {
+            "x": 142,
+            "y": 82,
+            "unit": "mm"
+          },
+          {
+            "x": 138,
+            "y": 88,
+            "unit": "mm"
+          }
+        ],
+        "strokeColor": "#FFD700",
+        "strokeWidth": 3,
+        "fillColor": "none"
+      },
+      "label": "17. 黄色尾巴曲线"
+    }
+  ]
+}

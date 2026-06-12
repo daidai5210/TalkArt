@@ -64,6 +64,7 @@ import {
 } from '../drawing-tools/canvas-ops';
 import { TOOL_DEFINITIONS } from '../drawing-tools/tool-definitions';
 import { EXECUTE_DRAWING_PLAN_DEFINITION } from '../drawing-tools/v2/tool-schema-skeleton';
+import { normalizePlanStep } from '../drawing-tools/normalize-plan-step';
 import { executeDrawingPlanAsTool } from '../drawing-tools/v2/plan-executor';
 import type { ExecuteDrawingPlanInput } from '../drawing-tools/v2/execute-drawing-plan.types';
 import { drawPath, drawPolyline, drawPolygon } from '../drawing-tools/v2/path-tools';
@@ -252,17 +253,18 @@ export class ToolDispatcher {
       }
     }
 
-    const toolFn = TOOL_REGISTRY[functionName];
+    const { tool: resolvedTool, args: normalizedArgs } = normalizePlanStep(functionName, args);
+    const toolFn = TOOL_REGISTRY[resolvedTool];
 
     if (!toolFn) {
       return {
         success: false,
-        error: `未知的绘图工具: "${functionName}"。可用的工具有: ${this.getToolNames().join(', ')}`,
+        error: `未知的绘图工具: "${resolvedTool}"。可用的工具有: ${this.getToolNames().join(', ')}`,
       };
     }
 
     try {
-      const result = toolFn(this.canvasContext, args);
+      const result = toolFn(this.canvasContext, normalizedArgs);
       return result as ExtendedToolResult;
     } catch (error) {
       return {

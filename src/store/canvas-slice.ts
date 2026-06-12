@@ -62,7 +62,7 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
   canvasHeight: 600,
   widthMm: 211.67,
   heightMm: 158.75,
-  defaultUnit: 'px',
+  defaultUnit: 'mm',
   history: [],
   historyIndex: -1,
 

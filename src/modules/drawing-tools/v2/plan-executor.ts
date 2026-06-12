@@ -3,6 +3,7 @@
  * Phase 2: batch execution of DrawingPlan steps.
  */
 
+import { normalizePlanStep } from '../normalize-plan-step';
 import type { CanvasContext, ToolResult } from '../types';
 import type {
   ExecuteDrawingPlanInput,
@@ -37,13 +38,14 @@ export function executeDrawingPlan(
 
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
-    const result = dispatch(step.tool, step.args);
+    const { tool, args } = normalizePlanStep(step.tool, step.args);
+    const result = dispatch(tool, args);
     results.push(result);
 
     if (!result.success) {
       errors.push({
         stepIndex: i,
-        tool: step.tool,
+        tool: tool,
         error: result.error ?? '未知错误',
       });
 

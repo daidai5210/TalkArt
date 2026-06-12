@@ -667,19 +667,17 @@ describe('drawTriangle', () => {
     expect(result.element!.props.strokeWidth).toBe(2);
   });
 
-  it('defaults to medium size', () => {
+  it('defaults to compact 15mm size (not oversized medium)', () => {
     const ctx = createTestContext();
     const result = drawTriangle(ctx, { position: { semantic: 'center' } });
 
     expect(result.success).toBe(true);
-    // medium = 200x200, centered on 800x600 → x=300, y=200
-    // top-center: (400, 200), bottom-left: (300, 400), bottom-right: (500, 400)
-    expect(result.element!.props.x1).toBe(400);
-    expect(result.element!.props.y1).toBe(200);
-    expect(result.element!.props.x2).toBe(300);
-    expect(result.element!.props.y2).toBe(400);
-    expect(result.element!.props.x3).toBe(500);
-    expect(result.element!.props.y3).toBe(400);
+    const w = result.element!.props.x3 - result.element!.props.x2;
+    const h = result.element!.props.y2 - result.element!.props.y1;
+    expect(w).toBeGreaterThan(40);
+    expect(w).toBeLessThan(80);
+    expect(h).toBeGreaterThan(40);
+    expect(h).toBeLessThan(80);
   });
 });
 
