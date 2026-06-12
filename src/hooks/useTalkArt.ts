@@ -24,7 +24,10 @@ import { useStore } from '@/store';
 import { VoiceManager } from '@/modules/voice-input/VoiceManager';
 import { WakeWordDetector } from '@/modules/voice-input/WakeWordDetector';
 import { EndPhraseDetector } from '@/modules/voice-input/EndPhraseDetector';
+import { VoiceCommandRouter } from '@/modules/voice-input/VoiceCommandRouter';
+import { TTSPlayer } from '@/modules/voice-output/TTSPlayer';
 import { exportSVG, exportPNG } from '@/modules/export';
+import { useDemoMode } from './useDemoMode';
 import type { AgentState } from '@/modules/ai-agent/types';
 import type { SVGElement } from '@/store/canvas-slice';
 import type { ConversationMessage } from '@/store/agent-slice';
@@ -84,6 +87,8 @@ export interface TalkArtState {
   // Conversation
   /** Conversation history for display. */
   conversation: ConversationMessage[];
+  /** Pure voice demo mode (hides text input / toolbar). */
+  demoMode: boolean;
 }
 
 export function useTalkArt(): TalkArtState {
@@ -116,6 +121,9 @@ export function useTalkArt(): TalkArtState {
   const voiceManagerRef = useRef<VoiceManager | null>(null);
   const wakeWordDetectorRef = useRef<WakeWordDetector | null>(null);
   const endPhraseDetectorRef = useRef<EndPhraseDetector | null>(null);
+  const voiceCommandRouterRef = useRef<VoiceCommandRouter | null>(null);
+  const ttsPlayerRef = useRef<TTSPlayer | null>(null);
+  const { demoMode } = useDemoMode();
   const isListeningRef = useRef(false);
   const isProcessingRef = useRef(false);
   const [isListening, setIsListening] = useState(false);
@@ -129,6 +137,8 @@ export function useTalkArt(): TalkArtState {
   const setErrorRef = useRef(setError);
   const processVoiceInputRef = useRef(processVoiceInput);
   const processConfirmationRef = useRef(processConfirmation);
+  const undoRef = useRef(undo);
+  const exportSVGActionRef = useRef<(() => void) | null>(null);
 
   // Keep refs in sync with latest values
   agentStateRef.current = agentState;
@@ -138,6 +148,7 @@ export function useTalkArt(): TalkArtState {
   setErrorRef.current = setError;
   processVoiceInputRef.current = processVoiceInput;
   processConfirmationRef.current = processConfirmation;
+  undoRef.current = undo;
 
   // Lazy initialization
   if (!voiceManagerRef.current) {
@@ -149,10 +160,18 @@ export function useTalkArt(): TalkArtState {
   if (!endPhraseDetectorRef.current) {
     endPhraseDetectorRef.current = new EndPhraseDetector();
   }
+  if (!voiceCommandRouterRef.current) {
+    voiceCommandRouterRef.current = new VoiceCommandRouter();
+  }
+  if (!ttsPlayerRef.current) {
+    ttsPlayerRef.current = new TTSPlayer();
+  }
 
   const voiceManager = voiceManagerRef.current;
   const wakeWordDetector = wakeWordDetectorRef.current;
   const endPhraseDetector = endPhraseDetectorRef.current;
+  const voiceCommandRouter = voiceCommandRouterRef.current;
+  const ttsPlayer = ttsPlayerRef.current;
 
   // ---------------------------------------------------------------------------
   // Wire up voice callbacks (once)
@@ -184,6 +203,18 @@ export function useTalkArt(): TalkArtState {
 
       // Process final transcripts when in listening/confirming state
       if (isFinal && isListeningRef.current) {
+        const voiceCmd = voiceCommandRouter.detect(text);
+        if (voiceCmd === 'undo') {
+          undoRef.current();
+          ttsPlayer.speak('已撤销');
+          return;
+        }
+        if (voiceCmd === 'export') {
+          exportSVGActionRef.current?.();
+          ttsPlayer.speak('已导出');
+          return;
+        }
+
         const phraseType = endPhraseDetector.detect(text);
 
         if (phraseType === 'correction') {
@@ -262,6 +293,13 @@ export function useTalkArt(): TalkArtState {
     }
   }, [agentState, wakeWordDetector]);
 
+  // TTS: speak confirmation text when entering confirming state
+  useEffect(() => {
+    if (agentState === 'confirming' && confirmationText && ttsPlayer.isSupported()) {
+      ttsPlayer.speak(confirmationText);
+    }
+  }, [agentState, confirmationText, ttsPlayer]);
+
   // ---------------------------------------------------------------------------
   // Actions
   // ---------------------------------------------------------------------------
@@ -339,6 +377,8 @@ export function useTalkArt(): TalkArtState {
     }
   }, []);
 
+  exportSVGActionRef.current = exportSVGAction;
+
   /** Export canvas as PNG file. */
   const exportPNGAction = useCallback(async () => {
     const svg = document.querySelector('svg') as SVGSVGElement | null;
@@ -392,5 +432,6 @@ export function useTalkArt(): TalkArtState {
 
     // Conversation
     conversation,
+    demoMode,
   };
 }

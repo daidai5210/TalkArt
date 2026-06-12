@@ -509,10 +509,10 @@ describe('ToolDispatcher', () => {
   });
 
   describe('getToolNames', () => {
-    it('should return all 15 registered tool names', () => {
+    it('should return all registered tool names', () => {
       const names = dispatcher.getToolNames();
 
-      expect(names).toHaveLength(27);
+      expect(names).toHaveLength(28);
       expect(names).toContain('executeDrawingPlan');
       expect(names).toContain('drawPolyline');
       expect(names).toContain('createLayer');
@@ -530,6 +530,7 @@ describe('ToolDispatcher', () => {
       expect(names).toContain('duplicateElement');
       expect(names).toContain('clearCanvas');
       expect(names).toContain('undoAction');
+      expect(names).toContain('redoAction');
       expect(names).toContain('exportImage');
     });
   });
