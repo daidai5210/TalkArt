@@ -76,6 +76,7 @@ export interface ToolResult {
   /** Action descriptor for canvas operations (e.g., 'undo', 'export', 'clear') */
   action?:
     | 'undo'
+    | 'redo'
     | 'export'
     | 'clear'
     | 'setCanvasSize'

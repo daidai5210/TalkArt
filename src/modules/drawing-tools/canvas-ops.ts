@@ -45,6 +45,16 @@ export function undoAction(_context: CanvasContext): ToolResult {
 }
 
 /**
+ * Redo the last undone action.
+ */
+export function redoAction(_context: CanvasContext): ToolResult {
+  return {
+    success: true,
+    action: 'redo' as const,
+  };
+}
+
+/**
  * Export the canvas as an image file.
  *
  * Returns a success result with action 'export', format, and filename.

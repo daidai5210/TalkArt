@@ -72,3 +72,8 @@ body {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
+
+/* Pure voice demo mode: URL ?demo=1 or localStorage talkart-demo-mode=1 */
+body.talkart-demo-mode {
+  user-select: none;
+}

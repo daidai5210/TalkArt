@@ -57,6 +57,7 @@ import {
 import {
   clearCanvas,
   undoAction,
+  redoAction,
   exportImage,
   setCanvasSize,
   setCanvasUnit,
@@ -81,7 +82,7 @@ import {
  */
 export interface ExtendedToolResult extends ToolResult {
   /** Action descriptor for canvas operations (undo, export, clear). */
-  action?: 'undo' | 'export' | 'clear' | 'setCanvasSize' | 'setCanvasUnit';
+  action?: 'undo' | 'redo' | 'export' | 'clear' | 'setCanvasSize' | 'setCanvasUnit';
   canvasSize?: { width: number; height: number; widthMm?: number; heightMm?: number };
   defaultUnit?: 'mm' | 'px';
   elements?: Array<{ id: string; type: string; props: Record<string, unknown> }>;
@@ -143,6 +144,7 @@ const TOOL_REGISTRY: Record<string, ToolFunction> = {
   // Canvas operation tools
   clearCanvas: clearCanvas as ToolFunction,
   undoAction: undoAction as ToolFunction,
+  redoAction: redoAction as ToolFunction,
   exportImage: exportImage as ToolFunction,
   setCanvasSize: setCanvasSize as ToolFunction,
   setCanvasUnit: setCanvasUnit as ToolFunction,

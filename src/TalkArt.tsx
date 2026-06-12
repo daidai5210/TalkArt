@@ -48,6 +48,7 @@ const TalkArt: React.FC = () => {
     exportSVGAction,
     exportPNGAction,
     conversation,
+    demoMode,
   } = useTalkArt();
 
   // Text input fallback state
@@ -123,7 +124,14 @@ const TalkArt: React.FC = () => {
             {agentState === 'error' && '出错'}
           </span>
 
+          {demoMode && (
+            <span className="text-xs text-talkart-primary bg-talkart-primary/10 px-2 py-0.5 rounded">
+              纯语音演示
+            </span>
+          )}
+
           {/* Export buttons */}
+          {!demoMode && (
           <div className="flex items-center gap-1.5">
             <button
               onClick={exportSVGAction}
@@ -142,6 +150,7 @@ const TalkArt: React.FC = () => {
               PNG ⬇️
             </button>
           </div>
+          )}
         </div>
       </header>
 
@@ -202,15 +211,16 @@ const TalkArt: React.FC = () => {
         </div>
       </div>
 
-      {/* Toolbar */}
-      <Toolbar
-        elementCount={elements.length}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        onUndo={undo}
-        onRedo={redo}
-        onClear={clearCanvas}
-      />
+      {!demoMode && (
+        <Toolbar
+          elementCount={elements.length}
+          canUndo={canUndo}
+          canRedo={canRedo}
+          onUndo={undo}
+          onRedo={redo}
+          onClear={clearCanvas}
+        />
+      )}
 
       {/* Status bar */}
       <StatusBar
@@ -219,7 +229,7 @@ const TalkArt: React.FC = () => {
         error={error}
       />
 
-      {/* Text input fallback (always available) */}
+      {!demoMode && (
       <div className="px-4 py-3 bg-talkart-surface border-t border-gray-700/50">
         <form onSubmit={handleTextInputSubmit} className="flex gap-2">
           <input
@@ -243,6 +253,7 @@ const TalkArt: React.FC = () => {
             : '当前浏览器不支持麦克风录音，请使用文字输入'}
         </p>
       </div>
+      )}
 
       {/* Error toast (dismissable) */}
       {error && agentState === 'error' && (

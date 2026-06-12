@@ -302,6 +302,11 @@ function handleFunctionCall(
     return result;
   }
 
+  if (result.action === 'redo') {
+    store.redo();
+    return result;
+  }
+
   if (result.action === 'export') {
     // Export is handled by the UI layer (e.g., serialize SVG DOM).
     // For now, we just acknowledge success; the UI can read the
