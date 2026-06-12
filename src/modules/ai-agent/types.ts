@@ -53,8 +53,10 @@ export interface LLMFunctionCall {
 }
 
 export interface LLMResponse {
-  type: 'confirmation' | 'function_call' | 'tool_calls';
+  type: 'confirmation' | 'function_call' | 'tool_calls' | 'error';
   content?: string;
+  /** When true, the client may retry the request once. */
+  retryable?: boolean;
   function?: LLMFunctionCall;
   /** Multiple tool calls from BFF (Phase 2+). */
   tool_calls?: LLMFunctionCall[];

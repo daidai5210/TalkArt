@@ -322,6 +322,9 @@ export class ConversationManager {
    * maintains context about what was drawn.
    */
   private addAssistantResponse(response: LLMResponse): void {
+    if (response.type === 'error') {
+      return;
+    }
     if (response.type === 'confirmation' && response.content) {
       this.messages.push({
         role: 'assistant',
