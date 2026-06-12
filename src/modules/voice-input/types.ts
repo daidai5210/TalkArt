@@ -10,7 +10,7 @@
 export interface VoiceManagerState {
   /** Whether the microphone is currently active and listening. */
   isListening: boolean;
-  /** Whether the browser supports the Web Speech API. */
+  /** Whether the browser supports microphone recording for ASR. */
   isSupported: boolean;
   /** Human-readable error message (Chinese), or null when no error. */
   error: string | null;
