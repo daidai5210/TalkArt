@@ -11,6 +11,7 @@ import {
   PathShape,
   PolylineShape,
   PolygonShape,
+  ImageShape,
 } from './shapes';
 
 interface ElementRendererProps {
@@ -32,7 +33,7 @@ export const ElementRenderer: React.FC<ElementRendererProps> = ({ element }) => 
 
     switch (type) {
       case 'rect':
-        return <RectShape {...(props as any)} />;
+        return <RectShape {...(props as any)} id={element.id} />;
       case 'circle':
         return <CircleShape {...(props as any)} />;
       case 'ellipse':
@@ -49,6 +50,8 @@ export const ElementRenderer: React.FC<ElementRendererProps> = ({ element }) => 
         return <PolylineShape {...(props as any)} />;
       case 'polygon':
         return <PolygonShape {...(props as any)} />;
+      case 'image':
+        return <ImageShape {...(props as any)} />;
       default:
         console.warn(`Unknown element type: ${type}`);
         return null;

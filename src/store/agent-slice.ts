@@ -29,6 +29,7 @@ import {
 } from '../modules/ai-agent';
 import type { ExtendedToolResult } from '../modules/ai-agent/ToolDispatcher';
 import { TOOL_DEFINITIONS } from '../modules/drawing-tools';
+import { PHASE5_TOOL_DEFINITIONS } from '../modules/drawing-tools/v2/phase5-tool-definitions';
 import { EXECUTE_DRAWING_PLAN_DEFINITION } from '../modules/drawing-tools/v2/tool-schema-skeleton';
 import type { LLMFunctionCall } from '../modules/ai-agent/types';
 import type { CanvasContext } from '../modules/drawing-tools/types';
@@ -124,6 +125,7 @@ function getConversationManager(): ConversationManager {
     conversationManager = new ConversationManager('', [
       ...TOOL_DEFINITIONS,
       EXECUTE_DRAWING_PLAN_DEFINITION,
+      ...PHASE5_TOOL_DEFINITIONS,
     ]);
   }
   return conversationManager;

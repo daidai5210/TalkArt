@@ -67,6 +67,9 @@ import { EXECUTE_DRAWING_PLAN_DEFINITION } from '../drawing-tools/v2/tool-schema
 import { executeDrawingPlanAsTool } from '../drawing-tools/v2/plan-executor';
 import type { ExecuteDrawingPlanInput } from '../drawing-tools/v2/execute-drawing-plan.types';
 import { drawPath, drawPolyline, drawPolygon } from '../drawing-tools/v2/path-tools';
+import { insertImage } from '../drawing-tools/v2/asset-tools';
+import { setFillGradient } from '../drawing-tools/v2/style-tools';
+import { PHASE5_TOOL_DEFINITIONS } from '../drawing-tools/v2/phase5-tool-definitions';
 import {
   createLayer,
   deleteLayer,
@@ -159,6 +162,9 @@ const TOOL_REGISTRY: Record<string, ToolFunction> = {
   setLayerVisibility: setLayerVisibility as ToolFunction,
   setLayerOrder: setLayerOrder as ToolFunction,
   moveElementToLayer: moveElementToLayer as ToolFunction,
+  // Phase 5 asset & style
+  insertImage: insertImage as ToolFunction,
+  setFillGradient: setFillGradient as ToolFunction,
 };
 
 /**
@@ -297,7 +303,7 @@ export class ToolDispatcher {
    */
   getToolDefinitions(): any[] {
     // v0.1 tools + Phase 2 orchestration tool
-    return [...TOOL_DEFINITIONS, EXECUTE_DRAWING_PLAN_DEFINITION];
+    return [...TOOL_DEFINITIONS, EXECUTE_DRAWING_PLAN_DEFINITION, ...PHASE5_TOOL_DEFINITIONS];
   }
 
   /**
