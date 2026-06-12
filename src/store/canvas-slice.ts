@@ -32,6 +32,9 @@ export interface CanvasState {
   defaultUnit: 'mm' | 'px';
   history: { elements: SVGElement[]; selectedId: string | null }[];
   historyIndex: number;
+  // Canvas 代码生成状态
+  canvasCode: string | null;
+  canvasCodeVersion: number;
 }
 
 export interface CanvasSlice extends CanvasState {
@@ -52,6 +55,9 @@ export interface CanvasSlice extends CanvasState {
   redo: () => void;
   clearCanvas: () => void;
   getSelectedElement: () => SVGElement | null;
+  // Canvas 代码生成
+  setCanvasCode: (code: string | null) => void;
+  clearCanvasCode: () => void;
 }
 
 export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
@@ -65,6 +71,9 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
   defaultUnit: 'px',
   history: [],
   historyIndex: -1,
+  // Canvas 代码生成初始状态
+  canvasCode: null,
+  canvasCodeVersion: 0,
 
   addElement: (el: SVGElement) => {
     set((state) => {
@@ -241,5 +250,19 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
   getSelectedElement: () => {
     const state = get();
     return state.elements.find((el) => el.id === state.selectedId) || null;
+  },
+
+  setCanvasCode: (code: string | null) => {
+    set((state) => ({
+      canvasCode: code,
+      canvasCodeVersion: state.canvasCodeVersion + 1,
+    }));
+  },
+
+  clearCanvasCode: () => {
+    set({
+      canvasCode: null,
+      canvasCodeVersion: 0,
+    });
   },
 });

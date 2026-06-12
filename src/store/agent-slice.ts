@@ -31,6 +31,7 @@ import type { ExtendedToolResult } from '../modules/ai-agent/ToolDispatcher';
 import { TOOL_DEFINITIONS } from '../modules/drawing-tools';
 import { PHASE5_TOOL_DEFINITIONS } from '../modules/drawing-tools/v2/phase5-tool-definitions';
 import { EXECUTE_DRAWING_PLAN_DEFINITION } from '../modules/drawing-tools/v2/tool-schema-skeleton';
+import { EXECUTE_CANVAS_CODE_DEFINITION } from '../modules/drawing-tools/v2/canvas-code-tools';
 import type { LLMFunctionCall } from '../modules/ai-agent/types';
 import { isLLMServiceError } from '../modules/ai-agent/llm-response-utils';
 import type { CanvasContext } from '../modules/drawing-tools/types';
@@ -127,6 +128,7 @@ function getConversationManager(): ConversationManager {
       ...TOOL_DEFINITIONS,
       EXECUTE_DRAWING_PLAN_DEFINITION,
       ...PHASE5_TOOL_DEFINITIONS,
+      EXECUTE_CANVAS_CODE_DEFINITION,
     ]);
   }
   return conversationManager;
@@ -237,6 +239,13 @@ function handleFunctionCall(
         props: el.props,
       })),
     );
+    return result;
+  }
+
+  // --- executeCanvasCode: 代码生成绘图 ---
+  if (functionName === 'executeCanvasCode' && element && element.type === 'canvasCode') {
+    const code = element.props.code as string;
+    store.setCanvasCode(code);
     return result;
   }
 

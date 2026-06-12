@@ -78,6 +78,7 @@ import {
   setLayerOrder,
   moveElementToLayer,
 } from '../drawing-tools/v2/layer-tools';
+import { executeCanvasCode, EXECUTE_CANVAS_CODE_DEFINITION } from '../drawing-tools/v2/canvas-code-tools';
 
 /**
  * Extended ToolResult that includes canvas-level action descriptors
@@ -85,7 +86,7 @@ import {
  */
 export interface ExtendedToolResult extends ToolResult {
   /** Action descriptor for canvas operations (undo, export, clear). */
-  action?: 'undo' | 'redo' | 'export' | 'clear' | 'setCanvasSize' | 'setCanvasUnit';
+  action?: 'undo' | 'redo' | 'export' | 'clear' | 'setCanvasSize' | 'setCanvasUnit' | 'createLayer' | 'deleteLayer' | 'renameLayer' | 'setLayerVisibility' | 'setLayerOrder' | 'moveElementToLayer';
   canvasSize?: { width: number; height: number; widthMm?: number; heightMm?: number };
   defaultUnit?: 'mm' | 'px';
   elements?: Array<{ id: string; type: string; props: Record<string, unknown> }>;
@@ -99,6 +100,13 @@ export interface ExtendedToolResult extends ToolResult {
   format?: 'svg' | 'png';
   /** Export filename (when action is 'export'). */
   filename?: string;
+  /** Layer operations */
+  layerId?: string;
+  layerName?: string;
+  layerVisible?: boolean;
+  layerZIndex?: number;
+  layer?: { id: string; name: string; visible: boolean; zIndex: number };
+  elementId?: string;
 }
 
 /**
@@ -165,6 +173,8 @@ const TOOL_REGISTRY: Record<string, ToolFunction> = {
   // Phase 5 asset & style
   insertImage: insertImage as ToolFunction,
   setFillGradient: setFillGradient as ToolFunction,
+  // Canvas code generation (Phase Canvas-1)
+  executeCanvasCode: executeCanvasCode as ToolFunction,
 };
 
 /**
@@ -302,8 +312,13 @@ export class ToolDispatcher {
    * @returns Array of OpenAI-compatible tool definitions
    */
   getToolDefinitions(): any[] {
-    // v0.1 tools + Phase 2 orchestration tool
-    return [...TOOL_DEFINITIONS, EXECUTE_DRAWING_PLAN_DEFINITION, ...PHASE5_TOOL_DEFINITIONS];
+    // v0.1 tools + Phase 2 orchestration tool + Phase 5 tools + Canvas code tool
+    return [
+      ...TOOL_DEFINITIONS,
+      EXECUTE_DRAWING_PLAN_DEFINITION,
+      ...PHASE5_TOOL_DEFINITIONS,
+      EXECUTE_CANVAS_CODE_DEFINITION,
+    ];
   }
 
   /**
