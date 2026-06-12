@@ -1,25 +1,18 @@
 /**
  * @module voice-input/MimoSTTEngine
- * Browser microphone recording + Xiaomi MiMo ASR via BFF (/api/stt).
+ * Microphone PCM capture + Xiaomi MiMo ASR via BFF (/api/stt).
  */
 
-import { encodeBlobAsWavDataUrl } from './audio-utils';
+import { encodePcmAsWavDataUrl } from './audio-utils';
+import { PcmRecorder } from './pcm-recorder';
 import { transcribeAudioDataUrl } from './stt-client';
 import type { STTEngineLike, STTResult } from './STTEngine';
 
-const CHUNK_MS = 2500;
-const SILENCE_FINALIZE_MS = 1800;
-const MIN_CHUNK_BYTES = 1200;
-
-function pickMimeType(): string {
-  const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
-  for (const type of candidates) {
-    if (MediaRecorder.isTypeSupported(type)) {
-      return type;
-    }
-  }
-  return '';
-}
+const INTERIM_INTERVAL_MS = 2000;
+const SILENCE_FINALIZE_MS = 4500;
+const MIN_DURATION_MS = 600;
+const SPEECH_RMS_THRESHOLD = 0.008;
+const SILENCE_CHECK_MS = 250;
 
 function mergeTranscript(current: string, next: string): string {
   const trimmed = next.trim();
@@ -32,60 +25,54 @@ function mergeTranscript(current: string, next: string): string {
 }
 
 export class MimoSTTEngine implements STTEngineLike {
-  private mediaRecorder: MediaRecorder | null = null;
-  private mediaStream: MediaStream | null = null;
+  private recorder: PcmRecorder | null = null;
   private utteranceText = '';
   private transcriptionChain: Promise<void> = Promise.resolve();
-  private silenceTimer: ReturnType<typeof setTimeout> | null = null;
+  private interimTimer: ReturnType<typeof setInterval> | null = null;
+  private silenceCheckTimer: ReturnType<typeof setInterval> | null = null;
+  private lastSpeechAt = 0;
+  private hasDetectedSpeech = false;
   private stopped = false;
+  private lastInterimAt = 0;
 
   private resultCallbacks: Array<(result: STTResult) => void> = [];
   private errorCallbacks: Array<(error: string, code: string) => void> = [];
   private endCallbacks: Array<() => void> = [];
 
-  async start(stream?: MediaStream): Promise<void> {
+  async start(): Promise<void> {
     if (!this.isSupported()) return;
+
+    this.abortInternal(false);
 
     this.stopped = false;
     this.utteranceText = '';
-    this.mediaStream = stream ?? await navigator.mediaDevices.getUserMedia({ audio: true });
+    this.hasDetectedSpeech = false;
+    this.lastSpeechAt = 0;
+    this.lastInterimAt = 0;
 
-    const mimeType = pickMimeType();
-    this.mediaRecorder = mimeType
-      ? new MediaRecorder(this.mediaStream, { mimeType })
-      : new MediaRecorder(this.mediaStream);
+    this.recorder = new PcmRecorder();
+    await this.recorder.start();
 
-    this.mediaRecorder.ondataavailable = (event) => {
-      if (event.data.size >= MIN_CHUNK_BYTES) {
-        this.enqueueTranscription(event.data);
-      }
-    };
+    this.interimTimer = setInterval(() => {
+      if (this.stopped || !this.hasDetectedSpeech) return;
+      void this.enqueueTranscription(false);
+    }, INTERIM_INTERVAL_MS);
 
-    this.mediaRecorder.onstop = () => {
-      void this.finalizeSession();
-    };
-
-    this.mediaRecorder.start(CHUNK_MS);
+    this.silenceCheckTimer = setInterval(() => {
+      this.checkSilence();
+    }, SILENCE_CHECK_MS);
   }
 
   stop(): void {
-    if (!this.mediaRecorder || this.mediaRecorder.state === 'inactive') {
-      return;
-    }
+    if (!this.recorder || this.stopped) return;
     this.stopped = true;
-    this.mediaRecorder.stop();
+    this.clearTimers();
+    this.recorder.stop();
+    void this.finalizeSession();
   }
 
   abort(): void {
-    this.stopped = true;
-    this.clearSilenceTimer();
-    try {
-      this.mediaRecorder?.stop();
-    } catch {
-      // ignore
-    }
-    this.cleanupStream();
-    this.mediaRecorder = null;
+    this.abortInternal(true);
   }
 
   onResult(callback: (result: STTResult) => void): void {
@@ -102,54 +89,94 @@ export class MimoSTTEngine implements STTEngineLike {
 
   isSupported(): boolean {
     return (
-      typeof MediaRecorder !== 'undefined' &&
+      typeof AudioContext !== 'undefined' &&
       typeof navigator !== 'undefined' &&
       !!navigator.mediaDevices?.getUserMedia
     );
   }
 
-  private enqueueTranscription(blob: Blob): void {
+  private checkSilence(): void {
+    if (this.stopped || !this.recorder) return;
+
+    const rms = this.recorder.getRecentRms(300);
+    if (rms >= SPEECH_RMS_THRESHOLD) {
+      this.hasDetectedSpeech = true;
+      this.lastSpeechAt = Date.now();
+      return;
+    }
+
+    if (!this.hasDetectedSpeech) return;
+
+    const silentFor = Date.now() - this.lastSpeechAt;
+    if (silentFor >= SILENCE_FINALIZE_MS) {
+      void this.enqueueTranscription(true);
+      this.hasDetectedSpeech = false;
+      this.lastSpeechAt = 0;
+      this.recorder.clearSamples();
+    }
+  }
+
+  private enqueueTranscription(finalize: boolean): void {
     this.transcriptionChain = this.transcriptionChain
-      .then(() => this.transcribeChunk(blob))
+      .then(() => this.transcribeSnapshot(finalize))
       .catch((err) => {
         const message = err instanceof Error ? err.message : '语音转写失败';
         this.errorCallbacks.forEach((cb) => cb(message, 'transcription-failed'));
       });
   }
 
-  private async transcribeChunk(blob: Blob): Promise<void> {
-    const wavDataUrl = await encodeBlobAsWavDataUrl(blob);
+  private async transcribeSnapshot(finalize: boolean): Promise<void> {
+    if (!this.recorder) return;
+
+    const snapshot = this.recorder.getSnapshot();
+    if (!snapshot || snapshot.durationMs < MIN_DURATION_MS) {
+      if (finalize) this.finalizeUtterance();
+      return;
+    }
+
+    if (!finalize) {
+      const now = Date.now();
+      if (now - this.lastInterimAt < INTERIM_INTERVAL_MS - 200) return;
+      this.lastInterimAt = now;
+    }
+
+    const wavDataUrl = encodePcmAsWavDataUrl(snapshot.samples, snapshot.sampleRate);
     const text = await transcribeAudioDataUrl(wavDataUrl, 'zh');
-    if (!text) return;
+    if (!text) {
+      if (finalize) this.finalizeUtterance();
+      return;
+    }
 
     this.utteranceText = mergeTranscript(this.utteranceText, text);
     this.emitResult(this.utteranceText, false);
-    this.scheduleFinalize();
-  }
 
-  private scheduleFinalize(): void {
-    this.clearSilenceTimer();
-    this.silenceTimer = setTimeout(() => {
+    if (finalize) {
       this.finalizeUtterance();
-    }, SILENCE_FINALIZE_MS);
+    }
   }
 
   private finalizeUtterance(): void {
     if (!this.utteranceText) return;
     this.emitResult(this.utteranceText, true);
     this.utteranceText = '';
+    this.recorder?.clearSamples();
   }
 
   private async finalizeSession(): Promise<void> {
-    this.clearSilenceTimer();
+    this.enqueueTranscription(true);
     await this.transcriptionChain;
-    if (this.utteranceText) {
-      this.emitResult(this.utteranceText, true);
-      this.utteranceText = '';
-    }
-    this.cleanupStream();
-    this.mediaRecorder = null;
-    if (this.stopped) {
+    this.recorder?.dispose();
+    this.recorder = null;
+    this.endCallbacks.forEach((cb) => cb());
+  }
+
+  private abortInternal(notifyEnd: boolean): void {
+    this.stopped = true;
+    this.clearTimers();
+    this.recorder?.dispose();
+    this.recorder = null;
+    this.utteranceText = '';
+    if (notifyEnd) {
       this.endCallbacks.forEach((cb) => cb());
     }
   }
@@ -163,16 +190,14 @@ export class MimoSTTEngine implements STTEngineLike {
     this.resultCallbacks.forEach((cb) => cb(result));
   }
 
-  private clearSilenceTimer(): void {
-    if (this.silenceTimer) {
-      clearTimeout(this.silenceTimer);
-      this.silenceTimer = null;
+  private clearTimers(): void {
+    if (this.interimTimer) {
+      clearInterval(this.interimTimer);
+      this.interimTimer = null;
     }
-  }
-
-  private cleanupStream(): void {
-    if (!this.mediaStream) return;
-    this.mediaStream.getTracks().forEach((track) => track.stop());
-    this.mediaStream = null;
+    if (this.silenceCheckTimer) {
+      clearInterval(this.silenceCheckTimer);
+      this.silenceCheckTimer = null;
+    }
   }
 }
