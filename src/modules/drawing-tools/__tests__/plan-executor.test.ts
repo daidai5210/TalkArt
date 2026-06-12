@@ -9,6 +9,7 @@ import { mmToPx, pxToMm } from '../coordinate-utils';
 import { executeDrawingPlan } from '../v2/plan-executor';
 import { KANGSHIFU_PLAN_FIXTURE } from './kangshifu-plan.fixture';
 import { OLYMPIC_FLAG_PLAN_FIXTURE } from './olympic-plan.fixture';
+import { YELLOW_CAT_PLAN_FIXTURE } from './yellow-cat-plan.fixture';
 import type { CanvasContext } from '../types';
 
 function createContext(): CanvasContext {
@@ -115,6 +116,22 @@ describe('executeDrawingPlan', () => {
     expect(result.success).toBe(true);
     expect(result.elements).toHaveLength(3);
     expect(result.planResult?.completedSteps).toBe(3);
+  });
+
+  it('executes yellow cat plan with non-overlapping layout (draw iter R1)', () => {
+    const context = createContext();
+    const dispatcher = new ToolDispatcher(context);
+
+    const result = dispatcher.execute('executeDrawingPlan', YELLOW_CAT_PLAN_FIXTURE);
+
+    expect(result.success).toBe(true);
+    expect(result.planResult?.completedSteps).toBe(8);
+    expect(result.elements?.length).toBe(8);
+
+    const circles = result.elements?.filter((el) => el.type === 'circle') ?? [];
+    const positions = circles.map((c) => ({ cx: c.props.cx, cy: c.props.cy }));
+    const unique = new Set(positions.map((p) => `${p.cx},${p.cy}`));
+    expect(unique.size).toBeGreaterThan(1);
   });
 
   it('executes olympic rings + flag plan fixture (iter 4)', () => {

@@ -5,8 +5,9 @@
 
 import { EXECUTE_DRAWING_PLAN_DEFINITION } from '../drawing-tools/v2/tool-schema-skeleton';
 
-const COMPLEX_DRAWING_PATTERN =
-  /五环|奥运|国旗|多个|几个|复杂|包装|组合|后面是|一起画|直接画|现在就画|马上就画|国徽|会徽/i;
+/** Any drawing intent → executeDrawingPlan only (fastest + forces step plan). */
+const DRAWING_INTENT_PATTERN =
+  /画|绘|绘制|帮我画|帮我做|做一|生成|圆|方|三角|猫|狗|鸟|花|树|人|车|五环|奥运|国旗|包装/i;
 
 /**
  * Complex scenes use executeDrawingPlan only — smallest schema, fastest tool-call generation.
@@ -15,12 +16,12 @@ const COMPLEX_DRAWING_PATTERN =
 export const COMPACT_DRAWING_TOOLS = [EXECUTE_DRAWING_PLAN_DEFINITION];
 
 export function isComplexDrawingRequest(text: string): boolean {
-  return COMPLEX_DRAWING_PATTERN.test(text);
+  return DRAWING_INTENT_PATTERN.test(text);
 }
 
 export function selectToolsForRequest(allTools: unknown[], userText: string): unknown[] {
-  if (!isComplexDrawingRequest(userText)) {
-    return allTools;
+  if (DRAWING_INTENT_PATTERN.test(userText)) {
+    return COMPACT_DRAWING_TOOLS;
   }
-  return COMPACT_DRAWING_TOOLS;
+  return allTools;
 }

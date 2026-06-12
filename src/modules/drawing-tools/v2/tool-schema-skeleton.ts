@@ -99,25 +99,38 @@ export const EXECUTE_DRAWING_PLAN_DEFINITION: ToolDefinition = {
   function: {
     name: 'executeDrawingPlan',
     description:
-      '批量执行绘图计划。当用户描述包含多个图形、图层或步骤时使用此工具，一次性提交所有步骤。' +
-      '例如「画三个圆排成一行」「画一个包装盒分背景层和文字层」。',
+      '【必用】用户任何绘图请求都通过此工具分步执行。按绘制顺序列出 steps：先背景/身体，后四肢，最后五官细节。' +
+      '每步 args 须含 unit:"mm" 的精确 x,y（勿全部用 center）。支持 drawCircle drawEllipse drawRect drawTriangle drawLine drawText clearCanvas。',
     parameters: {
       type: 'object',
       properties: {
-        planId: { type: 'string', description: '可选计划 ID，用于追踪' },
-        atomic: {
-          type: 'boolean',
-          description: '是否原子执行：true 时任一步失败则整体回滚。默认 false',
-        },
+        planId: { type: 'string', description: '可选计划 ID' },
+        atomic: { type: 'boolean', description: '默认 false' },
         steps: {
           type: 'array',
-          description: '有序步骤列表',
+          description: '有序绘制步骤，3~20 步',
           items: {
             type: 'object',
             properties: {
-              tool: { type: 'string', description: '工具名，如 drawRect、createLayer' },
-              args: { type: 'object', description: '该工具的参数对象' },
-              label: { type: 'string', description: '步骤说明，可选' },
+              tool: {
+                type: 'string',
+                enum: [
+                  'drawCircle',
+                  'drawEllipse',
+                  'drawRect',
+                  'drawTriangle',
+                  'drawLine',
+                  'drawText',
+                  'clearCanvas',
+                ],
+                description: '绘图工具名',
+              },
+              args: {
+                type: 'object',
+                description:
+                  '工具参数。坐标示例：position:{x:80,y:70,unit:"mm"}；圆：r:15,unit:"mm"；矩形：size:{width:40,height:30,unit:"mm"}',
+              },
+              label: { type: 'string', description: '本步画什么，如「1.黄色身体椭圆」' },
             },
             required: ['tool', 'args'],
           },

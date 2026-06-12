@@ -460,10 +460,32 @@ export const createAgentSlice: StateCreator<CanvasSlice & AgentSlice, [], [], Ag
         setConfirmation('');
         setAgentState('error');
       } else if (response.type === 'confirmation') {
-        const content = response.content || '请确认是否继续？';
-        addMessage({ role: 'assistant', content });
-        setConfirmation(content);
-        setAgentState('confirming');
+        // Fallback: model still replied with text — force one-shot plan execution
+        const retry = await manager.processConfirmation(
+          '不要提问，立即用 executeDrawingPlan 按步骤绘制，坐标用 mm',
+          canvasContext,
+        );
+        if (retry.type === 'error' || isLLMServiceError(retry.content)) {
+          const content = retry.content || response.content || '绘图失败，请重试';
+          addMessage({ role: 'assistant', content });
+          setError(content);
+          setAgentState('error');
+        } else if (retry.type === 'function_call' || retry.type === 'tool_calls') {
+          const outcome = processLLMToolResponse(retry, dispatcher, get, addMessage);
+          if (outcome.success) {
+            setAgentState('idle');
+            setConfirmation('');
+          } else {
+            setError(outcome.error || '绘图执行失败');
+            setAgentState('error');
+          }
+        } else {
+          const content = response.content || '请重试';
+          addMessage({ role: 'assistant', content });
+          setConfirmation('');
+          setError('模型未返回绘图计划，请重试');
+          setAgentState('error');
+        }
       } else if (
         response.type === 'function_call' ||
         response.type === 'tool_calls'

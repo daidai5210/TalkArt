@@ -17,8 +17,10 @@ describe('llm-tool-selector', () => {
     expect(selected[0].function.name).toBe('executeDrawingPlan');
   });
 
-  it('keeps full tools for simple requests', () => {
-    const all = [{ function: { name: 'a' } }, { function: { name: 'b' } }];
-    expect(selectToolsForRequest(all, '画一个红色的圆')).toBe(all);
+  it('uses executeDrawingPlan-only for simple draw requests', () => {
+    const all = [{ function: { name: 'drawCircle' } }, { function: { name: 'drawRect' } }];
+    const selected = selectToolsForRequest(all, '画一个红色的圆') as { function: { name: string } }[];
+    expect(selected).toHaveLength(1);
+    expect(selected[0].function.name).toBe('executeDrawingPlan');
   });
 });
