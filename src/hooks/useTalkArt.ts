@@ -19,7 +19,7 @@
  * - Export functionality (SVG/PNG)
  */
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useStore } from '@/store';
 import { VoiceManager } from '@/modules/voice-input/VoiceManager';
 import { WakeWordDetector } from '@/modules/voice-input/WakeWordDetector';
@@ -42,8 +42,10 @@ export interface TalkArtState {
   isListening: boolean;
   /** Whether the browser supports Web Speech API. */
   isSupported: boolean;
-  /** Error message, or null if no error. */
+  /** Agent-level error message, or null if no error. */
   error: string | null;
+  /** Voice-specific warning (does not block the app). */
+  voiceError: string | null;
 
   // Actions
   /** Manually start listening (fallback to wake word). */
@@ -52,8 +54,10 @@ export interface TalkArtState {
   stopListening: () => void;
   /** Submit text input (fallback when voice is not supported). */
   submitTextInput: (text: string) => void;
-  /** Clear error and return to idle. */
+  /** Clear agent error and return to idle. */
   clearError: () => void;
+  /** Clear voice warning. */
+  clearVoiceError: () => void;
 
   // Canvas state
   /** Elements on the canvas. */
@@ -114,6 +118,7 @@ export function useTalkArt(): TalkArtState {
   const endPhraseDetectorRef = useRef<EndPhraseDetector | null>(null);
   const isListeningRef = useRef(false);
   const isProcessingRef = useRef(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
 
   // Refs to always have the latest store actions in callbacks
   const agentStateRef = useRef(agentState);
@@ -215,17 +220,16 @@ export function useTalkArt(): TalkArtState {
       }
     });
 
-    // State change: track listening state
+    // State change: track listening state only (voice errors handled separately)
     voiceManager.onStateChange((state) => {
       isListeningRef.current = state.isListening;
-      if (state.error) {
-        setErrorRef.current(state.error);
-      }
     });
 
-    // Error handling
+    // Voice errors stay local — do not pollute the global agent error state
     voiceManager.onError((errorMsg) => {
-      setErrorRef.current(errorMsg);
+      setVoiceError(errorMsg);
+      isListeningRef.current = false;
+      setAgentStateRef.current('idle');
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -258,9 +262,11 @@ export function useTalkArt(): TalkArtState {
   const startListening = useCallback(() => {
     if (voiceManager.isSupported()) {
       wakeWordDetector.reset();
+      setVoiceError(null);
       setAgentState('listening');
-      voiceManager.startListening();
-      isListeningRef.current = true;
+      voiceManager.startListening().then(() => {
+        isListeningRef.current = voiceManager.getState().isListening;
+      });
     }
   }, [voiceManager, wakeWordDetector, setAgentState]);
 
@@ -268,6 +274,7 @@ export function useTalkArt(): TalkArtState {
   const stopListening = useCallback(() => {
     voiceManager.stopListening();
     isListeningRef.current = false;
+    setVoiceError(null);
     setAgentState('idle');
     setTranscript('');
   }, [voiceManager, setAgentState, setTranscript]);
@@ -308,6 +315,11 @@ export function useTalkArt(): TalkArtState {
     setAgentState('idle');
   }, [setError, setAgentState]);
 
+  const clearVoiceError = useCallback(() => {
+    setVoiceError(null);
+    voiceManager.clearError();
+  }, [voiceManager]);
+
   /** Export canvas as SVG file. */
   const exportSVGAction = useCallback(() => {
     const svg = document.querySelector('svg') as SVGSVGElement | null;
@@ -345,12 +357,14 @@ export function useTalkArt(): TalkArtState {
     isListening: isListeningRef.current,
     isSupported: voiceManager.isSupported(),
     error,
+    voiceError,
 
     // Actions
     startListening,
     stopListening,
     submitTextInput,
     clearError,
+    clearVoiceError,
 
     // Canvas state
     elements,

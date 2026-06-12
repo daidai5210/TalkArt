@@ -13,7 +13,7 @@
  * in a later phase.
  */
 
-import { ASREngine } from './ASREngine';
+import { ASREngine, isRecoverableSpeechError } from './ASREngine';
 import type { VoiceManagerState, ASRResult } from './types';
 
 /** Default error messages in Chinese for common failure scenarios. */
@@ -53,7 +53,7 @@ export class VoiceManager {
   private state: VoiceManagerState;
   private speechResultCallbacks: Array<(text: string, isFinal: boolean) => void> = [];
   private stateChangeCallbacks: Array<(state: VoiceManagerState) => void> = [];
-  private errorCallbacks: Array<(error: string) => void> = [];
+  private errorCallbacks: Array<(error: string, code: string) => void> = [];
 
   constructor() {
     this.engine = new ASREngine();
@@ -114,7 +114,7 @@ export class VoiceManager {
     if (!this.state.isListening) return;
 
     this.engine.stop();
-    this.updateState({ isListening: false });
+    this.updateState({ isListening: false, error: null });
   }
 
   /**
@@ -137,7 +137,7 @@ export class VoiceManager {
    * Register a callback for errors.
    * @param callback - Called with a Chinese error message string.
    */
-  onError(callback: (error: string) => void): void {
+  onError(callback: (error: string, code: string) => void): void {
     this.errorCallbacks.push(callback);
   }
 
@@ -166,9 +166,9 @@ export class VoiceManager {
   }
 
   /** Handle ASR error events and forward to registered callbacks. */
-  private handleASRError(error: string): void {
-    this.updateState({ error });
-    this.notifyError(error);
+  private handleASRError(error: string, code: string): void {
+    this.updateState({ isListening: false, error });
+    this.notifyError(error, code);
   }
 
   /** Handle ASR end events – update state if we weren't expecting it. */
@@ -201,7 +201,18 @@ export class VoiceManager {
   }
 
   /** Notify error callbacks. */
-  private notifyError(error: string): void {
-    this.errorCallbacks.forEach((cb) => cb(error));
+  private notifyError(error: string, code = 'unknown'): void {
+    this.errorCallbacks.forEach((cb) => cb(error, code));
+  }
+
+  /** Clear the current voice error without stopping listening. */
+  clearError(): void {
+    if (!this.state.error) return;
+    this.updateState({ error: null });
+  }
+
+  /** Whether the given speech error code is recoverable (text fallback still works). */
+  isRecoverableError(code: string): boolean {
+    return isRecoverableSpeechError(code);
   }
 }

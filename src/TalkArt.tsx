@@ -33,10 +33,12 @@ const TalkArt: React.FC = () => {
     isListening,
     isSupported,
     error,
+    voiceError,
     startListening,
     stopListening,
     submitTextInput,
     clearError,
+    clearVoiceError,
     elements,
     canUndo,
     canRedo,
@@ -167,6 +169,27 @@ const TalkArt: React.FC = () => {
           <Canvas />
         </div>
 
+        {/* Voice warning (non-blocking) */}
+        {voiceError && (
+          <div className="absolute bottom-36 right-6 z-20 max-w-xs">
+            <div className="bg-amber-900/90 backdrop-blur-sm border border-amber-500/30 rounded-lg px-3 py-2 shadow-lg">
+              <div className="flex items-start gap-2">
+                <p className="text-xs text-amber-100 flex-1">{voiceError}</p>
+                <button
+                  onClick={clearVoiceError}
+                  className="text-amber-300 hover:text-white transition-colors shrink-0"
+                  aria-label="关闭语音提示"
+                >
+                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2}>
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Microphone button (floating bottom-right) */}
         <div className="absolute bottom-20 right-6 z-20">
           <MicrophoneButton
@@ -175,7 +198,6 @@ const TalkArt: React.FC = () => {
             isSupported={isSupported}
             onStartListening={startListening}
             onStopListening={stopListening}
-            error={error}
           />
         </div>
       </div>
@@ -197,30 +219,30 @@ const TalkArt: React.FC = () => {
         error={error}
       />
 
-      {/* Text input fallback (when Web Speech API is not supported) */}
-      {!isSupported && (
-        <div className="px-4 py-3 bg-talkart-surface border-t border-gray-700/50">
-          <form onSubmit={handleTextInputSubmit} className="flex gap-2">
-            <input
-              type="text"
-              value={textInput}
-              onChange={(e) => setTextInput(e.target.value)}
-              placeholder="输入绘图指令..."
-              className="flex-1 px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-talkart-primary focus:ring-1 focus:ring-talkart-primary"
-              aria-label="文字输入（语音不可用）"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-talkart-primary hover:bg-talkart-primary/80 text-white rounded-lg text-sm font-medium transition-colors"
-            >
-              发送
-            </button>
-          </form>
-          <p className="text-xs text-gray-500 mt-1">
-            语音识别不可用，请使用文字输入代替
-          </p>
-        </div>
-      )}
+      {/* Text input fallback (always available) */}
+      <div className="px-4 py-3 bg-talkart-surface border-t border-gray-700/50">
+        <form onSubmit={handleTextInputSubmit} className="flex gap-2">
+          <input
+            type="text"
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            placeholder="输入绘图指令，例如：画一个红色的圆"
+            className="flex-1 px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-talkart-primary focus:ring-1 focus:ring-talkart-primary"
+            aria-label="文字输入"
+          />
+          <button
+            type="submit"
+            className="px-4 py-2 bg-talkart-primary hover:bg-talkart-primary/80 text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            发送
+          </button>
+        </form>
+        <p className="text-xs text-gray-500 mt-1">
+          {isSupported
+            ? '也可点击右下角麦克风使用语音，或直接使用文字输入'
+            : '当前浏览器不支持语音识别，请使用文字输入'}
+        </p>
+      </div>
 
       {/* Error toast (dismissable) */}
       {error && agentState === 'error' && (
