@@ -25,9 +25,12 @@ const { EXECUTE_DRAWING_PLAN_DEFINITION } = await import(
   pathToFileURL(join(root, 'src/modules/drawing-tools/v2/tool-schema-skeleton.ts')).href
 );
 
-const tools = [...TOOL_DEFINITIONS, EXECUTE_DRAWING_PLAN_DEFINITION, ...PHASE5_TOOL_DEFINITIONS];
+const allTools = [...TOOL_DEFINITIONS, EXECUTE_DRAWING_PLAN_DEFINITION, ...PHASE5_TOOL_DEFINITIONS];
+const compactTools = [EXECUTE_DRAWING_PLAN_DEFINITION];
+const tools = process.argv.includes('--compact') ? compactTools : allTools;
+const label = process.argv.includes('--compact') ? 'compact' : 'full';
 const payloadKb = (JSON.stringify(tools).length / 1024).toFixed(1);
-console.log(`tools=${tools.length} schema≈${payloadKb}KB`);
+console.log(`mode=${label} tools=${tools.length} schema≈${payloadKb}KB`);
 
 const userText = '帮我画一个奥运五环，奥运五环后面是中国的国旗，现在直接就画';
 const model = process.env.LLM_MODEL || 'deepseek-chat';
