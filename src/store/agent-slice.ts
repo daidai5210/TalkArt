@@ -32,6 +32,7 @@ import { TOOL_DEFINITIONS } from '../modules/drawing-tools';
 import { PHASE5_TOOL_DEFINITIONS } from '../modules/drawing-tools/v2/phase5-tool-definitions';
 import { EXECUTE_DRAWING_PLAN_DEFINITION } from '../modules/drawing-tools/v2/tool-schema-skeleton';
 import { EXECUTE_CANVAS_CODE_DEFINITION } from '../modules/drawing-tools/v2/canvas-code-tools';
+import { PAPER_TOOL_DEFINITIONS } from '../modules/drawing-tools/v2/paper-tools';
 import type { LLMFunctionCall } from '../modules/ai-agent/types';
 import { isLLMServiceError } from '../modules/ai-agent/llm-response-utils';
 import type { CanvasContext } from '../modules/drawing-tools/types';
@@ -129,6 +130,7 @@ function getConversationManager(): ConversationManager {
       EXECUTE_DRAWING_PLAN_DEFINITION,
       ...PHASE5_TOOL_DEFINITIONS,
       EXECUTE_CANVAS_CODE_DEFINITION,
+      ...PAPER_TOOL_DEFINITIONS,
     ]);
   }
   return conversationManager;
@@ -246,6 +248,26 @@ function handleFunctionCall(
   if (functionName === 'executeCanvasCode' && element && element.type === 'canvasCode') {
     const code = element.props.code as string;
     store.setCanvasCode(code);
+    return result;
+  }
+
+  // --- executePaperCode: Paper.js 代码生成绘图 ---
+  if (functionName === 'executePaperCode' && element && element.type === 'paperCode') {
+    const code = element.props.code as string;
+    store.setPaperCode(code);
+    return result;
+  }
+
+  // --- renderTemplate: 渲染预设模板 ---
+  if (functionName === 'renderTemplate' && element && element.type === 'template') {
+    const template = element.props.template as string;
+    store.addPaperTemplate({
+      template,
+      center: element.props.center as { x: number; y: number } | undefined,
+      size: element.props.size as number | undefined,
+      color: element.props.color as string | undefined,
+      strokeColor: element.props.strokeColor as string | undefined,
+    });
     return result;
   }
 

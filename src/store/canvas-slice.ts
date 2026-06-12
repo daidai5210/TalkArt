@@ -35,6 +35,16 @@ export interface CanvasState {
   // Canvas 代码生成状态
   canvasCode: string | null;
   canvasCodeVersion: number;
+  // Paper.js 状态
+  paperCode: string | null;
+  paperCodeVersion: number;
+  paperTemplates: Array<{
+    template: string;
+    center?: { x: number; y: number };
+    size?: number;
+    color?: string;
+    strokeColor?: string;
+  }>;
 }
 
 export interface CanvasSlice extends CanvasState {
@@ -58,6 +68,17 @@ export interface CanvasSlice extends CanvasState {
   // Canvas 代码生成
   setCanvasCode: (code: string | null) => void;
   clearCanvasCode: () => void;
+  // Paper.js
+  setPaperCode: (code: string | null) => void;
+  clearPaperCode: () => void;
+  addPaperTemplate: (template: {
+    template: string;
+    center?: { x: number; y: number };
+    size?: number;
+    color?: string;
+    strokeColor?: string;
+  }) => void;
+  clearPaperTemplates: () => void;
 }
 
 export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
@@ -74,6 +95,10 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
   // Canvas 代码生成初始状态
   canvasCode: null,
   canvasCodeVersion: 0,
+  // Paper.js 初始状态
+  paperCode: null,
+  paperCodeVersion: 0,
+  paperTemplates: [],
 
   addElement: (el: SVGElement) => {
     set((state) => {
@@ -263,6 +288,33 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
     set({
       canvasCode: null,
       canvasCodeVersion: 0,
+    });
+  },
+
+  // Paper.js 方法
+  setPaperCode: (code: string | null) => {
+    set((state) => ({
+      paperCode: code,
+      paperCodeVersion: state.paperCodeVersion + 1,
+    }));
+  },
+
+  clearPaperCode: () => {
+    set({
+      paperCode: null,
+      paperCodeVersion: 0,
+    });
+  },
+
+  addPaperTemplate: (template) => {
+    set((state) => ({
+      paperTemplates: [...state.paperTemplates, template],
+    }));
+  },
+
+  clearPaperTemplates: () => {
+    set({
+      paperTemplates: [],
     });
   },
 });
