@@ -1,11 +1,10 @@
 /**
  * @module voice-input
- * Browser STT input: microphone recording + cloud transcription.
+ * Browser STT input via SpeechRecognition (TalkMate-compatible).
  */
 
 export { VoiceManager } from './VoiceManager';
-export { BrowserSTTEngine } from './BrowserSTTEngine';
-export { transcribeAudioBlob } from './stt-client';
+export { WebSpeechSTTEngine } from './WebSpeechSTTEngine';
 export type { STTEngineLike, STTResult } from './STTEngine';
 export { WakeWordDetector } from './WakeWordDetector';
 export { EndPhraseDetector } from './EndPhraseDetector';

@@ -1,8 +1,8 @@
 /**
  * Speech-to-Text (STT) engine interface.
  *
- * STT flow: browser records microphone audio → BFF transcribes via cloud API.
- * This is intentionally separate from browser SpeechRecognition (Web Speech API).
+ * TalkArt uses browser SpeechRecognition for STT (same as TalkMate).
+ * No cloud speech API key is required for voice input.
  */
 
 export interface STTResult {

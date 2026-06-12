@@ -1,17 +1,16 @@
 /**
  * @module voice-input/VoiceManager
- * Coordinates browser microphone recording (STT input) with the application.
+ * Browser STT input via SpeechRecognition (no cloud speech API key).
  */
 
 import type { STTEngineLike } from './STTEngine';
-import { BrowserSTTEngine } from './BrowserSTTEngine';
+import { WebSpeechSTTEngine } from './WebSpeechSTTEngine';
 import type { VoiceManagerState } from './types';
 import type { STTResult } from './STTEngine';
 
 const ERRORS = {
-  NOT_SUPPORTED: '您的浏览器不支持麦克风录音，请使用文字输入',
+  NOT_SUPPORTED: '您的浏览器不支持语音识别，请使用 Chrome/Edge 或文字输入',
   PERMISSION_DENIED: '麦克风权限被拒绝，请在浏览器设置中允许麦克风访问',
-  MIC_UNAVAILABLE: '无法访问麦克风，请检查设备是否已连接',
 } as const;
 
 export class VoiceManager {
@@ -22,7 +21,7 @@ export class VoiceManager {
   private errorCallbacks: Array<(error: string, code: string) => void> = [];
 
   constructor(engine?: STTEngineLike) {
-    this.engine = engine ?? new BrowserSTTEngine();
+    this.engine = engine ?? new WebSpeechSTTEngine();
     this.state = {
       isListening: false,
       isSupported: this.engine.isSupported(),
@@ -37,7 +36,7 @@ export class VoiceManager {
   async startListening(): Promise<void> {
     if (!this.state.isSupported) {
       this.updateState({ error: ERRORS.NOT_SUPPORTED });
-      this.notifyError(ERRORS.NOT_SUPPORTED);
+      this.notifyError(ERRORS.NOT_SUPPORTED, 'browser_not_supported');
       return;
     }
 
@@ -48,11 +47,12 @@ export class VoiceManager {
     this.updateState({ error: null });
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      await this.engine.start(stream);
+      await this.engine.start();
       this.updateState({ isListening: true });
     } catch (err) {
-      this.handlePermissionError(err);
+      const message = err instanceof Error ? err.message : ERRORS.PERMISSION_DENIED;
+      this.updateState({ error: message, isListening: false });
+      this.notifyError(message, 'start_failed');
     }
   }
 
@@ -100,19 +100,6 @@ export class VoiceManager {
     }
   }
 
-  private handlePermissionError(err: unknown): void {
-    let message: string = ERRORS.MIC_UNAVAILABLE;
-
-    if (err instanceof DOMException) {
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        message = ERRORS.PERMISSION_DENIED;
-      }
-    }
-
-    this.updateState({ error: message, isListening: false });
-    this.notifyError(message);
-  }
-
   private updateState(partial: Partial<VoiceManagerState>): void {
     this.state = { ...this.state, ...partial };
     this.stateChangeCallbacks.forEach((cb) => cb(this.getState()));
@@ -128,6 +115,6 @@ export class VoiceManager {
   }
 
   isRecoverableError(code: string): boolean {
-    return code === 'transcription-failed' || code === 'no-speech';
+    return code === 'network' || code === 'no-speech' || code === 'service-not-allowed';
   }
 }
