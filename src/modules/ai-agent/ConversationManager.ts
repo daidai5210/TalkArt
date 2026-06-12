@@ -37,6 +37,7 @@
 import type { Message, LLMResponse } from './types';
 import type { CanvasContext } from '../drawing-tools/types';
 import { sendToLLM } from './llm-client';
+import { normalizeVoiceTranscript } from '../voice-input/normalize-transcript';
 
 /** Maximum number of messages to keep in conversation history. */
 const MAX_HISTORY_LENGTH = 20;
@@ -198,8 +199,8 @@ export class ConversationManager {
     userText: string,
     canvasContext: CanvasContext,
   ): Promise<LLMResponse> {
-    // Add the user message to history
-    this.messages.push({ role: 'user', content: userText });
+    const cleaned = normalizeVoiceTranscript(userText);
+    this.messages.push({ role: 'user', content: cleaned });
 
     // Update canvas context
     this.canvasContext = canvasContext;
@@ -235,8 +236,8 @@ export class ConversationManager {
     userText: string,
     canvasContext: CanvasContext,
   ): Promise<LLMResponse> {
-    // Add the user's confirmation to history
-    this.messages.push({ role: 'user', content: userText });
+    const cleaned = normalizeVoiceTranscript(userText);
+    this.messages.push({ role: 'user', content: cleaned });
 
     // Update canvas context
     this.canvasContext = canvasContext;

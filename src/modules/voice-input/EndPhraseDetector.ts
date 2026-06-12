@@ -18,12 +18,14 @@ const END_PHRASES = [
   '好的',
   '行',
   '画吧',
+  '直接画',
+  '直接就画',
+  '马上画',
+  '现在就画',
   '执行',
   '确认',
   '没问题',
-  '对',
   '是的',
-  '嗯',
 ] as const;
 
 /** Phrases that indicate the user wants to correct or change the request. */

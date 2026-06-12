@@ -8,16 +8,14 @@
  * prompt injection, and response normalization.
  *
  * The client handles:
- * - Network errors and timeouts (15s)
+ * - Network errors and timeouts (see llm-config)
  * - Non-200 HTTP responses from the BFF
  * - Graceful fallback to a Chinese error message on failure
  */
 
 import type { Message, LLMResponse } from './types';
 import type { CanvasContext } from '../drawing-tools/types';
-
-/** Request timeout in milliseconds. */
-const REQUEST_TIMEOUT_MS = 15_000;
+import { LLM_REQUEST_TIMEOUT_MS } from './llm-config';
 
 /** Fallback error message returned when the LLM service is unavailable. */
 const SERVICE_UNAVAILABLE_MSG = '抱歉，AI 服务暂时不可用，请稍后重试。';
@@ -63,16 +61,15 @@ export async function sendToLLM(
     canvas_context: {
       width: canvasContext.width,
       height: canvasContext.height,
-      elements: canvasContext.elements,
-      selected_element: canvasContext.selectedId
-        ? canvasContext.elements.find((el) => el.id === canvasContext.selectedId) ?? null
-        : null,
+      element_count: canvasContext.elements.length,
+      element_types: canvasContext.elements.map((el) => el.type),
+      selected_id: canvasContext.selectedId,
     },
   };
 
   // Create an AbortController for timeout handling
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), LLM_REQUEST_TIMEOUT_MS);
 
   try {
     const response = await fetch('/api/llm', {
