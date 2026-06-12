@@ -1,8 +1,8 @@
 /**
  * Speech-to-Text (STT) engine interface.
  *
- * TalkArt uses browser SpeechRecognition for STT (same as TalkMate).
- * No cloud speech API key is required for voice input.
+ * STT: browser records audio, BFF calls MiMo ASR (mimo-v2.5-asr).
+ * TTS uses browser SpeechSynthesis (see voice-output module).
  */
 
 export interface STTResult {
