@@ -1,11 +1,15 @@
 /**
- * Vite dev-only middleware: proxies POST /api/llm to the Vercel API handler
- * so local development can use .env without `vercel dev`.
+ * Vite dev-only middleware: proxies /api/llm and /api/stt to Vercel handlers.
  */
 
 import type { Plugin } from 'vite';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+
+const API_ROUTES: Record<string, () => Promise<{ default: (req: VercelRequest, res: VercelResponse) => Promise<void> }>> = {
+  '/api/llm': () => import('../api/llm'),
+  '/api/stt': () => import('../api/stt'),
+};
 
 function readBody(req: IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {
@@ -59,7 +63,8 @@ export function apiDevPlugin(env: Record<string, string>): Plugin {
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         const url = req.url?.split('?')[0];
-        if (url !== '/api/llm') {
+        const loader = url ? API_ROUTES[url] : undefined;
+        if (!loader) {
           return next();
         }
 
@@ -73,7 +78,7 @@ export function apiDevPlugin(env: Record<string, string>): Plugin {
 
         try {
           const body = await readBody(req);
-          const handler = (await import('../api/llm')).default;
+          const handler = (await loader()).default;
           const vercelReq = Object.assign(req, {
             body,
             method: 'POST',
@@ -82,10 +87,14 @@ export function apiDevPlugin(env: Record<string, string>): Plugin {
           const vercelRes = createVercelResponse(res);
           await handler(vercelReq, vercelRes);
         } catch (err) {
-          console.error('[talkart-api-dev]', err);
+          console.error(`[talkart-api-dev] ${url}`, err);
           res.statusCode = 500;
           res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify({ error: 'llm_error', message: 'AI 服务暂时不可用，请稍后重试' }));
+          const isStt = url === '/api/stt';
+          res.end(JSON.stringify({
+            error: isStt ? 'stt_error' : 'llm_error',
+            message: isStt ? '语音转写服务暂时不可用，请稍后重试' : 'AI 服务暂时不可用，请稍后重试',
+          }));
         }
       });
     },
