@@ -45,6 +45,14 @@ export interface CanvasState {
     color?: string;
     strokeColor?: string;
   }>;
+  // 绘制进度状态
+  drawingProgress: {
+    isDrawing: boolean;
+    progress: number;
+    currentStep: number;
+    totalSteps: number;
+    message: string;
+  } | null;
 }
 
 export interface CanvasSlice extends CanvasState {
@@ -79,6 +87,14 @@ export interface CanvasSlice extends CanvasState {
     strokeColor?: string;
   }) => void;
   clearPaperTemplates: () => void;
+  // 绘制进度
+  setDrawingProgress: (progress: {
+    isDrawing: boolean;
+    progress: number;
+    currentStep: number;
+    totalSteps: number;
+    message: string;
+  } | null) => void;
 }
 
 export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
@@ -99,6 +115,7 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
   paperCode: null,
   paperCodeVersion: 0,
   paperTemplates: [],
+  drawingProgress: null,
 
   addElement: (el: SVGElement) => {
     set((state) => {
@@ -315,6 +332,12 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
   clearPaperTemplates: () => {
     set({
       paperTemplates: [],
+    });
+  },
+
+  setDrawingProgress: (progress) => {
+    set({
+      drawingProgress: progress,
     });
   },
 });
