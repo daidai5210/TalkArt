@@ -24,7 +24,7 @@ describe('normalizePlanStep', () => {
     });
     expect(tool).toBe('drawLine');
     expect(args.start).toEqual({ x: 1, y: 2, unit: 'mm' });
-    expect(args.stroke).toBe('#000000');
+    expect(args.stroke).toBe('#000');
   });
 
   it('converts drawLine points[3+] to drawPolyline', () => {
