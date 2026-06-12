@@ -1,9 +1,9 @@
-// api/asr.ts
-// BFF route: browser-recorded audio -> OpenAI Whisper transcription
+// api/stt.ts
+// BFF route: browser-recorded audio -> cloud speech-to-text (Whisper)
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-interface ASRRequestBody {
+interface STTRequestBody {
   audio?: string;
   mimeType?: string;
   language?: string;
@@ -37,7 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  const { audio, mimeType = 'audio/webm', language = 'zh' } = req.body as ASRRequestBody;
+  const { audio, mimeType = 'audio/webm', language = 'zh' } = req.body as STTRequestBody;
 
   if (!audio || typeof audio !== 'string') {
     sendError(res, 400, 'invalid_request', 'audio 不能为空');
@@ -46,7 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   const apiKey = process.env.OPENAI_API_KEY || '';
   if (!apiKey) {
-    sendError(res, 401, 'api_key_missing', '语音识别需要配置 OPENAI_API_KEY');
+    sendError(res, 401, 'api_key_missing', '语音转写需要在服务端配置 OPENAI_API_KEY');
     return;
   }
 
@@ -68,7 +68,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  const model = process.env.ASR_MODEL || 'whisper-1';
+  const model = process.env.STT_MODEL || process.env.ASR_MODEL || 'whisper-1';
   const extension = mimeType.includes('mp4') ? 'm4a' : 'webm';
 
   try {
@@ -90,14 +90,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
     if (!response.ok) {
       const errorBody = await response.text().catch(() => '');
-      console.error(`Whisper API error: status=${response.status}, body=${errorBody}`);
+      console.error(`STT API error: status=${response.status}, body=${errorBody}`);
 
       if (response.status === 401 || response.status === 403) {
-        sendError(res, 500, 'asr_error', '语音识别服务认证失败，请检查 OPENAI_API_KEY');
+        sendError(res, 500, 'stt_error', '语音转写服务认证失败，请检查 OPENAI_API_KEY');
         return;
       }
 
-      sendError(res, 500, 'asr_error', '语音识别服务暂时不可用，请稍后重试');
+      sendError(res, 500, 'stt_error', '语音转写服务暂时不可用，请稍后重试');
       return;
     }
 
@@ -105,11 +105,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     res.status(200).json({ text: data.text?.trim() ?? '' });
   } catch (err: unknown) {
     if (err instanceof Error && err.message.includes('timed out')) {
-      sendError(res, 504, 'timeout', '语音识别超时，请重试');
+      sendError(res, 504, 'timeout', '语音转写超时，请重试');
       return;
     }
 
-    console.error('ASR proxy error:', err);
-    sendError(res, 500, 'asr_error', '语音识别服务暂时不可用，请稍后重试');
+    console.error('STT proxy error:', err);
+    sendError(res, 500, 'stt_error', '语音转写服务暂时不可用，请稍后重试');
   }
 }

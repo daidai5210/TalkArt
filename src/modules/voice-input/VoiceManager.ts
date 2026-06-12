@@ -1,13 +1,13 @@
 /**
  * @module voice-input/VoiceManager
- * High-level manager that coordinates the ASR engine with the application.
+ * Coordinates browser microphone recording (STT input) with the application.
  */
 
-import type { ASREngineLike } from './ASREngineInterface';
-import { WhisperASREngine } from './WhisperASREngine';
-import type { VoiceManagerState, ASRResult } from './types';
+import type { STTEngineLike } from './STTEngine';
+import { BrowserSTTEngine } from './BrowserSTTEngine';
+import type { VoiceManagerState } from './types';
+import type { STTResult } from './STTEngine';
 
-/** Default error messages in Chinese for common failure scenarios. */
 const ERRORS = {
   NOT_SUPPORTED: '您的浏览器不支持麦克风录音，请使用文字输入',
   PERMISSION_DENIED: '麦克风权限被拒绝，请在浏览器设置中允许麦克风访问',
@@ -15,23 +15,23 @@ const ERRORS = {
 } as const;
 
 export class VoiceManager {
-  private engine: ASREngineLike;
+  private engine: STTEngineLike;
   private state: VoiceManagerState;
   private speechResultCallbacks: Array<(text: string, isFinal: boolean) => void> = [];
   private stateChangeCallbacks: Array<(state: VoiceManagerState) => void> = [];
   private errorCallbacks: Array<(error: string, code: string) => void> = [];
 
-  constructor(engine?: ASREngineLike) {
-    this.engine = engine ?? new WhisperASREngine();
+  constructor(engine?: STTEngineLike) {
+    this.engine = engine ?? new BrowserSTTEngine();
     this.state = {
       isListening: false,
       isSupported: this.engine.isSupported(),
       error: null,
     };
 
-    this.engine.onResult(this.handleASRResult.bind(this));
-    this.engine.onError(this.handleASRError.bind(this));
-    this.engine.onEnd(this.handleASREnd.bind(this));
+    this.engine.onResult(this.handleSTTResult.bind(this));
+    this.engine.onError(this.handleSTTError.bind(this));
+    this.engine.onEnd(this.handleSTTEnd.bind(this));
   }
 
   async startListening(): Promise<void> {
@@ -83,18 +83,18 @@ export class VoiceManager {
     return { ...this.state };
   }
 
-  private handleASRResult(result: ASRResult): void {
+  private handleSTTResult(result: STTResult): void {
     this.speechResultCallbacks.forEach((cb) => {
       cb(result.transcript, result.isFinal);
     });
   }
 
-  private handleASRError(error: string, code: string): void {
+  private handleSTTError(error: string, code: string): void {
     this.updateState({ isListening: false, error });
     this.notifyError(error, code);
   }
 
-  private handleASREnd(): void {
+  private handleSTTEnd(): void {
     if (this.state.isListening) {
       this.updateState({ isListening: false });
     }
@@ -128,6 +128,6 @@ export class VoiceManager {
   }
 
   isRecoverableError(code: string): boolean {
-    return code === 'transcription-failed' || code === 'network' || code === 'no-speech';
+    return code === 'transcription-failed' || code === 'no-speech';
   }
 }

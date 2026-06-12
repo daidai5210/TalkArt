@@ -50,7 +50,7 @@ const TalkArt: React.FC = () => {
     conversation,
   } = useTalkArt();
 
-  // Text input fallback state (when Web Speech API is not supported)
+  // Text input fallback state
   const [textInput, setTextInput] = useState('');
 
   const handleTextInputSubmit = (e: React.FormEvent) => {
@@ -239,7 +239,7 @@ const TalkArt: React.FC = () => {
         </form>
         <p className="text-xs text-gray-500 mt-1">
           {isSupported
-            ? '点击右下角麦克风录音，语音将通过云端识别；也可直接使用文字输入'
+            ? '语音交互：麦克风录音输入（STT）+ 浏览器语音播报（TTS）；也可直接使用文字输入'
             : '当前浏览器不支持麦克风录音，请使用文字输入'}
         </p>
       </div>

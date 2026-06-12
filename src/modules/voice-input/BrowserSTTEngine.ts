@@ -1,15 +1,10 @@
 /**
- * @module voice-input/WhisperASREngine
- * Records microphone audio in the browser and transcribes via BFF (/api/asr).
- *
- * Unlike the Web Speech API, this does not depend on Google's speech servers
- * (which are often blocked or unreachable). Transcription runs server-side
- * through OpenAI Whisper using the same API key as the LLM BFF.
+ * @module voice-input/BrowserSTTEngine
+ * Browser microphone recording + cloud STT via BFF (/api/stt).
  */
 
-import { transcribeAudioBlob } from './asr-client';
-import type { ASREngineLike } from './ASREngineInterface';
-import type { ASRResult } from './types';
+import { transcribeAudioBlob } from './stt-client';
+import type { STTEngineLike, STTResult } from './STTEngine';
 
 const CHUNK_MS = 2500;
 const SILENCE_FINALIZE_MS = 1800;
@@ -35,7 +30,7 @@ function mergeTranscript(current: string, next: string): string {
   return `${current}${trimmed}`;
 }
 
-export class WhisperASREngine implements ASREngineLike {
+export class BrowserSTTEngine implements STTEngineLike {
   private mediaRecorder: MediaRecorder | null = null;
   private mediaStream: MediaStream | null = null;
   private utteranceText = '';
@@ -43,7 +38,7 @@ export class WhisperASREngine implements ASREngineLike {
   private silenceTimer: ReturnType<typeof setTimeout> | null = null;
   private stopped = false;
 
-  private resultCallbacks: Array<(result: ASRResult) => void> = [];
+  private resultCallbacks: Array<(result: STTResult) => void> = [];
   private errorCallbacks: Array<(error: string, code: string) => void> = [];
   private endCallbacks: Array<() => void> = [];
 
@@ -92,7 +87,7 @@ export class WhisperASREngine implements ASREngineLike {
     this.mediaRecorder = null;
   }
 
-  onResult(callback: (result: ASRResult) => void): void {
+  onResult(callback: (result: STTResult) => void): void {
     this.resultCallbacks.push(callback);
   }
 
@@ -116,7 +111,7 @@ export class WhisperASREngine implements ASREngineLike {
     this.transcriptionChain = this.transcriptionChain
       .then(() => this.transcribeChunk(blob))
       .catch((err) => {
-        const message = err instanceof Error ? err.message : '语音识别失败';
+        const message = err instanceof Error ? err.message : '语音转写失败';
         this.errorCallbacks.forEach((cb) => cb(message, 'transcription-failed'));
       });
   }
@@ -158,7 +153,7 @@ export class WhisperASREngine implements ASREngineLike {
   }
 
   private emitResult(transcript: string, isFinal: boolean): void {
-    const result: ASRResult = {
+    const result: STTResult = {
       transcript,
       isFinal,
       confidence: isFinal ? 0.9 : 0.5,

@@ -1,0 +1,1 @@
+export { TTSPlayer } from './TTSPlayer';
