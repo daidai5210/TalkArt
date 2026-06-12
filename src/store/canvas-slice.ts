@@ -9,15 +9,23 @@ export interface SVGElement {
 export interface CanvasState {
   elements: SVGElement[];
   selectedId: string | null;
+  canvasWidth: number;
+  canvasHeight: number;
+  widthMm: number;
+  heightMm: number;
+  defaultUnit: 'mm' | 'px';
   history: { elements: SVGElement[]; selectedId: string | null }[];
   historyIndex: number;
 }
 
 export interface CanvasSlice extends CanvasState {
   addElement: (el: SVGElement) => void;
+  addElements: (els: SVGElement[]) => void;
   updateElement: (id: string, props: Record<string, unknown>) => void;
   deleteElement: (id: string) => void;
   selectElement: (id: string | null) => void;
+  setCanvasDimensions: (width: number, height: number, widthMm?: number, heightMm?: number) => void;
+  setDefaultUnit: (unit: 'mm' | 'px') => void;
   undo: () => void;
   redo: () => void;
   clearCanvas: () => void;
@@ -27,6 +35,11 @@ export interface CanvasSlice extends CanvasState {
 export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
   elements: [],
   selectedId: null,
+  canvasWidth: 800,
+  canvasHeight: 600,
+  widthMm: 211.67,
+  heightMm: 158.75,
+  defaultUnit: 'px',
   history: [],
   historyIndex: -1,
 
@@ -43,6 +56,35 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
         historyIndex: newHistory.length - 1,
       };
     });
+  },
+
+  addElements: (els: SVGElement[]) => {
+    if (els.length === 0) return;
+    set((state) => {
+      const newElements = [...state.elements, ...els];
+      const newHistory = [
+        ...state.history.slice(0, state.historyIndex + 1),
+        { elements: newElements, selectedId: state.selectedId },
+      ];
+      return {
+        elements: newElements,
+        history: newHistory,
+        historyIndex: newHistory.length - 1,
+      };
+    });
+  },
+
+  setCanvasDimensions: (width, height, widthMm, heightMm) => {
+    set((state) => ({
+      canvasWidth: width,
+      canvasHeight: height,
+      widthMm: widthMm ?? state.widthMm,
+      heightMm: heightMm ?? state.heightMm,
+    }));
+  },
+
+  setDefaultUnit: (unit) => {
+    set({ defaultUnit: unit });
   },
 
   updateElement: (id: string, props: Record<string, unknown>) => {

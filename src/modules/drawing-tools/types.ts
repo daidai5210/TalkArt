@@ -9,10 +9,14 @@
  * The AI can specify position either semantically (e.g., "center", "top-left")
  * or with exact coordinates.
  */
+export type CoordinateUnit = 'mm' | 'px';
+
 export interface SemanticPosition {
   semantic?: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top' | 'bottom' | 'left' | 'right';
   x?: number;
   y?: number;
+  /** Coordinate unit for x/y. Defaults to canvas defaultUnit or px. */
+  unit?: CoordinateUnit;
 }
 
 /**
@@ -24,6 +28,8 @@ export interface SemanticSize {
   semantic?: 'small' | 'medium' | 'large';
   width?: number;
   height?: number;
+  /** Coordinate unit for width/height. Defaults to canvas defaultUnit or px. */
+  unit?: CoordinateUnit;
 }
 
 /**
@@ -35,6 +41,7 @@ export interface ShapeStyle {
   stroke?: string;
   strokeWidth?: number;
   cornerRadius?: number; // for rect (rx/ry)
+  unit?: CoordinateUnit;
 }
 
 /**
@@ -54,12 +61,29 @@ export interface ToolResult {
     type: string;
     props: Record<string, unknown>;
   };
+  /** Multiple elements produced by executeDrawingPlan. */
+  elements?: Array<{
+    id: string;
+    type: string;
+    props: Record<string, unknown>;
+  }>;
   /** Action descriptor for canvas operations (e.g., 'undo', 'export', 'clear') */
-  action?: 'undo' | 'export' | 'clear';
+  action?: 'undo' | 'export' | 'clear' | 'setCanvasSize' | 'setCanvasUnit';
   /** Export format (only when action is 'export') */
   format?: 'svg' | 'png';
   /** Export filename (only when action is 'export') */
   filename?: string;
+  /** Canvas size update (when action is 'setCanvasSize') */
+  canvasSize?: { width: number; height: number; widthMm?: number; heightMm?: number };
+  /** Default unit update (when action is 'setCanvasUnit') */
+  defaultUnit?: CoordinateUnit;
+  /** Plan execution summary (when tool is executeDrawingPlan) */
+  planResult?: {
+    planId: string;
+    completedSteps: number;
+    totalSteps: number;
+    errors?: Array<{ stepIndex: number; tool: string; error: string }>;
+  };
 }
 
 /**
@@ -69,6 +93,12 @@ export interface ToolResult {
 export interface CanvasContext {
   width: number;
   height: number;
+  /** Canvas width in mm (design unit). */
+  widthMm?: number;
+  /** Canvas height in mm (design unit). */
+  heightMm?: number;
+  /** Default coordinate unit for bare numeric values. */
+  defaultUnit?: CoordinateUnit;
   elements: Array<{
     id: string;
     type: string;
@@ -103,5 +133,6 @@ export interface CanvasContext {
 export interface LineEndpoint {
   x?: number;
   y?: number;
+  unit?: CoordinateUnit;
   semantic?: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top' | 'bottom' | 'left' | 'right';
 }

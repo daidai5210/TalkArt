@@ -58,8 +58,13 @@ import {
   clearCanvas,
   undoAction,
   exportImage,
+  setCanvasSize,
+  setCanvasUnit,
 } from '../drawing-tools/canvas-ops';
 import { TOOL_DEFINITIONS } from '../drawing-tools/tool-definitions';
+import { EXECUTE_DRAWING_PLAN_DEFINITION } from '../drawing-tools/v2/tool-schema-skeleton';
+import { executeDrawingPlanAsTool } from '../drawing-tools/v2/plan-executor';
+import type { ExecuteDrawingPlanInput } from '../drawing-tools/v2/execute-drawing-plan.types';
 
 /**
  * Extended ToolResult that includes canvas-level action descriptors
@@ -67,7 +72,16 @@ import { TOOL_DEFINITIONS } from '../drawing-tools/tool-definitions';
  */
 export interface ExtendedToolResult extends ToolResult {
   /** Action descriptor for canvas operations (undo, export, clear). */
-  action?: 'undo' | 'export' | 'clear';
+  action?: 'undo' | 'export' | 'clear' | 'setCanvasSize' | 'setCanvasUnit';
+  canvasSize?: { width: number; height: number; widthMm?: number; heightMm?: number };
+  defaultUnit?: 'mm' | 'px';
+  elements?: Array<{ id: string; type: string; props: Record<string, unknown> }>;
+  planResult?: {
+    planId: string;
+    completedSteps: number;
+    totalSteps: number;
+    errors?: Array<{ stepIndex: number; tool: string; error: string }>;
+  };
   /** Export format (when action is 'export'). */
   format?: 'svg' | 'png';
   /** Export filename (when action is 'export'). */
@@ -121,6 +135,8 @@ const TOOL_REGISTRY: Record<string, ToolFunction> = {
   clearCanvas: clearCanvas as ToolFunction,
   undoAction: undoAction as ToolFunction,
   exportImage: exportImage as ToolFunction,
+  setCanvasSize: setCanvasSize as ToolFunction,
+  setCanvasUnit: setCanvasUnit as ToolFunction,
 };
 
 /**
@@ -192,12 +208,28 @@ export class ToolDispatcher {
    * Internal execution logic shared by dispatch() and execute().
    */
   private executeInternal(functionName: string, args: Record<string, any>): ExtendedToolResult {
+    if (functionName === 'executeDrawingPlan') {
+      try {
+        const result = executeDrawingPlanAsTool(
+          this.canvasContext,
+          args as ExecuteDrawingPlanInput,
+          (tool, toolArgs) => this.executeInternal(tool, toolArgs),
+        );
+        return result as ExtendedToolResult;
+      } catch (error) {
+        return {
+          success: false,
+          error: `执行绘图计划时出错: ${error instanceof Error ? error.message : String(error)}`,
+        };
+      }
+    }
+
     const toolFn = TOOL_REGISTRY[functionName];
 
     if (!toolFn) {
       return {
         success: false,
-        error: `未知的绘图工具: "${functionName}"。可用的工具有: ${Object.keys(TOOL_REGISTRY).join(', ')}`,
+        error: `未知的绘图工具: "${functionName}"。可用的工具有: ${this.getToolNames().join(', ')}`,
       };
     }
 
@@ -210,6 +242,15 @@ export class ToolDispatcher {
         error: `执行工具 "${functionName}" 时出错: ${error instanceof Error ? error.message : String(error)}`,
       };
     }
+  }
+
+  /**
+   * Execute multiple tool calls sequentially (BFF multi tool_calls support).
+   */
+  dispatchMultiple(
+    calls: Array<{ name: string; arguments: Record<string, any> }>,
+  ): ExtendedToolResult[] {
+    return calls.map((call) => this.dispatch(call.name, call.arguments));
   }
 
   /**
@@ -233,8 +274,8 @@ export class ToolDispatcher {
    * @returns Array of OpenAI-compatible tool definitions
    */
   getToolDefinitions(): any[] {
-    // Return a mutable copy so callers can't accidentally modify the original
-    return [...TOOL_DEFINITIONS];
+    // v0.1 tools + Phase 2 orchestration tool
+    return [...TOOL_DEFINITIONS, EXECUTE_DRAWING_PLAN_DEFINITION];
   }
 
   /**
@@ -253,6 +294,6 @@ export class ToolDispatcher {
    * @returns Array of tool function names
    */
   getToolNames(): string[] {
-    return Object.keys(TOOL_REGISTRY);
+    return [...Object.keys(TOOL_REGISTRY), 'executeDrawingPlan'];
   }
 }

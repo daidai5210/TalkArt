@@ -9,7 +9,8 @@
  * actual canvas operations based on the returned results.
  */
 
-import { CanvasContext, ToolResult } from './types';
+import { mmToPx, pxToMm } from './coordinate-utils';
+import { CanvasContext, CoordinateUnit, ToolResult } from './types';
 
 /**
  * Clear all elements from the canvas.
@@ -68,5 +69,46 @@ export function exportImage(
     action: 'export' as const,
     format,
     filename,
+  };
+}
+
+/**
+ * Set canvas dimensions in mm or px.
+ */
+export function setCanvasSize(
+  _context: CanvasContext,
+  params: { width: number; height: number; unit?: CoordinateUnit },
+): ToolResult {
+  const unit = params.unit ?? 'mm';
+  const widthPx = unit === 'mm' ? mmToPx(params.width) : params.width;
+  const heightPx = unit === 'mm' ? mmToPx(params.height) : params.height;
+
+  return {
+    success: true,
+    action: 'setCanvasSize',
+    canvasSize: {
+      width: widthPx,
+      height: heightPx,
+      widthMm: unit === 'mm' ? params.width : pxToMm(widthPx),
+      heightMm: unit === 'mm' ? params.height : pxToMm(heightPx),
+    },
+  };
+}
+
+/**
+ * Set the default coordinate unit for subsequent tool calls.
+ */
+export function setCanvasUnit(
+  _context: CanvasContext,
+  params: { unit: CoordinateUnit },
+): ToolResult {
+  if (params.unit !== 'mm' && params.unit !== 'px') {
+    return { success: false, error: 'unit 必须是 mm 或 px' };
+  }
+
+  return {
+    success: true,
+    action: 'setCanvasUnit',
+    defaultUnit: params.unit,
   };
 }

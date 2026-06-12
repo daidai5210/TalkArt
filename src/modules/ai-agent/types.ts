@@ -47,11 +47,15 @@ export interface Message {
  * - `function_call`: The LLM has decided to call a drawing tool.
  *   The `function` field contains the tool name and parsed arguments.
  */
+export interface LLMFunctionCall {
+  name: string;
+  arguments: Record<string, any>;
+}
+
 export interface LLMResponse {
-  type: 'confirmation' | 'function_call';
+  type: 'confirmation' | 'function_call' | 'tool_calls';
   content?: string;
-  function?: {
-    name: string;
-    arguments: Record<string, any>;
-  };
+  function?: LLMFunctionCall;
+  /** Multiple tool calls from BFF (Phase 2+). */
+  tool_calls?: LLMFunctionCall[];
 }
