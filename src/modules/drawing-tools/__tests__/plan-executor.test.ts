@@ -7,6 +7,7 @@ import { describe, it, expect } from 'vitest';
 import { ToolDispatcher } from '../../ai-agent/ToolDispatcher';
 import { mmToPx, pxToMm } from '../coordinate-utils';
 import { executeDrawingPlan } from '../v2/plan-executor';
+import { KANGSHIFU_PLAN_FIXTURE } from './kangshifu-plan.fixture';
 import type { CanvasContext } from '../types';
 
 function createContext(): CanvasContext {
@@ -113,5 +114,18 @@ describe('executeDrawingPlan', () => {
     expect(result.success).toBe(true);
     expect(result.elements).toHaveLength(3);
     expect(result.planResult?.completedSteps).toBe(3);
+  });
+
+  it('executes kangshifu package plan fixture (phase 6)', () => {
+    const context = createContext();
+    const dispatcher = new ToolDispatcher(context);
+
+    const result = dispatcher.execute('executeDrawingPlan', KANGSHIFU_PLAN_FIXTURE);
+
+    expect(result.success).toBe(true);
+    expect(result.planResult?.completedSteps).toBe(5);
+    expect(result.elements?.length).toBeGreaterThanOrEqual(4);
+    const image = result.elements?.find((el) => el.type === 'image');
+    expect(image).toBeDefined();
   });
 });
