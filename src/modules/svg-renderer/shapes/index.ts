@@ -7,3 +7,5 @@ export { TriangleShape } from './TriangleShape';
 export { PathShape } from './PathShape';
 export { PolylineShape } from './PolylineShape';
 export { PolygonShape } from './PolygonShape';
+export { ImageShape } from './ImageShape';
+export { GradientDefs } from './GradientDefs';

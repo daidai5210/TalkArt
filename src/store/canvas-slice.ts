@@ -16,7 +16,7 @@ export const DEFAULT_LAYER: Layer = {
 
 export interface SVGElement {
   id: string;
-  type: 'rect' | 'circle' | 'ellipse' | 'line' | 'text' | 'triangle' | 'path' | 'polyline' | 'polygon';
+  type: 'rect' | 'circle' | 'ellipse' | 'line' | 'text' | 'triangle' | 'path' | 'polyline' | 'polygon' | 'image';
   layerId?: string;
   props: Record<string, unknown>;
 }

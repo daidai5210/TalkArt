@@ -512,7 +512,7 @@ describe('ToolDispatcher', () => {
     it('should return all registered tool names', () => {
       const names = dispatcher.getToolNames();
 
-      expect(names).toHaveLength(28);
+      expect(names).toHaveLength(30);
       expect(names).toContain('executeDrawingPlan');
       expect(names).toContain('drawPolyline');
       expect(names).toContain('createLayer');
@@ -531,6 +531,8 @@ describe('ToolDispatcher', () => {
       expect(names).toContain('clearCanvas');
       expect(names).toContain('undoAction');
       expect(names).toContain('redoAction');
+      expect(names).toContain('insertImage');
+      expect(names).toContain('setFillGradient');
       expect(names).toContain('exportImage');
     });
   });
@@ -539,7 +541,7 @@ describe('ToolDispatcher', () => {
     it('should return all 15 tool definitions', () => {
       const definitions = dispatcher.getToolDefinitions();
 
-      expect(definitions).toHaveLength(16);
+      expect(definitions).toHaveLength(18);
       definitions.forEach((def) => {
         expect(def.type).toBe('function');
         expect(def.function.name).toBeTruthy();
@@ -553,7 +555,7 @@ describe('ToolDispatcher', () => {
       defs1.push({ type: 'function', function: { name: 'fake', description: '', parameters: { type: 'object', properties: {} } } });
 
       const defs2 = dispatcher.getToolDefinitions();
-      expect(defs2).toHaveLength(16); // original unaffected
+      expect(defs2).toHaveLength(18); // original unaffected
     });
   });
 
