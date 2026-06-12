@@ -8,6 +8,9 @@ import {
   LineShape,
   TextShape,
   TriangleShape,
+  PathShape,
+  PolylineShape,
+  PolygonShape,
 } from './shapes';
 
 interface ElementRendererProps {
@@ -40,6 +43,12 @@ export const ElementRenderer: React.FC<ElementRendererProps> = ({ element }) => 
         return <TextShape {...(props as any)} />;
       case 'triangle':
         return <TriangleShape {...(props as any)} />;
+      case 'path':
+        return <PathShape {...(props as any)} />;
+      case 'polyline':
+        return <PolylineShape {...(props as any)} />;
+      case 'polygon':
+        return <PolygonShape {...(props as any)} />;
       default:
         console.warn(`Unknown element type: ${type}`);
         return null;

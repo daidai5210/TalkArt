@@ -4,3 +4,6 @@ export { EllipseShape } from './EllipseShape';
 export { LineShape } from './LineShape';
 export { TextShape } from './TextShape';
 export { TriangleShape } from './TriangleShape';
+export { PathShape } from './PathShape';
+export { PolylineShape } from './PolylineShape';
+export { PolygonShape } from './PolygonShape';

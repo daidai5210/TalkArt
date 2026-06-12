@@ -512,9 +512,10 @@ describe('ToolDispatcher', () => {
     it('should return all 15 registered tool names', () => {
       const names = dispatcher.getToolNames();
 
-      expect(names).toHaveLength(18);
+      expect(names).toHaveLength(27);
       expect(names).toContain('executeDrawingPlan');
-      expect(names).toContain('setCanvasSize');
+      expect(names).toContain('drawPolyline');
+      expect(names).toContain('createLayer');
       expect(names).toContain('drawCircle');
       expect(names).toContain('drawRect');
       expect(names).toContain('drawEllipse');

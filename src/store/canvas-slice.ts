@@ -1,13 +1,29 @@
 import { StateCreator } from 'zustand';
 
+export interface Layer {
+  id: string;
+  name: string;
+  visible: boolean;
+  zIndex: number;
+}
+
+export const DEFAULT_LAYER: Layer = {
+  id: 'layer-default',
+  name: '默认层',
+  visible: true,
+  zIndex: 0,
+};
+
 export interface SVGElement {
   id: string;
-  type: 'rect' | 'circle' | 'ellipse' | 'line' | 'text' | 'triangle';
+  type: 'rect' | 'circle' | 'ellipse' | 'line' | 'text' | 'triangle' | 'path' | 'polyline' | 'polygon';
+  layerId?: string;
   props: Record<string, unknown>;
 }
 
 export interface CanvasState {
   elements: SVGElement[];
+  layers: Layer[];
   selectedId: string | null;
   canvasWidth: number;
   canvasHeight: number;
@@ -24,6 +40,12 @@ export interface CanvasSlice extends CanvasState {
   updateElement: (id: string, props: Record<string, unknown>) => void;
   deleteElement: (id: string) => void;
   selectElement: (id: string | null) => void;
+  createLayer: (layer: Layer) => void;
+  deleteLayer: (layerId: string) => void;
+  renameLayer: (layerId: string, name: string) => void;
+  setLayerVisibility: (layerId: string, visible: boolean) => void;
+  setLayerOrder: (layerId: string, zIndex: number) => void;
+  moveElementToLayer: (elementId: string, layerId: string) => void;
   setCanvasDimensions: (width: number, height: number, widthMm?: number, heightMm?: number) => void;
   setDefaultUnit: (unit: 'mm' | 'px') => void;
   undo: () => void;
@@ -34,6 +56,7 @@ export interface CanvasSlice extends CanvasState {
 
 export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
   elements: [],
+  layers: [DEFAULT_LAYER],
   selectedId: null,
   canvasWidth: 800,
   canvasHeight: 600,
@@ -123,6 +146,51 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
 
   selectElement: (id: string | null) => {
     set({ selectedId: id });
+  },
+
+  createLayer: (layer) => {
+    set((state) => ({
+      layers: [...state.layers, layer],
+    }));
+  },
+
+  deleteLayer: (layerId) => {
+    set((state) => ({
+      layers: state.layers.filter((l) => l.id !== layerId),
+      elements: state.elements.map((el) =>
+        (el.layerId ?? el.props.layerId) === layerId
+          ? { ...el, layerId: 'layer-default', props: { ...el.props, layerId: 'layer-default' } }
+          : el,
+      ),
+    }));
+  },
+
+  renameLayer: (layerId, name) => {
+    set((state) => ({
+      layers: state.layers.map((l) => (l.id === layerId ? { ...l, name } : l)),
+    }));
+  },
+
+  setLayerVisibility: (layerId, visible) => {
+    set((state) => ({
+      layers: state.layers.map((l) => (l.id === layerId ? { ...l, visible } : l)),
+    }));
+  },
+
+  setLayerOrder: (layerId, zIndex) => {
+    set((state) => ({
+      layers: state.layers.map((l) => (l.id === layerId ? { ...l, zIndex } : l)),
+    }));
+  },
+
+  moveElementToLayer: (elementId, layerId) => {
+    set((state) => ({
+      elements: state.elements.map((el) =>
+        el.id === elementId
+          ? { ...el, layerId, props: { ...el.props, layerId } }
+          : el,
+      ),
+    }));
   },
 
   undo: () => {

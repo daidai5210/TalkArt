@@ -9,6 +9,7 @@ export const Canvas: React.FC = () => {
   const selectElement = useStore((state) => state.selectElement);
   const canvasWidth = useStore((state) => state.canvasWidth);
   const canvasHeight = useStore((state) => state.canvasHeight);
+  const layers = useStore((state) => state.layers);
 
   const selectedElement = elements.find((el) => el.id === selectedId) || null;
 
@@ -41,10 +42,22 @@ export const Canvas: React.FC = () => {
             fill="#ffffff"
           />
 
-          {/* Render all elements */}
-          {elements.map((element) => (
-            <ElementRenderer key={element.id} element={element} />
-          ))}
+          {/* Render elements grouped by layer (z-index order) */}
+          {[...layers]
+            .sort((a, b) => a.zIndex - b.zIndex)
+            .filter((layer) => layer.visible)
+            .map((layer) => (
+              <g key={layer.id} data-layer={layer.id}>
+                {elements
+                  .filter(
+                    (el) => (el.layerId ?? (el.props.layerId as string)) === layer.id
+                      || (!(el.layerId ?? el.props.layerId) && layer.id === 'layer-default'),
+                  )
+                  .map((element) => (
+                    <ElementRenderer key={element.id} element={element} />
+                  ))}
+              </g>
+            ))}
 
           {/* Selection overlay on top */}
           {selectedElement && <SelectionOverlay element={selectedElement} />}
