@@ -9,3 +9,5 @@
 export { CanvasLayer } from './CanvasLayer';
 export { CodeExecutor, type ExecuteResult } from './CodeExecutor';
 export { CanvasRenderer } from './CanvasRenderer';
+export { StreamingExecutor, type DrawingProgress } from './StreamingExecutor';
+export { DrawingProgressIndicator } from './DrawingProgress';
