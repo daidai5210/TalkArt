@@ -25,6 +25,7 @@ import { VoiceManager } from '@/modules/voice-input/VoiceManager';
 import { WakeWordDetector } from '@/modules/voice-input/WakeWordDetector';
 import { EndPhraseDetector } from '@/modules/voice-input/EndPhraseDetector';
 import { VoiceCommandRouter } from '@/modules/voice-input/VoiceCommandRouter';
+import { normalizeVoiceTranscript } from '@/modules/voice-input/normalize-transcript';
 import { exportSVG, exportPNG } from '@/modules/export';
 import { useDemoMode } from './useDemoMode';
 import type { AgentState } from '@/modules/ai-agent/types';
@@ -196,7 +197,10 @@ export function useTalkArt(): TalkArtState {
       // Utterance complete — stop mic; user must click mic again for next input
       stopMicAfterUtterance();
 
-      const voiceCmd = voiceCommandRouter.detect(text);
+      const cleaned = normalizeVoiceTranscript(text);
+      setTranscriptRef.current(cleaned);
+
+      const voiceCmd = voiceCommandRouter.detect(cleaned);
       if (voiceCmd === 'undo') {
         undoRef.current();
         setAgentStateRef.current('idle');
@@ -208,7 +212,7 @@ export function useTalkArt(): TalkArtState {
         return;
       }
 
-      const phraseType = endPhraseDetector.detect(text);
+      const phraseType = endPhraseDetector.detect(cleaned);
 
       if (phraseType === 'correction') {
         setConfirmationRef.current('');
@@ -218,9 +222,20 @@ export function useTalkArt(): TalkArtState {
 
       if (phraseType === 'end') {
         if (state === 'confirming') {
-          processConfirmationRef.current(text).catch((err) => {
+          processConfirmationRef.current(cleaned).catch((err) => {
             setErrorRef.current(err instanceof Error ? err.message : '执行失败');
           });
+        } else if (state === 'listening' && !isProcessingRef.current) {
+          // One-shot utterance with direct-draw intent (e.g. 「现在就画」)
+          isProcessingRef.current = true;
+          processVoiceInputRef.current(cleaned)
+            .then(() => {
+              isProcessingRef.current = false;
+            })
+            .catch((err) => {
+              isProcessingRef.current = false;
+              setErrorRef.current(err instanceof Error ? err.message : '处理失败');
+            });
         }
         return;
       }
@@ -228,7 +243,7 @@ export function useTalkArt(): TalkArtState {
       // No end/correction phrase — send to LLM
       if (!isProcessingRef.current) {
         isProcessingRef.current = true;
-        processVoiceInputRef.current(text)
+        processVoiceInputRef.current(cleaned)
           .then(() => {
             isProcessingRef.current = false;
           })

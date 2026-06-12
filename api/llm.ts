@@ -9,8 +9,12 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 interface CanvasContext {
   width: number;
   height: number;
-  selected_element: unknown | null;
-  elements: unknown[];
+  /** @deprecated full elements array — prefer element_count */
+  elements?: unknown[];
+  element_count?: number;
+  element_types?: string[];
+  selected_element?: unknown | null;
+  selected_id?: string | null;
 }
 
 interface ChatMessage {
@@ -44,12 +48,14 @@ interface LLMRequest {
 function buildSystemPrompt(canvasContext?: CanvasContext): string {
   const width = canvasContext?.width ?? 800;
   const height = canvasContext?.height ?? 600;
-  const selectedElement = canvasContext?.selected_element
-    ? JSON.stringify(canvasContext.selected_element)
-    : '无';
-  const elementsSummary = canvasContext?.elements?.length
-    ? `${canvasContext.elements.length} 个元素: ${JSON.stringify(canvasContext.elements)}`
-    : '空画布';
+  const selectedElement = canvasContext?.selected_id ?? '无';
+  const elementCount =
+    canvasContext?.element_count ?? canvasContext?.elements?.length ?? 0;
+  const typeSummary = canvasContext?.element_types?.length
+    ? `（${canvasContext.element_types.join('、')}）`
+    : '';
+  const elementsSummary =
+    elementCount > 0 ? `${elementCount} 个元素${typeSummary}` : '空画布';
 
   const mmWidth = ((width * 25.4) / 96).toFixed(1);
   const mmHeight = ((height * 25.4) / 96).toFixed(1);
@@ -58,16 +64,14 @@ function buildSystemPrompt(canvasContext?: CanvasContext): string {
 你的任务是理解用户的绘图需求，通过多轮对话确认后，调用绘图工具执行。
 
 规则：
-1. 用户描述绘图需求后，先反问确认，不要直接调用工具
-2. 确认时简洁明了，1-2 句话
-3. 用户说"开始吧"/"可以了"/"好的"/"行"/"画吧"等确认词后，立即调用对应工具
+1. 用户描述绘图需求后，先简短反问确认（1-2 句），不要冗长解释
+2. 若用户在一句话中明确表示立即绘制（如「直接画」「现在就画」「马上就画」），跳过反问，直接调用 executeDrawingPlan 或合适工具
 4. 用户说"不对"/"不是"/"重新来"/"换个"后，放弃当前意图，重新询问
 5. 模糊指令（"大一点"）基于画布上下文推断目标元素和参数
 6. 空间描述（"中间"、"左边"、"右上角"）使用语义位置参数
-7. 确认工具调用前说一句简短确认语
-8. 对话语气自然、友好、简洁
-9. 复杂多步场景优先使用 executeDrawingPlan 一次提交所有步骤
-10. 精确尺寸优先使用 unit:"mm"，96 DPI 换算：1mm ≈ 3.78px
+7. 对话语气自然、友好、简洁
+8. 复杂多步场景（奥运五环、国旗、多物体）必须用 executeDrawingPlan 一次提交，steps 控制在 20 步以内
+9. 精确尺寸优先使用 unit:"mm"，96 DPI 换算：1mm ≈ 3.78px
 
 画布上下文：
 - 画布大小: ${width}×${height}px（约 ${mmWidth}×${mmHeight}mm）
@@ -176,6 +180,7 @@ export default async function handler(
   const payload: Record<string, unknown> = {
     model: config.model,
     messages: fullMessages,
+    max_tokens: 4096,
   };
 
   if (tools && Array.isArray(tools) && tools.length > 0) {
@@ -194,7 +199,7 @@ export default async function handler(
         },
         body: JSON.stringify(payload),
       }),
-      15_000 // 15 seconds
+      90_000 // 90 seconds — complex tool calls need more time
     );
 
     // 7. Handle LLM API errors

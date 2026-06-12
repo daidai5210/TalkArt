@@ -55,19 +55,14 @@ describe('EndPhraseDetector', () => {
       expect(detector.isEndPhrase('没问题')).toBe(true);
     });
 
-    it('should detect "对" as end phrase', () => {
-      const detector = new EndPhraseDetector();
-      expect(detector.isEndPhrase('对')).toBe(true);
-    });
-
     it('should detect "是的" as end phrase', () => {
       const detector = new EndPhraseDetector();
       expect(detector.isEndPhrase('是的')).toBe(true);
     });
 
-    it('should detect "嗯" as end phrase', () => {
+    it('should detect "直接就画" as end phrase', () => {
       const detector = new EndPhraseDetector();
-      expect(detector.isEndPhrase('嗯')).toBe(true);
+      expect(detector.isEndPhrase('现在就画')).toBe(true);
     });
 
     it('should NOT detect "画一个圆" as end phrase', () => {
@@ -162,9 +157,9 @@ describe('EndPhraseDetector', () => {
       expect(detector.detect('画一个圆')).toBe('none');
     });
 
-    it('should return "end" for "对" (simple affirmation)', () => {
+    it('should return "end" for "直接就画" in a longer utterance', () => {
       const detector = new EndPhraseDetector();
-      expect(detector.detect('对')).toBe('end');
+      expect(detector.detect('画奥运五环，现在就画')).toBe('end');
     });
 
     it('should return "end" for "好的开始吧" (multiple end phrases)', () => {
