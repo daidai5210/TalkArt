@@ -32,6 +32,7 @@ import { TOOL_DEFINITIONS } from '../modules/drawing-tools';
 import { PHASE5_TOOL_DEFINITIONS } from '../modules/drawing-tools/v2/phase5-tool-definitions';
 import { EXECUTE_DRAWING_PLAN_DEFINITION } from '../modules/drawing-tools/v2/tool-schema-skeleton';
 import type { LLMFunctionCall } from '../modules/ai-agent/types';
+import { isLLMServiceError } from '../modules/ai-agent/llm-response-utils';
 import type { CanvasContext } from '../modules/drawing-tools/types';
 import type { CanvasSlice, SVGElement } from './canvas-slice';
 
@@ -452,8 +453,13 @@ export const createAgentSlice: StateCreator<CanvasSlice & AgentSlice, [], [], Ag
       // Send user message to LLM
       const response: LLMResponse = await manager.processUserMessage(text, canvasContext);
 
-      if (response.type === 'confirmation') {
-        // LLM is asking the user to confirm
+      if (response.type === 'error' || isLLMServiceError(response.content)) {
+        const content = response.content || 'AI 服务出错，请重试';
+        addMessage({ role: 'assistant', content });
+        setError(content);
+        setConfirmation('');
+        setAgentState('error');
+      } else if (response.type === 'confirmation') {
         const content = response.content || '请确认是否继续？';
         addMessage({ role: 'assistant', content });
         setConfirmation(content);
@@ -496,7 +502,13 @@ export const createAgentSlice: StateCreator<CanvasSlice & AgentSlice, [], [], Ag
       // Send confirmation to LLM
       const response: LLMResponse = await manager.processConfirmation(text, canvasContext);
 
-      if (response.type === 'function_call' || response.type === 'tool_calls') {
+      if (response.type === 'error' || isLLMServiceError(response.content)) {
+        const content = response.content || 'AI 服务出错，请重试';
+        addMessage({ role: 'assistant', content });
+        setError(content);
+        setConfirmation('');
+        setAgentState('error');
+      } else if (response.type === 'function_call' || response.type === 'tool_calls') {
         const outcome = processLLMToolResponse(response, dispatcher, get, addMessage);
         if (outcome.success) {
           setAgentState('idle');
@@ -506,8 +518,6 @@ export const createAgentSlice: StateCreator<CanvasSlice & AgentSlice, [], [], Ag
           setAgentState('error');
         }
       } else if (response.type === 'confirmation') {
-        // LLM returned another confirmation instead of a function call.
-        // This can happen if the LLM needs more information.
         const content = response.content || '请提供更多信息。';
         addMessage({ role: 'assistant', content });
         setConfirmation(content);
