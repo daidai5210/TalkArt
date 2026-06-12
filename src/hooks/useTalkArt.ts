@@ -25,7 +25,6 @@ import { VoiceManager } from '@/modules/voice-input/VoiceManager';
 import { WakeWordDetector } from '@/modules/voice-input/WakeWordDetector';
 import { EndPhraseDetector } from '@/modules/voice-input/EndPhraseDetector';
 import { VoiceCommandRouter } from '@/modules/voice-input/VoiceCommandRouter';
-import { TTSPlayer } from '@/modules/voice-output/TTSPlayer';
 import { exportSVG, exportPNG } from '@/modules/export';
 import { useDemoMode } from './useDemoMode';
 import type { AgentState } from '@/modules/ai-agent/types';
@@ -122,7 +121,6 @@ export function useTalkArt(): TalkArtState {
   const wakeWordDetectorRef = useRef<WakeWordDetector | null>(null);
   const endPhraseDetectorRef = useRef<EndPhraseDetector | null>(null);
   const voiceCommandRouterRef = useRef<VoiceCommandRouter | null>(null);
-  const ttsPlayerRef = useRef<TTSPlayer | null>(null);
   const { demoMode } = useDemoMode();
   const isListeningRef = useRef(false);
   const isProcessingRef = useRef(false);
@@ -163,15 +161,10 @@ export function useTalkArt(): TalkArtState {
   if (!voiceCommandRouterRef.current) {
     voiceCommandRouterRef.current = new VoiceCommandRouter();
   }
-  if (!ttsPlayerRef.current) {
-    ttsPlayerRef.current = new TTSPlayer();
-  }
-
   const voiceManager = voiceManagerRef.current;
   const wakeWordDetector = wakeWordDetectorRef.current;
   const endPhraseDetector = endPhraseDetectorRef.current;
   const voiceCommandRouter = voiceCommandRouterRef.current;
-  const ttsPlayer = ttsPlayerRef.current;
 
   // ---------------------------------------------------------------------------
   // Wire up voice callbacks (once)
@@ -182,75 +175,67 @@ export function useTalkArt(): TalkArtState {
     if (callbacksInitializedRef.current) return;
     callbacksInitializedRef.current = true;
 
+    const stopMicAfterUtterance = () => {
+      if (isListeningRef.current) {
+        voiceManager.stopListening();
+        isListeningRef.current = false;
+        setIsListening(false);
+      }
+    };
+
     // Speech result handler: core of the state machine
     voiceManager.onSpeechResult((text, isFinal) => {
       // Always update the transcript for UI display
       setTranscriptRef.current(text);
 
-      // Check for wake word when idle
-      if (agentStateRef.current === 'idle' || !isListeningRef.current) {
-        const wakeDetected = wakeWordDetector.detect(text);
-        if (wakeDetected) {
-          setAgentStateRef.current('wake_word');
-          // Start listening after wake word detection
-          setAgentStateRef.current('listening');
-          void voiceManager.startListening();
-          isListeningRef.current = true;
-          setIsListening(true);
-          return;
-        }
+      if (!isFinal) return;
+
+      const state = agentStateRef.current;
+      if (state !== 'listening' && state !== 'confirming') return;
+
+      // Utterance complete — stop mic; user must click mic again for next input
+      stopMicAfterUtterance();
+
+      const voiceCmd = voiceCommandRouter.detect(text);
+      if (voiceCmd === 'undo') {
+        undoRef.current();
+        setAgentStateRef.current('idle');
+        return;
+      }
+      if (voiceCmd === 'export') {
+        exportSVGActionRef.current?.();
+        setAgentStateRef.current('idle');
+        return;
       }
 
-      // Process final transcripts when in listening/confirming state
-      if (isFinal && isListeningRef.current) {
-        const voiceCmd = voiceCommandRouter.detect(text);
-        if (voiceCmd === 'undo') {
-          undoRef.current();
-          ttsPlayer.speak('已撤销');
-          return;
-        }
-        if (voiceCmd === 'export') {
-          exportSVGActionRef.current?.();
-          ttsPlayer.speak('已导出');
-          return;
-        }
+      const phraseType = endPhraseDetector.detect(text);
 
-        const phraseType = endPhraseDetector.detect(text);
+      if (phraseType === 'correction') {
+        setConfirmationRef.current('');
+        setAgentStateRef.current('idle');
+        return;
+      }
 
-        if (phraseType === 'correction') {
-          // User wants to correct — go back to listening
-          setConfirmationRef.current('');
-          setAgentStateRef.current('listening');
-          return;
+      if (phraseType === 'end') {
+        if (state === 'confirming') {
+          processConfirmationRef.current(text).catch((err) => {
+            setErrorRef.current(err instanceof Error ? err.message : '执行失败');
+          });
         }
+        return;
+      }
 
-        if (phraseType === 'end') {
-          // User confirmed — execute
-          if (agentStateRef.current === 'confirming') {
-            setAgentStateRef.current('executing');
-            isListeningRef.current = false;
-            setIsListening(false);
-            voiceManager.stopListening();
-            processConfirmationRef.current(text).catch((err) => {
-              setErrorRef.current(err instanceof Error ? err.message : '执行失败');
-            });
-          }
-          return;
-        }
-
-        // No end/correction phrase detected — send to LLM
-        if (!isProcessingRef.current) {
-          isProcessingRef.current = true;
-          setAgentStateRef.current('listening');
-          processVoiceInputRef.current(text)
-            .then(() => {
-              isProcessingRef.current = false;
-            })
-            .catch((err) => {
-              isProcessingRef.current = false;
-              setErrorRef.current(err instanceof Error ? err.message : '处理失败');
-            });
-        }
+      // No end/correction phrase — send to LLM
+      if (!isProcessingRef.current) {
+        isProcessingRef.current = true;
+        processVoiceInputRef.current(text)
+          .then(() => {
+            isProcessingRef.current = false;
+          })
+          .catch((err) => {
+            isProcessingRef.current = false;
+            setErrorRef.current(err instanceof Error ? err.message : '处理失败');
+          });
       }
     });
 
@@ -272,33 +257,13 @@ export function useTalkArt(): TalkArtState {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Also update the wake word callback on state changes
-  useEffect(() => {
-    wakeWordDetector.onWake(() => {
-      setAgentStateRef.current('wake_word');
-      setAgentStateRef.current('listening');
-      void voiceManager.startListening();
-      isListeningRef.current = true;
-      setIsListening(true);
-    });
-  }, [voiceManager, wakeWordDetector]);
-
-  // ---------------------------------------------------------------------------
-  // Auto-restart wake word detection when returning to idle
-  // ---------------------------------------------------------------------------
+  // Reset wake-word detector when returning to idle (manual mic click only)
   useEffect(() => {
     if (agentState === 'idle') {
       wakeWordDetector.reset();
       isProcessingRef.current = false;
     }
   }, [agentState, wakeWordDetector]);
-
-  // TTS: speak confirmation text when entering confirming state
-  useEffect(() => {
-    if (agentState === 'confirming' && confirmationText && ttsPlayer.isSupported()) {
-      ttsPlayer.speak(confirmationText);
-    }
-  }, [agentState, confirmationText, ttsPlayer]);
 
   // ---------------------------------------------------------------------------
   // Actions

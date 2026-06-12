@@ -9,7 +9,8 @@ import { transcribeAudioDataUrl } from './stt-client';
 import type { STTEngineLike, STTResult } from './STTEngine';
 
 const INTERIM_INTERVAL_MS = 2000;
-const SILENCE_FINALIZE_MS = 4500;
+/** Stop and send transcript after this much silence following speech (ms). */
+export const SILENCE_FINALIZE_MS = 1500;
 const MIN_DURATION_MS = 600;
 const SPEECH_RMS_THRESHOLD = 0.008;
 const SILENCE_CHECK_MS = 250;
@@ -109,10 +110,7 @@ export class MimoSTTEngine implements STTEngineLike {
 
     const silentFor = Date.now() - this.lastSpeechAt;
     if (silentFor >= SILENCE_FINALIZE_MS) {
-      void this.enqueueTranscription(true);
-      this.hasDetectedSpeech = false;
-      this.lastSpeechAt = 0;
-      this.recorder.clearSamples();
+      this.stop();
     }
   }
 

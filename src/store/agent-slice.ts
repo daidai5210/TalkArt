@@ -441,8 +441,7 @@ export const createAgentSlice: StateCreator<CanvasSlice & AgentSlice, [], [], Ag
     // Add user message to UI conversation
     addMessage({ role: 'user', content: text });
 
-    // Transition to listening state
-    setAgentState('listening');
+    setAgentState('executing');
     setError(null);
 
     try {
