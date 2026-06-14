@@ -1,26 +1,17 @@
 /**
  * @component StatusBar
- * Bottom status bar showing the current agent state and canvas info.
- *
- * Displays:
- * - Current state with Chinese label: "等待唤醒..." / "我在听..." / "确认中..." / "正在画..."
- * - Color-coded indicator dot
- * - Element count on canvas
+ * Bottom status bar showing agent state and Leafer step count.
  */
 
 import React from 'react';
 import type { AgentState } from '@/modules/ai-agent/types';
 
 interface StatusBarProps {
-  /** Current agent state. */
   agentState: AgentState;
-  /** Number of elements on the canvas. */
-  elementCount: number;
-  /** Optional error message. */
+  stepCount: number;
   error?: string | null;
 }
 
-/** Map agent states to display labels. */
 const STATE_LABELS: Record<AgentState, string> = {
   idle: '等待唤醒...',
   wake_word: '我在听...',
@@ -30,7 +21,6 @@ const STATE_LABELS: Record<AgentState, string> = {
   error: '出错了',
 };
 
-/** Map agent states to indicator dot colors. */
 const STATE_DOT_COLORS: Record<AgentState, string> = {
   idle: 'bg-gray-400',
   wake_word: 'bg-talkart-success',
@@ -42,7 +32,7 @@ const STATE_DOT_COLORS: Record<AgentState, string> = {
 
 export const StatusBar: React.FC<StatusBarProps> = ({
   agentState,
-  elementCount,
+  stepCount,
   error,
 }) => {
   const showError = agentState === 'error' && error;
@@ -56,7 +46,6 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       aria-live="polite"
       aria-label={`状态: ${label}`}
     >
-      {/* State indicator */}
       <div className="flex items-center gap-2">
         <span className={`w-2.5 h-2.5 rounded-full ${dotColor}`} />
         <span className="text-sm text-gray-300">{label}</span>
@@ -65,22 +54,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         )}
       </div>
 
-      {/* Element count */}
       <div className="flex items-center gap-1.5 text-xs text-gray-500">
-        <svg
-          viewBox="0 0 24 24"
-          className="w-3.5 h-3.5"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-          <path d="M3 9h18" />
-          <path d="M9 21V9" />
-        </svg>
-        <span>
-          {elementCount} 个元素
-        </span>
+        <span>{stepCount} 个绘制步骤</span>
       </div>
     </div>
   );

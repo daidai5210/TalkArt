@@ -1,73 +1,28 @@
 /**
  * @component Toolbar
- * Horizontal button bar below the canvas for canvas operations.
- *
- * Buttons:
- * - Undo (↩️): Revert last change
- * - Redo (↪️): Re-apply undone change
- * - Clear (🗑️): Remove all elements
- * - Export SVG: Download as SVG file
- * - Export PNG: Download as PNG file
- *
- * Disabled states:
- * - Undo/Redo disabled when no history available
- * - Clear disabled when no elements
- * - Export disabled when no elements
+ * Canvas toolbar for LeaferJS drawing.
  */
 
-import React, { useCallback } from 'react';
-import { exportSVG, exportPNG } from '@/modules/export';
+import React from 'react';
 
 interface ToolbarProps {
-  /** Number of elements on the canvas. */
-  elementCount: number;
-  /** Whether undo is available. */
+  stepCount: number;
   canUndo: boolean;
-  /** Whether redo is available. */
-  canRedo: boolean;
-  /** Undo action. */
   onUndo: () => void;
-  /** Redo action. */
-  onRedo: () => void;
-  /** Clear canvas action. */
   onClear: () => void;
+  onExportSVG: () => void;
+  onExportPNG: () => void;
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({
-  elementCount,
+  stepCount,
   canUndo,
-  canRedo,
   onUndo,
-  onRedo,
   onClear,
+  onExportSVG,
+  onExportPNG,
 }) => {
-  /** Get the SVG element from the DOM for export. */
-  const getSvgElement = useCallback((): SVGSVGElement | null => {
-    // Find the SVG element in the canvas area
-    const svg = document.querySelector('svg[viewbox]') as SVGSVGElement | null
-      || document.querySelector('svg') as SVGSVGElement | null;
-    return svg;
-  }, []);
-
-  const handleExportSVG = useCallback(() => {
-    const svg = getSvgElement();
-    if (svg) {
-      exportSVG(svg, `talkart-${Date.now()}`);
-    }
-  }, [getSvgElement]);
-
-  const handleExportPNG = useCallback(async () => {
-    const svg = getSvgElement();
-    if (svg) {
-      try {
-        await exportPNG(svg, `talkart-${Date.now()}`);
-      } catch (err) {
-        console.error('PNG export failed:', err);
-      }
-    }
-  }, [getSvgElement]);
-
-  const hasElements = elementCount > 0;
+  const hasContent = stepCount > 0;
 
   return (
     <div
@@ -75,12 +30,11 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       role="toolbar"
       aria-label="画布工具栏"
     >
-      {/* Left: History controls */}
       <div className="flex items-center gap-2">
         <ToolbarButton
           onClick={onUndo}
           disabled={!canUndo}
-          label="撤销"
+          label="撤销上一步"
           icon={
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <polyline points="1 4 1 10 7 10" />
@@ -88,21 +42,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             </svg>
           }
         />
-        <ToolbarButton
-          onClick={onRedo}
-          disabled={!canRedo}
-          label="重做"
-          icon={
-            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="23 4 23 10 17 10" />
-              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-            </svg>
-          }
-        />
         <div className="w-px h-5 bg-gray-700/50 mx-1" />
         <ToolbarButton
           onClick={onClear}
-          disabled={!hasElements}
+          disabled={!hasContent}
           label="清空"
           danger
           icon={
@@ -114,11 +57,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         />
       </div>
 
-      {/* Right: Export controls */}
       <div className="flex items-center gap-2">
         <ToolbarButton
-          onClick={handleExportSVG}
-          disabled={!hasElements}
+          onClick={onExportSVG}
+          disabled={!hasContent}
           label="导出 SVG"
           icon={
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -129,8 +71,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           }
         />
         <ToolbarButton
-          onClick={handleExportPNG}
-          disabled={!hasElements}
+          onClick={onExportPNG}
+          disabled={!hasContent}
           label="导出 PNG"
           icon={
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -144,10 +86,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     </div>
   );
 };
-
-// ---------------------------------------------------------------------------
-// Internal ToolbarButton component
-// ---------------------------------------------------------------------------
 
 interface ToolbarButtonProps {
   onClick: () => void;

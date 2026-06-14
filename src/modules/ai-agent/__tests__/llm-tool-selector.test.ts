@@ -1,24 +1,27 @@
 import { describe, it, expect } from 'vitest';
 import {
-  isComplexDrawingRequest,
+  isDrawingRequest,
   selectToolsForRequest,
-  COMPACT_DRAWING_TOOLS,
+  LEAFER_TOOLS,
+  PLANNING_TOOLS,
+  RENDER_TOOLS,
 } from '../llm-tool-selector';
 
 describe('llm-tool-selector', () => {
-  it('detects Olympic rings + flag as complex', () => {
-    expect(isComplexDrawingRequest('画奥运五环，后面是中国国旗，直接画')).toBe(true);
+  it('detects drawing intent', () => {
+    expect(isDrawingRequest('画奥运五环，后面是中国国旗，直接画')).toBe(true);
+    expect(isDrawingRequest('你好')).toBe(false);
   });
 
-  it('returns executeDrawingPlan-only for complex requests', () => {
-    const all = [{ function: { name: 'drawCircle' } }, { function: { name: 'drawRect' } }];
-    const selected = selectToolsForRequest(all, '奥运五环和国旗') as { function: { name: string } }[];
-    expect(selected).toHaveLength(1);
-    expect(selected[0].function.name).toBe('executeDrawingPlan');
+  it('returns Leafer tools for drawing requests', () => {
+    const all = [{ function: { name: 'drawCircle' } }];
+    const selected = selectToolsForRequest(all, '奥运五环和国旗');
+    expect(selected).toEqual(LEAFER_TOOLS);
+    expect(selected).toHaveLength(3);
   });
 
-  it('keeps full tools for simple requests', () => {
-    const all = [{ function: { name: 'a' } }, { function: { name: 'b' } }];
-    expect(selectToolsForRequest(all, '画一个红色的圆')).toBe(all);
+  it('exports planning and render tool subsets', () => {
+    expect(PLANNING_TOOLS[0].function.name).toBe('planDrawingSteps');
+    expect(RENDER_TOOLS[0].function.name).toBe('renderLeaferStep');
   });
 });
