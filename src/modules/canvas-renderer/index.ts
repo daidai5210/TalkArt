@@ -11,3 +11,5 @@ export { CodeExecutor, type ExecuteResult } from './CodeExecutor';
 export { CanvasRenderer } from './CanvasRenderer';
 export { StreamingExecutor, type DrawingProgress } from './StreamingExecutor';
 export { DrawingProgressIndicator } from './DrawingProgress';
+export { RobustExecutor, type RetryConfig, type RobustExecuteResult } from './RobustExecutor';
+export { analyzeError, buildRepairPrompt, type ErrorReport } from './ErrorHandler';

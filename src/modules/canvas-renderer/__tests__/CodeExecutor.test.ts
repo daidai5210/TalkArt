@@ -7,7 +7,7 @@
  * Full rendering tests should be done in browser environment.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { CodeExecutor } from '../CodeExecutor';
 
 describe('CodeExecutor', () => {

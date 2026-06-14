@@ -1,4 +1,5 @@
 import { StateCreator } from 'zustand';
+import type { ErrorReport } from '../modules/canvas-renderer/ErrorHandler';
 
 export interface Layer {
   id: string;
@@ -53,6 +54,8 @@ export interface CanvasState {
     totalSteps: number;
     message: string;
   } | null;
+  // 错误报告状态
+  lastError: ErrorReport | null;
 }
 
 export interface CanvasSlice extends CanvasState {
@@ -95,6 +98,7 @@ export interface CanvasSlice extends CanvasState {
     totalSteps: number;
     message: string;
   } | null) => void;
+  setLastError: (error: ErrorReport | null) => void;
 }
 
 export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
@@ -116,6 +120,7 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
   paperCodeVersion: 0,
   paperTemplates: [],
   drawingProgress: null,
+  lastError: null,
 
   addElement: (el: SVGElement) => {
     set((state) => {
@@ -338,6 +343,12 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
   setDrawingProgress: (progress) => {
     set({
       drawingProgress: progress,
+    });
+  },
+
+  setLastError: (error) => {
+    set({
+      lastError: error,
     });
   },
 });

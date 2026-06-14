@@ -263,6 +263,42 @@ export class ConversationManager {
   }
 
   /**
+   * Process an error repair request — send error info to LLM for code fix.
+   *
+   * Called when code execution fails and the LLM should repair the code.
+   * The repairPrompt is built by the caller using buildRepairPrompt().
+   *
+   * @param repairPrompt - Error context + instruction for LLM to fix code
+   * @param canvasContext - Current canvas state for context injection
+   * @returns The LLM's response (typically a function_call with fixed code)
+   */
+  async processErrorRepair(
+    repairPrompt: string,
+    canvasContext: CanvasContext,
+  ): Promise<LLMResponse> {
+    // Add error repair message to history
+    this.messages.push({ role: 'user', content: repairPrompt });
+
+    // Update canvas context
+    this.canvasContext = canvasContext;
+
+    // Send to LLM with all tools available for repair
+    const response = await sendToLLM(
+      this.buildRequestMessages(),
+      this.tools as typeof this.tools,
+      canvasContext,
+    );
+
+    // Add the assistant's response to history
+    this.addAssistantResponse(response);
+
+    // Trim history if it exceeds the maximum length
+    this.trimHistory();
+
+    return response;
+  }
+
+  /**
    * Reset the conversation history.
    *
    * Call this when starting a new drawing session or when the user
