@@ -4,10 +4,15 @@
 
 import type { CompletedStepContext, PlanStepContext } from './canvas-context';
 import {
-  formatCompletedSteps,
+  formatCanvasSpec,
   formatPlanOverview,
+  formatSceneStateBlock,
 } from '../leafer-renderer/scene-bounds';
-import type { StepLayoutSpec } from '../leafer-renderer/step-layout-aligner';
+import type { LayoutTarget, StepLayoutSpec } from '../leafer-renderer/step-layout-aligner';
+import {
+  describeLayoutTargetForPrompt,
+  formatAttachReference,
+} from '../leafer-renderer/step-layout-aligner';
 
 function formatLayoutSpec(layout: StepLayoutSpec | undefined): string {
   if (!layout) return '（未指定，请按 description 坐标绘制）';
@@ -32,9 +37,11 @@ export function buildLeaferPlanningPrompt(ctx: {
   const { width, height, stepCount } = ctx;
   const cx = Math.round(width / 2);
   const cy = Math.round(height / 2);
+  const canvasSpec = formatCanvasSpec(width, height);
+
   return `你是 TalkArt 绘图助手「小智」。当前任务：**仅规划绘制步骤**，不要输出图形 JSON。
 
-画布尺寸：${width}×${height}px（原点左上角，中心约 (${cx}, ${cy})）
+${canvasSpec}
 已有步骤数：${stepCount}
 
 ## 规则
@@ -42,19 +49,18 @@ export function buildLeaferPlanningPrompt(ctx: {
 2. 简单图形（圆、矩形、单物体）：1~3 步
 3. 复杂场景（动物、人物、多物体、场景）：5~15 步
 4. 步骤顺序：背景/大轮廓 → 主体 → 细节装饰
-5. **每步必须填写 layout 对象**（系统会按边对齐拼合，LLM 坐标仅作形状参考）：
+5. **所有 layout 坐标必须落在上述画布有效区域内**，禁止超出 ${width}×${height}
+6. **每步必须填写 layout 对象**（系统会按边对齐拼合）：
    - 动物/人物：身体/头用 **Ellipse**，不用 Rect
    - 身体（步骤0）：{ centerX:${cx}, centerY:${cy + 70}, width:200, height:120 }
-   - 头部：{ attachTo:0, attachEdge:"top", offsetY:-8, width:110, height:95 }（offsetY 负值=压入身体）
+   - 头部：{ attachTo:0, attachEdge:"top", offsetY:-8, width:110, height:95 }
    - 耳朵：{ attachTo:1, attachEdge:"top", offsetX:±35, offsetY:-5, width:36, height:40 }
    - 腿：{ attachTo:0, attachEdge:"bottom", offsetX:±45, offsetY:6, width:28, height:50 }
    - 尾巴：{ attachTo:0, attachEdge:"right", offsetX:8, offsetY:-15, width:45, height:28 }
-   - 五官/斑点：{ attachTo:对应步骤, attachEdge:"center", width/height 写清 }
-   - 斑点步骤：多个小 Ellipse（半径 4~12px），禁止用一个大的黑色图形盖住整步区域
-   - 五官步骤：眼睛/鼻子用多个小 Ellipse，layout 的 width/height 表示区域大小，不要画一个实心大圆
-6. description 写形状与颜色；layout 写拼合关系（系统会把本步贴到参照步骤对应边上）
-7. 禁止画背景全屏步骤（浪费一步且干扰构图）
-8. 禁止反问、禁止纯文字回复`;
+   - 五官/斑点：依附对应步骤 attachEdge:"center"，多个小图形
+7. description 写形状与颜色；layout 写拼合关系
+8. 禁止画背景全屏步骤
+9. 禁止反问、禁止纯文字回复`;
 }
 
 export function buildLeaferRenderPrompt(ctx: {
@@ -66,6 +72,7 @@ export function buildLeaferRenderPrompt(ctx: {
   stepLabel: string;
   stepDescription: string;
   stepLayout?: StepLayoutSpec;
+  resolvedLayoutTarget?: LayoutTarget | null;
   completedSteps: CompletedStepContext[];
   planSteps: PlanStepContext[];
 }): string {
@@ -78,12 +85,15 @@ export function buildLeaferRenderPrompt(ctx: {
     stepLabel,
     stepDescription,
     stepLayout,
+    resolvedLayoutTarget,
     completedSteps,
     planSteps,
   } = ctx;
-  const cx = Math.round(width / 2);
-  const cy = Math.round(height / 2);
-  const completedSummary = formatCompletedSteps(
+
+  const canvasSpec = formatCanvasSpec(width, height);
+  const sceneState = formatSceneStateBlock(
+    width,
+    height,
     completedSteps.map((s) => ({
       stepIndex: s.stepIndex,
       label: s.label,
@@ -91,48 +101,61 @@ export function buildLeaferRenderPrompt(ctx: {
       summary: s.summary,
     })),
   );
+  const attachRef = formatAttachReference(
+    stepLayout,
+    completedSteps.map((s) => ({
+      stepIndex: s.stepIndex,
+      label: s.label,
+      bounds: s.bounds,
+      summary: s.summary,
+    })),
+  );
+  const layoutInstruction = resolvedLayoutTarget
+    ? describeLayoutTargetForPrompt(resolvedLayoutTarget)
+    : '（无 layout 锚点，请参考已完成步骤坐标绘制）';
+
   const planOverview =
     planSteps.length > 0
       ? formatPlanOverview(planSteps, stepIndex)
       : `本步说明：${stepDescription}`;
 
+  const cx = Math.round(width / 2);
+  const cy = Math.round(height / 2);
+
   return `你是 TalkArt 绘图助手「小智」。当前任务：**仅渲染第 ${stepIndex + 1}/${totalSteps} 步**。
+
+${canvasSpec}
+
+${sceneState}
 
 用户原始需求：${userIntent}
 本步标签：${stepLabel}
 本步说明：${stepDescription}
-本步空间锚点：${formatLayoutSpec(stepLayout)}
-画布：${width}×${height}px，原点左上角，中心约 (${cx}, ${cy})
+本步 layout 规划：${formatLayoutSpec(stepLayout)}
+${attachRef ? `${attachRef}\n` : ''}## 本步落点（系统对齐用，请按此坐标绘制）
+${layoutInstruction}
 
-## 已有画布内容（本步必须与之对齐拼合）
-${completedSummary}
-
-## 完整绘制计划
+## 完整绘制计划（含 layout）
 ${planOverview}
 
 ## 坐标规则（LeaferJS）
 1. Ellipse / Star / Polygon：x,y 为**中心点**
 2. Rect / Box：x,y 为**左上角**
-3. Line：x,y 为起点，toX/toY 或 to 为终点
-4. 本步图形必须与已有步骤的空间位置衔接，禁止漂浮错位
-5. 主图形应落在「本步空间锚点」附近（系统会自动对齐，但仍请尽量接近）
+3. 坐标必须在 0~${width} × 0~${height} 内
+4. 只画本步内容；必须与「当前画布状态」中已有步骤拼合，禁止漂浮
 
 ## 输出规则
 1. 必须调用 renderLeaferStep 工具
-2. leaferJson 根节点用 tag:"Group"，name:"step-${stepIndex}"
-3. 只画本步内容，不要重复画已完成步骤的图形
-4. 可用 tag：Rect, Ellipse, Line, Polygon, Star, Path, Text, Group, Box
-5. 动物身体/头部优先 Ellipse；腿可用 Rect 或 Ellipse
-6. 斑点/五官：多个**小** Ellipse 分散排列，每个 width/height 8~24px，禁止单色大圆覆盖
-7. 颜色用 hex 或中文转 hex（红色=#FF0000，白色=#FFFFFF）
-8. 禁止纯文字回复
+2. leaferJson 根节点 tag:"Group"，name:"step-${stepIndex}"
+3. 动物身体/头部用 Ellipse；斑点/五官用多个小 Ellipse（8~24px）
+4. 禁止纯文字回复
 
-## JSON 示例
+## JSON 示例（本步主图形应接近锚点）
 {
   "tag": "Group",
   "name": "step-${stepIndex}",
   "children": [
-    { "tag": "Ellipse", "x": ${cx}, "y": ${cy}, "width": 200, "height": 120, "fill": "#FFD700" }
+    { "tag": "Ellipse", "x": ${cx}, "y": ${cy}, "width": 200, "height": 120, "fill": "#FFFFFF" }
   ]
 }`;
 }
@@ -143,25 +166,24 @@ export function buildDrawingSystemPrompt(ctx: {
   elementCount: number;
   elementsSummary: string;
   completedStepsSummary?: string;
+  canvasSpec?: string;
 }): string {
-  const { width, height, elementCount, elementsSummary, completedStepsSummary } = ctx;
+  const { width, height, elementCount, elementsSummary, completedStepsSummary, canvasSpec } = ctx;
+  const spec = canvasSpec ?? formatCanvasSpec(width, height);
   const spatialBlock = completedStepsSummary
-    ? `\n## 已有步骤空间布局\n${completedStepsSummary}`
+    ? `\n## 已有步骤真实坐标\n${completedStepsSummary}`
     : '';
   return `你是 TalkArt 绘图助手「小智」，使用 LeaferJS 分步渐显绘图。
 
-## 流程
-1. 用户描述绘图需求 → 调用 planDrawingSteps 规划步骤（含精确像素坐标）
-2. 系统会逐步请求你调用 renderLeaferStep 渲染每一步
-3. 每步只输出当前步骤的 Leafer JSON，且必须与已有步骤对齐拼合
+${spec}
 
-## 画布
-- 尺寸：${width}×${height}px
+## 流程
+1. 用户描述需求 → planDrawingSteps（layout 坐标必须在画布内）
+2. 逐步 renderLeaferStep，每步参考「已有步骤真实坐标」拼合
+
+## 当前状态
 - 已有步骤：${elementsSummary}（${elementCount} 步）${spatialBlock}
-- 用户说「不对/重新来」→ 下一步 plan 的第一步 description 注明先清空再重画
 
 ## 禁止
-- 不要反问确认
-- 不要一次输出所有步骤的 JSON
-- 不要返回纯文字`;
+- 不要反问；不要一次输出所有步骤 JSON；坐标不得超出画布`;
 }

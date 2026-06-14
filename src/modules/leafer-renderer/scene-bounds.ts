@@ -145,14 +145,50 @@ export function formatCompletedSteps(steps: StepLayoutRecord[]): string {
 }
 
 export function formatPlanOverview(
-  steps: Array<{ index: number; label: string; description: string }>,
+  steps: Array<{ index: number; label: string; description: string; layout?: Record<string, unknown> }>,
   currentIndex: number,
 ): string {
   return steps
     .map((s) => {
       const marker =
         s.index === currentIndex ? '→ 当前' : s.index < currentIndex ? '✓ 已完成' : '待绘制';
-      return `${marker} 步骤${s.index + 1}「${s.label}」: ${s.description}`;
+      const layoutStr = s.layout ? ` layout=${JSON.stringify(s.layout)}` : '';
+      return `${marker} 步骤${s.index + 1}「${s.label}」: ${s.description}${layoutStr}`;
     })
     .join('\n');
+}
+
+/** Explicit canvas coordinate system block for LLM prompts. */
+export function formatCanvasSpec(width: number, height: number): string {
+  const cx = Math.round(width / 2);
+  const cy = Math.round(height / 2);
+  const margin = 40;
+  return `## 画布坐标系（必须遵守，禁止超出）
+- 尺寸：宽 ${width}px × 高 ${height}px
+- 原点 (0,0) 在左上角；x 向右增大，y 向下增大
+- 中心点 (${cx}, ${cy})
+- 建议有效区域：x ${margin}~${width - margin}，y ${margin}~${height - margin}
+- 所有坐标必须是 0~${width}（x）和 0~${height}（y）范围内的像素整数`;
+}
+
+/** Structured scene snapshot of completed steps. */
+export function formatSceneStateBlock(
+  width: number,
+  height: number,
+  steps: StepLayoutRecord[],
+): string {
+  if (steps.length === 0) {
+    return `## 当前画布状态\n空画布 ${width}×${height}px，尚无已绘制步骤。`;
+  }
+
+  const lines = steps.map((s) => {
+    const b = s.bounds;
+    const cx = Math.round((b.minX + b.maxX) / 2);
+    const cy = Math.round((b.minY + b.maxY) / 2);
+    return `  步骤${s.stepIndex + 1}「${s.label}」: 包围盒(${Math.round(b.minX)},${Math.round(b.minY)})-(${Math.round(b.maxX)},${Math.round(b.maxY)}) 中心(${cx},${cy}) | ${s.summary}`;
+  });
+
+  return `## 当前画布状态（上一步及之前已渲染的真实坐标，本步必须与之拼合）
+画布 ${width}×${height}px，已完成 ${steps.length} 步：
+${lines.join('\n')}`;
 }

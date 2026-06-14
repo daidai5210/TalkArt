@@ -43,6 +43,7 @@ import {
   buildLeaferPlanningPrompt,
   buildLeaferRenderPrompt,
 } from './leafer-system-prompt';
+import type { LayoutTarget } from '../leafer-renderer/step-layout-aligner';
 
 /** Maximum number of messages to keep in conversation history. */
 const MAX_HISTORY_LENGTH = 20;
@@ -311,6 +312,7 @@ export class ConversationManager {
       stepLabel: string;
       stepDescription: string;
       stepLayout?: import('../leafer-renderer/step-layout-aligner').StepLayoutSpec;
+      resolvedLayoutTarget?: LayoutTarget | null;
       completedSteps: CompletedStepContext[];
       planSteps: PlanStepContext[];
     },
@@ -327,6 +329,7 @@ export class ConversationManager {
       stepLabel: params.stepLabel,
       stepDescription: params.stepDescription,
       stepLayout: params.stepLayout,
+      resolvedLayoutTarget: params.resolvedLayoutTarget,
       completedSteps: params.completedSteps,
       planSteps: params.planSteps,
     });

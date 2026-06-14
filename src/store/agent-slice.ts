@@ -129,6 +129,10 @@ async function renderSingleStep(
 
   for (let attempt = 0; attempt <= MAX_STEP_RETRIES; attempt++) {
     const canvasContext = buildCanvasContext(get);
+    const resolvedLayoutTarget = resolveStepLayoutTarget(
+      step.layout,
+      get().completedStepLayouts,
+    );
     const response = await manager.renderStep(
       {
         userIntent,
@@ -137,6 +141,7 @@ async function renderSingleStep(
         stepLabel: step.label,
         stepDescription: step.description,
         stepLayout: step.layout,
+        resolvedLayoutTarget,
         completedSteps: canvasContext.completed_steps ?? [],
         planSteps: canvasContext.plan_steps ?? [],
       },
