@@ -1,0 +1,96 @@
+{
+  "planId": "ynu_gate_road_silhouette_plan",
+  "totalSteps": 6,
+  "steps": [
+    {
+      "index": 0,
+      "label": "天空",
+      "description": "天空背景，浅色平面矩形，可留白简约风，用于衬托校门剪影",
+      "layout": {
+        "centerX": 400,
+        "centerY": 165,
+        "width": 760,
+        "height": 330,
+        "attachTo": 0,
+        "attachEdge": "center",
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    },
+    {
+      "index": 1,
+      "label": "地面",
+      "description": "地面基底，简约浅灰绿横向矩形，顶边为道路与校门依附基准",
+      "layout": {
+        "centerX": 400,
+        "centerY": 492,
+        "width": 760,
+        "height": 108,
+        "attachTo": 0,
+        "attachEdge": "center",
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    },
+    {
+      "index": 2,
+      "label": "道路",
+      "description": "通向校门的道路，透视梯形或长条深灰剪影，底边落在地面区域，顶边作为牌坊基座依附面",
+      "layout": {
+        "centerX": 400,
+        "centerY": 0,
+        "width": 300,
+        "height": 80,
+        "attachTo": 1,
+        "attachEdge": "top",
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    },
+    {
+      "index": 3,
+      "label": "云南大学校门牌坊",
+      "description": "云南大学校门牌坊主体剪影：左右立柱、中间门洞、上方横梁和简化屋檐轮廓，大轮廓简笔画风格",
+      "layout": {
+        "centerX": 400,
+        "centerY": 0,
+        "width": 280,
+        "height": 220,
+        "attachTo": 2,
+        "attachEdge": "top",
+        "offsetX": 0,
+        "offsetY": -2
+      }
+    },
+    {
+      "index": 4,
+      "label": "校门匾额",
+      "description": "牌坊题字区域与匾额细节，简化为横向深色小矩形或浅色线条，表示校名牌匾",
+      "layout": {
+        "centerX": 0,
+        "centerY": 0,
+        "width": 150,
+        "height": 36,
+        "attachTo": 3,
+        "attachEdge": "top",
+        "offsetX": 0,
+        "offsetY": 58
+      }
+    },
+    {
+      "index": 5,
+      "label": "两侧绿化剪影",
+      "description": "校门两侧简化树影或灌木剪影，低矮圆形团块，增强校园入口氛围但不抢主体",
+      "layout": {
+        "centerX": 400,
+        "centerY": 0,
+        "width": 640,
+        "height": 86,
+        "attachTo": 1,
+        "attachEdge": "top",
+        "offsetX": 0,
+        "offsetY": -6
+      }
+    }
+  ]
+}

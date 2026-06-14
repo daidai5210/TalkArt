@@ -17,6 +17,7 @@ export {
 export type { GeometryKind, GeometryDef } from './geometry-catalog';
 export {
   validatePrimitives,
+  parseDrawingPlan,
   parseRenderThreeStep,
 } from './primitive-validator';
 export type { ValidationResult } from './primitive-validator';
@@ -26,20 +27,6 @@ export {
   summarizePrimitive,
 } from './primitive-bounds';
 export { alignPrimitivesToLayout } from './primitive-aligner';
-export {
-  assembleComponentOnCanvas,
-  normalizeToLocalCenter,
-  applyLayerZ,
-} from './component-assembler';
-export {
-  parseComposedDrawingPlan,
-  resolveCompositionLayoutTarget,
-  formatSceneMetaForPrompt,
-  formatLayerGuideForPlanning,
-  layerToZ,
-  defaultSceneMeta,
-} from './scene-composition';
-export type { SceneMeta, SceneLayer, ComposedDrawingPlan } from './scene-composition';
 export {
   formatCanvasSpec,
   formatSceneStateBlock,
@@ -53,5 +40,9 @@ export {
 export type { StepLayoutSpec, LayoutTarget } from '../leafer-renderer/step-layout-aligner';
 export type { Bounds, StepLayoutRecord } from './scene-bounds';
 
-/** @deprecated */
-export { parseComposedDrawingPlan as parseDrawingPlan } from './scene-composition';
+/** @deprecated use extractPrimitiveBounds */
+export { extractPrimitiveBounds as extractThreeJsonBounds } from './primitive-bounds';
+/** @deprecated use summarizePrimitives */
+export { summarizePrimitives as summarizeThreeJson } from './primitive-bounds';
+/** @deprecated use alignPrimitivesToLayout */
+export { alignPrimitivesToLayout as alignStepJsonToLayout } from './primitive-aligner';

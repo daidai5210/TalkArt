@@ -1,0 +1,50 @@
+你是绘图空间关系评审专家。请根据以下信息评估绘图的空间质量。
+
+## 用户原始需求
+绘制云南大学校门与道路的简约剪影平面设计图，简笔画风格，大轮廓即可
+
+## 画布
+800×600px，原点(0,0)在左上角，x向右，y向下
+
+## 绘图计划
+- 步骤0「天空背景」: 淡色天空背景矩形，简约平面底色，可包含极淡渐变感但不绘制复杂元素 | layer=background layout={"centerX":400,"centerY":165,"width":760,"height":330,"attachTo":0,"attachEdge":"center","offsetX":0,"offsetY":0}
+- 步骤1「地面」: 浅灰绿色地面平台矩形，承接道路与校门，底边位于画布下部 | layer=ground layout={"centerX":400,"centerY":492,"width":760,"height":108,"attachTo":0,"attachEdge":"center","offsetX":0,"offsetY":0}
+- 步骤2「道路」: 正中向前延伸的道路剪影，使用梯形/长条透视形状，深灰色大轮廓，底边落在地面区域 | layer=structure layout={"centerX":0,"centerY":0,"width":300,"height":80,"attachTo":1,"attachEdge":"top","offsetX":0,"offsetY":0}
+- 步骤3「云南大学校门牌坊」: 云南大学校门牌坊主体剪影：三开间门洞、两侧柱、中央牌匾、简化中式屋檐大轮廓，深色线面，底部依附道路顶边 | layer=structure layout={"centerX":0,"centerY":0,"width":280,"height":220,"attachTo":2,"attachEdge":"top","offsetX":0,"offsetY":-2}
+- 步骤4「校门牌匾与线条细节」: 校门细节：牌匾区域与简化文字‘云南大学’、门洞内负形线条、屋檐边线，保持剪影简笔画风格 | layer=detail layout={"centerX":0,"centerY":0,"width":220,"height":120,"attachTo":3,"attachEdge":"center","offsetX":0,"offsetY":-20}
+- 步骤5「道路标线」: 道路中心虚线与两侧简化边线，增强道路指向校门的平面设计感 | layer=detail layout={"centerX":0,"centerY":0,"width":220,"height":70,"attachTo":2,"attachEdge":"center","offsetX":0,"offsetY":0}
+- 步骤6「两侧树丛剪影」: 两侧简化树丛/植被剪影，圆冠与短树干组成，作为前景装饰但不遮挡校门主体 | layer=foreground layout={"centerX":0,"centerY":0,"width":680,"height":120,"attachTo":1,"attachEdge":"top","offsetX":0,"offsetY":0}
+
+## 实际渲染结果（组装后坐标）
+- 步骤0「天空背景」(layer=background): 包围盒(20,0)-(780,330) 中心(400,165) 尺寸760×330
+- 步骤1「地面」(layer=ground): 包围盒(20,438)-(780,546) 中心(400,492) 尺寸760×108
+- 步骤2「道路」(layer=structure): 包围盒(250,358)-(550,438) 中心(400,398) 尺寸300×80
+- 步骤3「云南大学校门牌坊」(layer=structure): 包围盒(260,136)-(540,356) 中心(400,246) 尺寸280×220
+- 步骤4「校门牌匾与线条细节」(layer=detail): 包围盒(290,166)-(510,286) 中心(400,226) 尺寸220×120
+- 步骤5「道路标线」(layer=detail): 包围盒(290,363)-(510,433) 中心(400,398) 尺寸220×70
+- 步骤6「两侧树丛剪影」(layer=foreground): 包围盒(60,318)-(740,438) 中心(400,378) 尺寸680×120
+
+## 评审维度（请逐一打分并说明）
+1. **结构完整性**：计划中的步骤是否都渲染了？有无遗漏？
+2. **空间拼合**：组件之间是否有合理的连接/接触关系？（例如：头在身体上方且连接、腿在身体下方、屋顶在墙壁上方）
+3. **层次正确**：foreground 组件是否在 structure 前面？background 是否在最后面？有无遮挡错误？
+4. **比例合理**：组件之间的尺寸比例是否符合常识？（例如：头比身体小、门比窗户大）
+5. **位置合理**：组件是否落在画布合理区域？（建筑应在地面线上、不漂浮；天空应在上方）
+6. **整体聚散**：组件是否聚集在一个合理的视觉中心？有无过度分散或挤成一团？
+
+## 输出格式（必须返回 JSON，不要其他文字）
+{
+  "score": 0-100的总分,
+  "grades": {
+    "completeness": 0-10,
+    "connectivity": 0-10,
+    "layering": 0-10,
+    "proportion": 0-10,
+    "placement": 0-10,
+    "composition": 0-10
+  },
+  "issues": ["问题1", "问题2"],
+  "suggestions": ["建议1", "建议2"]
+}
+
+请严格输出 JSON，不要有任何其他文字。

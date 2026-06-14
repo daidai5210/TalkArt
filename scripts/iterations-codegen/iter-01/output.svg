@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<rect width="100%" height="100%" fill="#fffef5"/>
+<circle cx="400" cy="340" r="118.75" fill="#000000" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<circle cx="400" cy="340" r="110" fill="#fff7df" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<circle cx="400" cy="230" r="68" fill="#000000" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<circle cx="400" cy="230" r="62" fill="#fff7df" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<circle cx="338" cy="228" r="42.5" fill="#000000" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<circle cx="338" cy="228" r="36.25" fill="#d58b55" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<circle cx="462" cy="228" r="42.5" fill="#000000" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<circle cx="462" cy="228" r="36.25" fill="#d58b55" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<circle cx="377" cy="212" r="7" fill="#000000" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<circle cx="423" cy="212" r="7" fill="#000000" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<circle cx="400" cy="232" r="10" fill="#000000" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<rect x="391.5" y="236" width="3" height="22" fill="#000000" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<rect x="405.5" y="236" width="3" height="22" fill="#000000" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<circle cx="362" cy="238" r="8" fill="#ffb6b6" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<circle cx="438" cy="238" r="8" fill="#ffb6b6" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<circle cx="512" cy="318" r="30.800000000000004" fill="#000000" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<circle cx="512" cy="318" r="24.200000000000003" fill="#fff7df" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<circle cx="355" cy="422" r="25.200000000000003" fill="#000000" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<circle cx="355" cy="422" r="18.900000000000002" fill="#fff7df" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<circle cx="445" cy="422" r="25.200000000000003" fill="#000000" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<circle cx="445" cy="422" r="18.900000000000002" fill="#fff7df" fill-opacity="1" stroke="#333" stroke-width="2"/>
+<rect x="372.5" y="368" width="55" height="4" fill="#000000" fill-opacity="1" stroke="#333" stroke-width="2"/>
+</svg>

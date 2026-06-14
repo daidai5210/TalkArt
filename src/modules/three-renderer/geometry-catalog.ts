@@ -34,7 +34,7 @@ export const GEOMETRY_CATALOG: readonly GeometryDef[] = [
     threeClass: 'PlaneGeometry',
     label: '平面矩形',
     anchor: 'topLeft',
-    description: '2D 平面矩形，适合背景块、招牌、简单面板',
+    description: '2D 平面矩形，适合主体部件面板/招牌（禁止用作全屏背景）',
     requiredParams: ['x', 'y', 'width', 'height'],
     optionalParams: ['z', 'rotation', 'color', 'opacity', 'roughness', 'metalness'],
     example: { kind: 'plane', x: 100, y: 80, width: 200, height: 120, color: '#4ECDC4', z: 0 },
@@ -150,6 +150,7 @@ export function formatGeometryCatalogForPrompt(): string {
   return `## Three.js 图元 API（renderThreeStep.primitives 数组）
 每步输出 1~20 个图元对象，每个图元必须含 kind + 对应必填参数。
 坐标系：左上角 (0,0)，x 向右，y 向下，单位 px。z 用于层叠（0~50，越大越靠前）。
+**白纸画布已由系统提供，禁止用任何图元绘制天空/草地/全屏背景。**
 
 ${lines.join('\n\n')}`;
 }

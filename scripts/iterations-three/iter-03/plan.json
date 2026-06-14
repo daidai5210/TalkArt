@@ -1,0 +1,129 @@
+{
+  "planId": "ynu_gate_road_silhouette_plan",
+  "totalSteps": 7,
+  "scene": {
+    "groundLineY": 492,
+    "skyBottomY": 330
+  },
+  "steps": [
+    {
+      "index": 0,
+      "label": "天空背景",
+      "description": "淡色天空背景矩形，简约平面底色，可包含极淡渐变感但不绘制复杂元素",
+      "layer": "background",
+      "grounded": false,
+      "layout": {
+        "centerX": 400,
+        "centerY": 165,
+        "width": 760,
+        "height": 330,
+        "attachTo": 0,
+        "attachEdge": "center",
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    },
+    {
+      "index": 1,
+      "label": "地面",
+      "description": "浅灰绿色地面平台矩形，承接道路与校门，底边位于画布下部",
+      "layer": "ground",
+      "grounded": true,
+      "layout": {
+        "centerX": 400,
+        "centerY": 492,
+        "width": 760,
+        "height": 108,
+        "attachTo": 0,
+        "attachEdge": "center",
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    },
+    {
+      "index": 2,
+      "label": "道路",
+      "description": "正中向前延伸的道路剪影，使用梯形/长条透视形状，深灰色大轮廓，底边落在地面区域",
+      "layer": "structure",
+      "grounded": true,
+      "layout": {
+        "centerX": 0,
+        "centerY": 0,
+        "width": 300,
+        "height": 80,
+        "attachTo": 1,
+        "attachEdge": "top",
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    },
+    {
+      "index": 3,
+      "label": "云南大学校门牌坊",
+      "description": "云南大学校门牌坊主体剪影：三开间门洞、两侧柱、中央牌匾、简化中式屋檐大轮廓，深色线面，底部依附道路顶边",
+      "layer": "structure",
+      "grounded": true,
+      "layout": {
+        "centerX": 0,
+        "centerY": 0,
+        "width": 280,
+        "height": 220,
+        "attachTo": 2,
+        "attachEdge": "top",
+        "offsetX": 0,
+        "offsetY": -2
+      }
+    },
+    {
+      "index": 4,
+      "label": "校门牌匾与线条细节",
+      "description": "校门细节：牌匾区域与简化文字‘云南大学’、门洞内负形线条、屋檐边线，保持剪影简笔画风格",
+      "layer": "detail",
+      "grounded": false,
+      "layout": {
+        "centerX": 0,
+        "centerY": 0,
+        "width": 220,
+        "height": 120,
+        "attachTo": 3,
+        "attachEdge": "center",
+        "offsetX": 0,
+        "offsetY": -20
+      }
+    },
+    {
+      "index": 5,
+      "label": "道路标线",
+      "description": "道路中心虚线与两侧简化边线，增强道路指向校门的平面设计感",
+      "layer": "detail",
+      "grounded": false,
+      "layout": {
+        "centerX": 0,
+        "centerY": 0,
+        "width": 220,
+        "height": 70,
+        "attachTo": 2,
+        "attachEdge": "center",
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    },
+    {
+      "index": 6,
+      "label": "两侧树丛剪影",
+      "description": "两侧简化树丛/植被剪影，圆冠与短树干组成，作为前景装饰但不遮挡校门主体",
+      "layer": "foreground",
+      "grounded": true,
+      "layout": {
+        "centerX": 0,
+        "centerY": 0,
+        "width": 680,
+        "height": 120,
+        "attachTo": 1,
+        "attachEdge": "top",
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    }
+  ]
+}

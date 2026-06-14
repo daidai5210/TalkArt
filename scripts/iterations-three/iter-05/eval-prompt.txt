@@ -1,0 +1,50 @@
+你是绘图空间关系评审专家。请根据以下信息评估绘图的空间质量。
+
+## 用户原始需求
+绘制云南大学校门与道路的简约剪影平面设计图，简笔画风格，大轮廓即可
+
+## 画布
+800×600px，原点(0,0)在左上角，x向右，y向下
+
+## 绘图计划
+- 步骤0「天空」: 浅色天空背景矩形区域，简约留白，可承载校门上方空间 | layer=background layout={"centerX":400,"centerY":165,"width":760,"height":330,"attachTo":0,"attachEdge":"center","offsetX":0,"offsetY":0}
+- 步骤1「地面」: 校园前方地面基底，浅灰绿色平面块，底部延展到画布下方 | layer=ground layout={"centerX":400,"centerY":492,"width":760,"height":108,"attachTo":0,"attachEdge":"center","offsetX":0,"offsetY":0}
+- 步骤2「道路」: 从前景通向校门的道路，梯形透视剪影，中轴线简笔线条 | layer=structure layout={"centerX":0,"centerY":0,"width":300,"height":80,"attachTo":1,"attachEdge":"top","offsetX":0,"offsetY":0}
+- 步骤3「云南大学校门牌坊」: 云南大学校门牌坊主体剪影：两侧立柱、横梁、顶部屋檐大轮廓，深色简笔风格 | layer=structure layout={"centerX":0,"centerY":0,"width":280,"height":220,"attachTo":2,"attachEdge":"top","offsetX":0,"offsetY":-2}
+- 步骤4「校名匾额」: 牌坊中央匾额与“云南大学”字样占位，简化为深浅对比矩形和短线文字 | layer=detail layout={"centerX":0,"centerY":0,"width":150,"height":42,"attachTo":3,"attachEdge":"top","offsetX":0,"offsetY":58}
+- 步骤5「牌坊轮廓细节」: 牌坊屋檐层次线和柱脚小基座，用少量细线强化云南大学校门轮廓 | layer=detail layout={"centerX":0,"centerY":0,"width":270,"height":210,"attachTo":3,"attachEdge":"top","offsetX":0,"offsetY":6}
+- 步骤6「道路两侧树影」: 道路两侧简化树影与灌木剪影，左右对称衬托校门入口 | layer=foreground layout={"centerX":0,"centerY":0,"width":560,"height":120,"attachTo":1,"attachEdge":"top","offsetX":0,"offsetY":-4}
+
+## 实际渲染结果（组装后坐标）
+- 步骤0「天空」(layer=background): 包围盒(20,0)-(780,330) 中心(400,165) 尺寸760×330
+- 步骤1「地面」(layer=ground): 包围盒(20,438)-(780,546) 中心(400,492) 尺寸760×108
+- 步骤2「道路」(layer=structure): 包围盒(250,358)-(550,438) 中心(400,398) 尺寸300×80
+- 步骤3「云南大学校门牌坊」(layer=structure): 包围盒(260,136)-(540,356) 中心(400,246) 尺寸280×220
+- 步骤4「校名匾额」(layer=detail): 包围盒(325,152)-(475,194) 中心(400,173) 尺寸150×42
+- 步骤5「牌坊轮廓细节」(layer=detail): 包围盒(265,-68)-(535,142) 中心(400,37) 尺寸270×210
+- 步骤6「道路两侧树影」(layer=foreground): 包围盒(120,314)-(680,434) 中心(400,374) 尺寸560×120
+
+## 评审维度（请逐一打分并说明）
+1. **结构完整性**：计划中的步骤是否都渲染了？有无遗漏？
+2. **空间拼合**：组件之间是否有合理的连接/接触关系？（例如：头在身体上方且连接、腿在身体下方、屋顶在墙壁上方）
+3. **层次正确**：foreground 组件是否在 structure 前面？background 是否在最后面？有无遮挡错误？
+4. **比例合理**：组件之间的尺寸比例是否符合常识？（例如：头比身体小、门比窗户大）
+5. **位置合理**：组件是否落在画布合理区域？（建筑应在地面线上、不漂浮；天空应在上方）
+6. **整体聚散**：组件是否聚集在一个合理的视觉中心？有无过度分散或挤成一团？
+
+## 输出格式（必须返回 JSON，不要其他文字）
+{
+  "score": 0-100的总分,
+  "grades": {
+    "completeness": 0-10,
+    "connectivity": 0-10,
+    "layering": 0-10,
+    "proportion": 0-10,
+    "placement": 0-10,
+    "composition": 0-10
+  },
+  "issues": ["问题1", "问题2"],
+  "suggestions": ["建议1", "建议2"]
+}
+
+请严格输出 JSON，不要有任何其他文字。

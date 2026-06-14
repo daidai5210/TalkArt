@@ -164,11 +164,12 @@ export function formatCanvasSpec(width: number, height: number): string {
   const cy = Math.round(height / 2);
   const margin = 40;
   return `## 画布坐标系（必须遵守，禁止超出）
-- 尺寸：宽 ${width}px × 高 ${height}px
+- 尺寸：宽 ${width}px × 高 ${height}px，**白纸背景（#FFFFFF）已由系统提供**
 - 原点 (0,0) 在左上角；x 向右增大，y 向下增大
 - 中心点 (${cx}, ${cy})
 - 建议有效区域：x ${margin}~${width - margin}，y ${margin}~${height - margin}
-- 所有坐标必须是 0~${width}（x）和 0~${height}（y）范围内的像素整数`;
+- 所有坐标必须是 0~${width}（x）和 0~${height}（y）范围内的像素整数
+- **禁止绘制背景**：不要画天空/草地/全屏底色/环境铺底，只画用户要的主体`;
 }
 
 /** Structured scene snapshot of completed steps. */
@@ -178,7 +179,7 @@ export function formatSceneStateBlock(
   steps: StepLayoutRecord[],
 ): string {
   if (steps.length === 0) {
-    return `## 当前画布状态\n空画布 ${width}×${height}px，尚无已绘制步骤。`;
+    return `## 当前画布状态\n白纸画布 ${width}×${height}px，尚无已绘制步骤（背景已由系统提供，勿画背景）。`;
   }
 
   const lines = steps.map((s) => {

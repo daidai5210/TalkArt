@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<rect width="100%" height="100%" fill="#1a1a2e"/>
+<!-- step 0: 天空 (background) -->
+<rect x="20" y="0" width="760" height="330" fill="#EAF5FF" fill-opacity="1" stroke="none" stroke-width="0"/>
+<ellipse cx="190" cy="74.8" rx="120" ry="30.800000000000004" fill="#F7FBFF" fill-opacity="0.55" stroke="none" stroke-width="0"/>
+<ellipse cx="620" cy="112.19999999999999" rx="160" ry="38.5" fill="#FDFEFE" fill-opacity="0.35" stroke="none" stroke-width="0"/>
+<!-- step 1: 地面 (ground) -->
+<rect x="20" y="438" width="760" height="108" fill="#D9E2D2" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="20" y="438" width="760" height="4" fill="#B7C6B0" fill-opacity="0.9" stroke="none" stroke-width="0"/>
+<rect x="40" y="444" width="720" height="18" fill="#EEF3EA" fill-opacity="0.45" stroke="none" stroke-width="0"/>
+<!-- step 2: 道路 (structure) -->
+<rect x="364" y="358" width="72" height="10" fill="#6F7678" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="350" y="368" width="100" height="10" fill="#747B7D" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="335" y="378" width="130" height="10" fill="#7A8183" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="318" y="388" width="164" height="10" fill="#808789" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="301" y="398" width="198" height="10" fill="#868D8F" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="284" y="408" width="232" height="10" fill="#8C9395" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="267" y="418" width="266" height="10" fill="#92999B" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="250" y="428" width="300" height="10" fill="#989FA1" fill-opacity="1" stroke="none" stroke-width="0"/>
+<line x1="364" y1="358" x2="250" y2="438" stroke="#3E4547" stroke-width="3"/>
+<line x1="436" y1="358" x2="550" y2="438" stroke="#3E4547" stroke-width="3"/>
+<line x1="400" y1="364" x2="400" y2="378" stroke="#E8ECEC" stroke-width="2"/>
+<line x1="400" y1="388" x2="400" y2="406" stroke="#E8ECEC" stroke-width="3"/>
+<line x1="400" y1="416" x2="400" y2="436" stroke="#E8ECEC" stroke-width="4"/>
+<!-- step 3: 云南大学校门牌坊 (structure) -->
+<rect x="335" y="136" width="130" height="10.476190476190476" fill="#2F2F2F" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="295" y="148.22222222222223" width="210" height="12.222222222222221" fill="#343434" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="260" y="163.93650793650795" width="280" height="13.968253968253968" fill="#252525" fill-opacity="1" stroke="none" stroke-width="0"/>
+<line x1="278" y1="148.22222222222223" x2="328" y2="136" stroke="#1F1F1F" stroke-width="8"/>
+<line x1="522" y1="148.22222222222223" x2="472" y2="136" stroke="#1F1F1F" stroke-width="8"/>
+<rect x="282" y="183.14285714285714" width="236" height="24.444444444444443" fill="#5B2A23" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="295" y="209.33333333333334" width="210" height="15.714285714285715" fill="#6E3428" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="288" y="209.33333333333334" width="30" height="146.66666666666666" fill="#4A211D" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="482" y="209.33333333333334" width="30" height="146.66666666666666" fill="#4A211D" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="330" y="223.3015873015873" width="14" height="129.20634920634922" fill="#5B2A23" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="456" y="223.3015873015873" width="14" height="129.20634920634922" fill="#5B2A23" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="276" y="345.5238095238095" width="54" height="10.476190476190476" fill="#3B1B18" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="470" y="345.5238095238095" width="54" height="10.476190476190476" fill="#3B1B18" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="274" y="179.65079365079364" width="252" height="8.730158730158731" fill="#2B2B2B" fill-opacity="1" stroke="none" stroke-width="0"/>
+<!-- step 4: 校名匾额 (detail) -->
+<rect x="329" y="156" width="142" height="34" fill="#5B2A1A" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="325" y="152" width="150" height="4" fill="#E6C36A" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="325" y="190" width="150" height="4" fill="#E6C36A" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="325" y="154" width="4" height="38" fill="#E6C36A" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="471" y="154" width="4" height="38" fill="#E6C36A" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="350" y="170" width="18" height="3" fill="#F7E6A2" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="382" y="170" width="18" height="3" fill="#F7E6A2" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="414" y="170" width="18" height="3" fill="#F7E6A2" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="446" y="170" width="18" height="3" fill="#F7E6A2" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="358" y="164" width="3" height="14" fill="#F7E6A2" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="390" y="164" width="3" height="14" fill="#F7E6A2" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="422" y="164" width="3" height="14" fill="#F7E6A2" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="454" y="164" width="3" height="14" fill="#F7E6A2" fill-opacity="1" stroke="none" stroke-width="0"/>
+<!-- step 5: 牌坊轮廓细节 (detail) -->
+<rect x="269.18604651162786" y="-67.99999999999997" width="261.6279069767442" height="3.0882352941176467" fill="#3A2A22" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="288.0232558139535" y="-51.529411764705856" width="223.95348837209303" height="3.0882352941176467" fill="#4A3428" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="323.6046511627907" y="-35.05882352941174" width="152.79069767441862" height="3.0882352941176467" fill="#4A3428" fill-opacity="1" stroke="none" stroke-width="0"/>
+<line x1="269.18604651162786" y1="-51.529411764705856" x2="318.37209302325584" y2="-63.88235294117645" stroke="#3A2A22" stroke-width="3"/>
+<line x1="530.8139534883721" y1="-51.529411764705856" x2="481.62790697674416" y2="-63.88235294117645" stroke="#3A2A22" stroke-width="3"/>
+<rect x="271.27906976744185" y="119.3529411764706" width="48.139534883720934" height="6.1764705882352935" fill="#5B4031" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="480.5813953488372" y="119.3529411764706" width="48.139534883720934" height="6.1764705882352935" fill="#5B4031" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="265" y="131.70588235294116" width="60.697674418604656" height="10.294117647058822" fill="#3A2A22" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="474.30232558139534" y="131.70588235294116" width="60.697674418604656" height="10.294117647058822" fill="#3A2A22" fill-opacity="1" stroke="none" stroke-width="0"/>
+<line x1="302.6744186046511" y1="-20.64705882352939" x2="302.6744186046511" y2="125.52941176470588" stroke="#4A3428" stroke-width="2"/>
+<line x1="497.3255813953489" y1="-20.64705882352939" x2="497.3255813953489" y2="125.52941176470588" stroke="#4A3428" stroke-width="2"/>
+<rect x="385.3488372093023" y="-16.529411764705863" width="29.30232558139535" height="5.147058823529411" fill="#614737" fill-opacity="0.95" stroke="none" stroke-width="0"/>
+<!-- step 6: 道路两侧树影 (foreground) -->
+<rect x="181.65137614678898" y="376.9032258064516" width="12.844036697247708" height="56.12903225806452" fill="#5B3A29" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="248.44036697247705" y="384.64516129032256" width="10.275229357798166" height="48.38709677419355" fill="#5B3A29" fill-opacity="1" stroke="none" stroke-width="0"/>
+<ellipse cx="186.78899082568807" cy="342.06451612903226" rx="46.23853211009175" ry="28.06451612903226" fill="#1F4F36" fill-opacity="0.96" stroke="none" stroke-width="0"/>
+<ellipse cx="155.96330275229357" cy="363.35483870967744" rx="35.96330275229358" ry="22.258064516129032" fill="#2E6A45" fill-opacity="0.94" stroke="none" stroke-width="0"/>
+<ellipse cx="226.60550458715596" cy="357.5483870967742" rx="39.816513761467895" ry="25.161290322580648" fill="#245D3E" fill-opacity="0.96" stroke="none" stroke-width="0"/>
+<ellipse cx="251.00917431192659" cy="359.48387096774195" rx="32.11009174311927" ry="19.35483870967742" fill="#2E6A45" fill-opacity="0.95" stroke="none" stroke-width="0"/>
+<ellipse cx="163.66972477064218" cy="420.4516129032258" rx="42.38532110091743" ry="13.548387096774194" fill="#1F4F36" fill-opacity="0.95" stroke="none" stroke-width="0"/>
+<ellipse cx="225.32110091743118" cy="417.5483870967742" rx="51.37614678899083" ry="15.483870967741936" fill="#2E6A45" fill-opacity="0.95" stroke="none" stroke-width="0"/>
+<ellipse cx="293.39449541284404" cy="422.38709677419354" rx="46.23853211009175" ry="11.612903225806452" fill="#376F48" fill-opacity="0.93" stroke="none" stroke-width="0"/>
+<rect x="605.5045871559633" y="376.9032258064516" width="12.844036697247708" height="56.12903225806452" fill="#5B3A29" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="541.2844036697247" y="384.64516129032256" width="10.275229357798166" height="48.38709677419355" fill="#5B3A29" fill-opacity="1" stroke="none" stroke-width="0"/>
+<ellipse cx="613.2110091743119" cy="342.06451612903226" rx="46.23853211009175" ry="28.06451612903226" fill="#1F4F36" fill-opacity="0.96" stroke="none" stroke-width="0"/>
+<ellipse cx="644.0366972477065" cy="363.35483870967744" rx="35.96330275229358" ry="22.258064516129032" fill="#2E6A45" fill-opacity="0.94" stroke="none" stroke-width="0"/>
+<ellipse cx="573.394495412844" cy="357.5483870967742" rx="39.816513761467895" ry="25.161290322580648" fill="#245D3E" fill-opacity="0.96" stroke="none" stroke-width="0"/>
+<ellipse cx="548.9908256880734" cy="359.48387096774195" rx="32.11009174311927" ry="19.35483870967742" fill="#2E6A45" fill-opacity="0.95" stroke="none" stroke-width="0"/>
+<ellipse cx="636.3302752293578" cy="420.4516129032258" rx="42.38532110091743" ry="13.548387096774194" fill="#1F4F36" fill-opacity="0.95" stroke="none" stroke-width="0"/>
+<ellipse cx="574.6788990825688" cy="417.5483870967742" rx="51.37614678899083" ry="15.483870967741936" fill="#2E6A45" fill-opacity="0.95" stroke="none" stroke-width="0"/>
+<ellipse cx="506.60550458715596" cy="422.38709677419354" rx="46.23853211009175" ry="11.612903225806452" fill="#376F48" fill-opacity="0.93" stroke="none" stroke-width="0"/>
+</svg>

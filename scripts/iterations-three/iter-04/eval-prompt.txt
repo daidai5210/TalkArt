@@ -1,0 +1,52 @@
+你是绘图空间关系评审专家。请根据以下信息评估绘图的空间质量。
+
+## 用户原始需求
+绘制云南大学校门与道路的简约剪影平面设计图，简笔画风格，大轮廓即可
+
+## 画布
+800×600px，原点(0,0)在左上角，x向右，y向下
+
+## 绘图计划
+- 步骤0「天空背景」: 天空背景矩形，浅色留白风格，可含极简淡色天际渐变；作为背景层覆盖上半部。 | layer=background layout={"centerX":400,"centerY":165,"width":760,"height":330,"attachTo":0,"attachEdge":"center","offsetX":0,"offsetY":0}
+- 步骤1「地面」: 地面横向矩形色块，简约平面剪影底座，底边贴近画布下方并与道路衔接。 | layer=ground layout={"centerX":400,"centerY":492,"width":760,"height":108,"attachTo":0,"attachEdge":"center","offsetX":0,"offsetY":0}
+- 步骤2「道路」: 从校门向前延伸的道路，局部可设计为梯形透视路面与中线，深灰简笔剪影。 | layer=structure layout={"centerX":0,"centerY":0,"width":300,"height":80,"attachTo":1,"attachEdge":"top","offsetX":0,"offsetY":0}
+- 步骤3「云南大学校门牌坊」: 云南大学校门主体大轮廓：三开间牌坊式门楼剪影，包括左右立柱、中间高门洞、横梁与简化屋檐轮廓，底部依附道路顶边。 | layer=structure layout={"centerX":0,"centerY":0,"width":280,"height":220,"attachTo":2,"attachEdge":"top","offsetX":0,"offsetY":-2}
+- 步骤4「牌坊屋顶剪影细节」: 校门屋顶与檐口细节：简化飞檐曲线、屋脊小线条，叠加在牌坊顶部形成云南大学老校门特征。 | layer=detail layout={"centerX":0,"centerY":0,"width":300,"height":42,"attachTo":3,"attachEdge":"top","offsetX":0,"offsetY":8}
+- 步骤5「校门门洞线条」: 门洞与柱体负形细节：三个简化拱门/矩形门洞、柱脚线、横梁分割线，以浅色刻画在主体剪影上。 | layer=detail layout={"centerX":0,"centerY":0,"width":250,"height":150,"attachTo":3,"attachEdge":"center","offsetX":0,"offsetY":28}
+- 步骤6「校名牌匾」: 校名牌匾细节：位于横梁中央的小矩形牌匾，写意表示“云南大学”字样或短线符号。 | layer=detail layout={"centerX":0,"centerY":0,"width":120,"height":34,"attachTo":3,"attachEdge":"top","offsetX":0,"offsetY":62}
+- 步骤7「道路前景标线与绿化」: 道路前景简化标线与两侧绿化轮廓：道路中线、两侧低矮灌木剪影，增强校门入口空间。 | layer=foreground layout={"centerX":0,"centerY":0,"width":360,"height":70,"attachTo":2,"attachEdge":"bottom","offsetX":0,"offsetY":0}
+
+## 实际渲染结果（组装后坐标）
+- 步骤0「天空背景」(layer=background): 包围盒(20,0)-(780,330) 中心(400,165) 尺寸760×330
+- 步骤1「地面」(layer=ground): 包围盒(20,438)-(780,546) 中心(400,492) 尺寸760×108
+- 步骤2「道路」(layer=structure): 包围盒(250,358)-(550,438) 中心(400,398) 尺寸300×80
+- 步骤3「云南大学校门牌坊」(layer=structure): 包围盒(260,136)-(540,356) 中心(400,246) 尺寸280×220
+- 步骤4「牌坊屋顶剪影细节」(layer=detail): 包围盒(250,102)-(550,144) 中心(400,123) 尺寸300×42
+- 步骤5「校门门洞线条」(layer=detail): 包围盒(275,199)-(525,349) 中心(400,274) 尺寸250×150
+- 步骤6「校名牌匾」(layer=detail): 包围盒(344,166)-(456,198) 中心(400,182) 尺寸112×32
+- 步骤7「道路前景标线与绿化」(layer=foreground): 包围盒(220,438)-(580,508) 中心(400,473) 尺寸360×70
+
+## 评审维度（请逐一打分并说明）
+1. **结构完整性**：计划中的步骤是否都渲染了？有无遗漏？
+2. **空间拼合**：组件之间是否有合理的连接/接触关系？（例如：头在身体上方且连接、腿在身体下方、屋顶在墙壁上方）
+3. **层次正确**：foreground 组件是否在 structure 前面？background 是否在最后面？有无遮挡错误？
+4. **比例合理**：组件之间的尺寸比例是否符合常识？（例如：头比身体小、门比窗户大）
+5. **位置合理**：组件是否落在画布合理区域？（建筑应在地面线上、不漂浮；天空应在上方）
+6. **整体聚散**：组件是否聚集在一个合理的视觉中心？有无过度分散或挤成一团？
+
+## 输出格式（必须返回 JSON，不要其他文字）
+{
+  "score": 0-100的总分,
+  "grades": {
+    "completeness": 0-10,
+    "connectivity": 0-10,
+    "layering": 0-10,
+    "proportion": 0-10,
+    "placement": 0-10,
+    "composition": 0-10
+  },
+  "issues": ["问题1", "问题2"],
+  "suggestions": ["建议1", "建议2"]
+}
+
+请严格输出 JSON，不要有任何其他文字。

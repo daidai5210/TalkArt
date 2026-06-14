@@ -1,0 +1,33 @@
+[
+  {
+    "iteration": 1,
+    "profile": "baseline",
+    "score": 100,
+    "issues": 0,
+    "exitCode": 0
+  },
+  {
+    "iteration": 2,
+    "profile": "sketch-prompt+attach-fix",
+    "score": 100,
+    "issues": 0,
+    "exitCode": 1
+  },
+  {
+    "iteration": 3,
+    "profile": "sketch+ground-fix",
+    "score": 100,
+    "issues": 0,
+    "exitCode": 1
+  },
+  {
+    "iteration": 4,
+    "score": null,
+    "exitCode": 1
+  },
+  {
+    "iteration": 5,
+    "score": null,
+    "exitCode": 1
+  }
+]

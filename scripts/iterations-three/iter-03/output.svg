@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<rect width="100%" height="100%" fill="#1a1a2e"/>
+<!-- step 0: 天空背景 (background) -->
+<rect x="20" y="0" width="760" height="121.00000000000001" fill="#DDEFFF" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="20" y="121" width="760" height="115.50000000000001" fill="#EAF6FF" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="20" y="236.5" width="760" height="93.50000000000001" fill="#F7FBF2" fill-opacity="1" stroke="none" stroke-width="0"/>
+<ellipse cx="640" cy="65.99999999999999" rx="120" ry="35.75" fill="#FFFFFF" fill-opacity="0.18" stroke="none" stroke-width="0"/>
+<!-- step 1: 地面 (ground) -->
+<rect x="20" y="438" width="760" height="108" fill="#C9D7C8" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="20" y="438" width="760" height="4" fill="#B6C8B5" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="20" y="442" width="760" height="18" fill="#D8E1D4" fill-opacity="0.55" stroke="none" stroke-width="0"/>
+<!-- step 2: 道路 (structure) -->
+<rect x="341" y="358" width="118" height="10" fill="#3E4448" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="329" y="368" width="142" height="10" fill="#40464A" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="317" y="378" width="166" height="10" fill="#42484C" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="305" y="388" width="190" height="10" fill="#444A4E" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="293" y="398" width="214" height="10" fill="#464C50" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="281" y="408" width="238" height="10" fill="#484E52" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="266" y="418" width="268" height="10" fill="#4A5054" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="250" y="428" width="300" height="10" fill="#4C5256" fill-opacity="1" stroke="none" stroke-width="0"/>
+<line x1="341" y1="358" x2="250" y2="438" stroke="#2E3336" stroke-width="4"/>
+<line x1="459" y1="358" x2="550" y2="438" stroke="#2E3336" stroke-width="4"/>
+<line x1="341" y1="358" x2="459" y2="358" stroke="#2E3336" stroke-width="3"/>
+<!-- step 3: 云南大学校门牌坊 (structure) -->
+<rect x="270" y="214.83333333333334" width="20" height="137.5" fill="#5B2B22" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="348" y="214.83333333333334" width="20" height="137.5" fill="#5B2B22" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="432" y="214.83333333333334" width="20" height="137.5" fill="#5B2B22" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="510" y="214.83333333333334" width="20" height="137.5" fill="#5B2B22" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="260" y="202" width="280" height="22" fill="#6B3428" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="275" y="180" width="250" height="16.5" fill="#7A3D2E" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="260" y="166.25" width="150" height="14.666666666666666" fill="#4A241D" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="390" y="166.25" width="150" height="14.666666666666666" fill="#4A241D" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="282" y="154.33333333333334" width="235" height="11" fill="#5B2B22" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="345" y="213" width="110" height="31.166666666666664" fill="#8A4A34" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="296" y="268" width="42" height="84.33333333333333" fill="#D8E8EA" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="374" y="260.6666666666667" width="52" height="91.66666666666666" fill="#D8E8EA" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="462" y="268" width="42" height="84.33333333333333" fill="#D8E8EA" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="260" y="348.66666666666663" width="280" height="7.333333333333333" fill="#4A241D" fill-opacity="1" stroke="none" stroke-width="0"/>
+<line x1="378" y1="154.33333333333334" x2="400" y2="136" stroke="#4A241D" stroke-width="4"/>
+<line x1="400" y1="136" x2="422" y2="154.33333333333334" stroke="#4A241D" stroke-width="4"/>
+<!-- step 4: 校门牌匾与线条细节 (detail) -->
+<rect x="327.30434782608694" y="201.55555555555551" width="145.3913043478261" height="33.333333333333336" fill="#F3D79B" fill-opacity="1" stroke="none" stroke-width="0"/>
+<line x1="327.30434782608694" y1="201.55555555555551" x2="472.69565217391306" y2="201.55555555555551" stroke="#3A2B1D" stroke-width="3"/>
+<line x1="327.30434782608694" y1="234.88888888888886" x2="472.69565217391306" y2="234.88888888888886" stroke="#3A2B1D" stroke-width="3"/>
+<line x1="327.30434782608694" y1="201.55555555555551" x2="327.30434782608694" y2="234.88888888888886" stroke="#3A2B1D" stroke-width="2"/>
+<line x1="472.69565217391306" y1="201.55555555555551" x2="472.69565217391306" y2="234.88888888888886" stroke="#3A2B1D" stroke-width="2"/>
+<line x1="290" y1="188.2222222222222" x2="510" y2="188.2222222222222" stroke="#2F2F2F" stroke-width="4"/>
+<line x1="306.2608695652174" y1="175.99999999999997" x2="493.7391304347826" y2="175.99999999999997" stroke="#2F2F2F" stroke-width="3"/>
+<line x1="315.82608695652175" y1="165.99999999999997" x2="484.17391304347825" y2="165.99999999999997" stroke="#2F2F2F" stroke-width="2"/>
+<line x1="342.60869565217394" y1="212.66666666666663" x2="356.95652173913044" y2="212.66666666666663" stroke="#303030" stroke-width="2"/>
+<line x1="340.69565217391306" y1="222.66666666666663" x2="358.8695652173913" y2="222.66666666666663" stroke="#303030" stroke-width="2"/>
+<line x1="345.47826086956525" y1="222.66666666666663" x2="352.17391304347825" y2="229.33333333333331" stroke="#303030" stroke-width="2"/>
+<line x1="367.47826086956525" y1="211.55555555555551" x2="384.69565217391306" y2="211.55555555555551" stroke="#303030" stroke-width="2"/>
+<line x1="370.3478260869565" y1="211.55555555555551" x2="370.3478260869565" y2="229.33333333333331" stroke="#303030" stroke-width="2"/>
+<line x1="383.7391304347826" y1="211.55555555555551" x2="383.7391304347826" y2="229.33333333333331" stroke="#303030" stroke-width="2"/>
+<line x1="402.8695652173913" y1="211.55555555555551" x2="422" y2="229.33333333333331" stroke="#303030" stroke-width="2"/>
+<line x1="412.4347826086956" y1="209.33333333333331" x2="412.4347826086956" y2="229.33333333333331" stroke="#303030" stroke-width="2"/>
+<line x1="404.7826086956522" y1="227.1111111111111" x2="420.0869565217391" y2="227.1111111111111" stroke="#303030" stroke-width="2"/>
+<line x1="437.30434782608694" y1="214.88888888888886" x2="454.52173913043475" y2="214.88888888888886" stroke="#303030" stroke-width="2"/>
+<line x1="445.9130434782609" y1="209.33333333333331" x2="445.9130434782609" y2="230.44444444444443" stroke="#303030" stroke-width="2"/>
+<line x1="463.1304347826087" y1="245.99999999999997" x2="463.1304347826087" y2="286" stroke="#3B3B3B" stroke-width="3"/>
+<!-- step 5: 道路标线 (detail) -->
+<line x1="290" y1="425.43243243243245" x2="354.390243902439" y2="363" stroke="#F2E9D8" stroke-width="3"/>
+<line x1="510" y1="425.43243243243245" x2="445.609756097561" y2="363" stroke="#F2E9D8" stroke-width="3"/>
+<rect x="397.3170731707317" y="364.8918918918919" width="5.365853658536586" height="8.513513513513514" fill="#FFF7E8" fill-opacity="0.9" stroke="none" stroke-width="0"/>
+<rect x="396.6463414634146" y="380.02702702702703" width="6.707317073170732" height="10.405405405405405" fill="#FFF7E8" fill-opacity="0.9" stroke="none" stroke-width="0"/>
+<rect x="395.9756097560976" y="398" width="8.048780487804878" height="12.297297297297296" fill="#FFF7E8" fill-opacity="0.92" stroke="none" stroke-width="0"/>
+<rect x="395.3048780487805" y="418.81081081081084" width="9.390243902439025" height="14.18918918918919" fill="#FFF7E8" fill-opacity="0.92" stroke="none" stroke-width="0"/>
+<line x1="343.6585365853658" y1="425.43243243243245" x2="379.8780487804878" y2="364.8918918918919" stroke="#F2E9D8" stroke-width="2"/>
+<line x1="456.3414634146342" y1="425.43243243243245" x2="420.1219512195122" y2="364.8918918918919" stroke="#F2E9D8" stroke-width="2"/>
+<!-- step 6: 两侧树丛剪影 (foreground) -->
+<rect x="149.95515695067266" y="391.77777777777777" width="18.295964125560538" height="46.22222222222222" fill="#6B4A2B" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="223.1390134529148" y="397.1111111111111" width="15.246636771300448" height="40.888888888888886" fill="#6B4A2B" fill-opacity="1" stroke="none" stroke-width="0"/>
+<ellipse cx="128.60986547085201" cy="368.6666666666667" rx="68.60986547085201" ry="32" fill="#315B3A" fill-opacity="1" stroke="none" stroke-width="0"/>
+<ellipse cx="183.49775784753365" cy="356.22222222222223" rx="71.6591928251121" ry="38.22222222222222" fill="#3F7048" fill-opacity="1" stroke="none" stroke-width="0"/>
+<ellipse cx="247.53363228699553" cy="370.44444444444446" rx="59.46188340807175" ry="28.444444444444443" fill="#2E5235" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="98.11659192825113" y="414.8888888888889" width="216.50224215246635" height="23.11111111111111" fill="#284A30" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="631.7488789237668" y="391.77777777777777" width="18.295964125560538" height="46.22222222222222" fill="#6B4A2B" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="561.6143497757847" y="397.1111111111111" width="15.246636771300448" height="40.888888888888886" fill="#6B4A2B" fill-opacity="1" stroke="none" stroke-width="0"/>
+<ellipse cx="671.390134529148" cy="368.6666666666667" rx="68.60986547085201" ry="32" fill="#315B3A" fill-opacity="1" stroke="none" stroke-width="0"/>
+<ellipse cx="616.5022421524664" cy="356.22222222222223" rx="71.6591928251121" ry="38.22222222222222" fill="#3F7048" fill-opacity="1" stroke="none" stroke-width="0"/>
+<ellipse cx="552.4663677130045" cy="370.44444444444446" rx="59.46188340807175" ry="28.444444444444443" fill="#2E5235" fill-opacity="1" stroke="none" stroke-width="0"/>
+<rect x="485.3811659192825" y="414.8888888888889" width="216.50224215246635" height="23.11111111111111" fill="#284A30" fill-opacity="1" stroke="none" stroke-width="0"/>
+</svg>

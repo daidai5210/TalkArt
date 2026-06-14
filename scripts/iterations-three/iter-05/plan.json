@@ -1,0 +1,129 @@
+{
+  "planId": "ynu_gate_road_silhouette_plan",
+  "totalSteps": 7,
+  "scene": {
+    "groundLineY": 492,
+    "skyBottomY": 330
+  },
+  "steps": [
+    {
+      "index": 0,
+      "label": "天空",
+      "description": "浅色天空背景矩形区域，简约留白，可承载校门上方空间",
+      "layer": "background",
+      "grounded": false,
+      "layout": {
+        "centerX": 400,
+        "centerY": 165,
+        "width": 760,
+        "height": 330,
+        "attachTo": 0,
+        "attachEdge": "center",
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    },
+    {
+      "index": 1,
+      "label": "地面",
+      "description": "校园前方地面基底，浅灰绿色平面块，底部延展到画布下方",
+      "layer": "ground",
+      "grounded": true,
+      "layout": {
+        "centerX": 400,
+        "centerY": 492,
+        "width": 760,
+        "height": 108,
+        "attachTo": 0,
+        "attachEdge": "center",
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    },
+    {
+      "index": 2,
+      "label": "道路",
+      "description": "从前景通向校门的道路，梯形透视剪影，中轴线简笔线条",
+      "layer": "structure",
+      "grounded": true,
+      "layout": {
+        "centerX": 0,
+        "centerY": 0,
+        "width": 300,
+        "height": 80,
+        "attachTo": 1,
+        "attachEdge": "top",
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    },
+    {
+      "index": 3,
+      "label": "云南大学校门牌坊",
+      "description": "云南大学校门牌坊主体剪影：两侧立柱、横梁、顶部屋檐大轮廓，深色简笔风格",
+      "layer": "structure",
+      "grounded": true,
+      "layout": {
+        "centerX": 0,
+        "centerY": 0,
+        "width": 280,
+        "height": 220,
+        "attachTo": 2,
+        "attachEdge": "top",
+        "offsetX": 0,
+        "offsetY": -2
+      }
+    },
+    {
+      "index": 4,
+      "label": "校名匾额",
+      "description": "牌坊中央匾额与“云南大学”字样占位，简化为深浅对比矩形和短线文字",
+      "layer": "detail",
+      "grounded": false,
+      "layout": {
+        "centerX": 0,
+        "centerY": 0,
+        "width": 150,
+        "height": 42,
+        "attachTo": 3,
+        "attachEdge": "top",
+        "offsetX": 0,
+        "offsetY": 58
+      }
+    },
+    {
+      "index": 5,
+      "label": "牌坊轮廓细节",
+      "description": "牌坊屋檐层次线和柱脚小基座，用少量细线强化云南大学校门轮廓",
+      "layer": "detail",
+      "grounded": false,
+      "layout": {
+        "centerX": 0,
+        "centerY": 0,
+        "width": 270,
+        "height": 210,
+        "attachTo": 3,
+        "attachEdge": "top",
+        "offsetX": 0,
+        "offsetY": 6
+      }
+    },
+    {
+      "index": 6,
+      "label": "道路两侧树影",
+      "description": "道路两侧简化树影与灌木剪影，左右对称衬托校门入口",
+      "layer": "foreground",
+      "grounded": true,
+      "layout": {
+        "centerX": 0,
+        "centerY": 0,
+        "width": 560,
+        "height": 120,
+        "attachTo": 1,
+        "attachEdge": "top",
+        "offsetX": 0,
+        "offsetY": -4
+      }
+    }
+  ]
+}

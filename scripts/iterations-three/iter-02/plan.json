@@ -1,0 +1,112 @@
+{
+  "planId": "ynu_gate_road_silhouette_plan",
+  "totalSteps": 6,
+  "scene": {
+    "groundLineY": 492,
+    "skyBottomY": 330
+  },
+  "steps": [
+    {
+      "index": 0,
+      "label": "天空",
+      "description": "简约天空背景区域，浅色纯色矩形，可预留少量云形留白；不含主体结构。",
+      "layer": "background",
+      "grounded": false,
+      "layout": {
+        "centerX": 400,
+        "centerY": 165,
+        "width": 760,
+        "height": 330,
+        "attachTo": 0,
+        "attachEdge": "center",
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    },
+    {
+      "index": 1,
+      "label": "地面",
+      "description": "地面基底，平面草地/广场区域，底部与画布下方留边协调，顶边作为道路依附线。",
+      "layer": "ground",
+      "grounded": true,
+      "layout": {
+        "centerX": 400,
+        "centerY": 492,
+        "width": 760,
+        "height": 108,
+        "attachTo": 0,
+        "attachEdge": "center",
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    },
+    {
+      "index": 2,
+      "label": "道路",
+      "description": "通向校门的简约道路剪影，梯形透视感或中央直道轮廓，底边落在地面区域，顶边承接牌坊。",
+      "layer": "structure",
+      "grounded": true,
+      "layout": {
+        "centerX": 400,
+        "centerY": 0,
+        "width": 300,
+        "height": 80,
+        "attachTo": 1,
+        "attachEdge": "top",
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    },
+    {
+      "index": 3,
+      "label": "云南大学校门牌坊",
+      "description": "云南大学校门牌坊主轮廓，包含左右立柱、横梁、中央门洞、屋檐/牌匾的大形剪影，底边依附道路顶面略上移。",
+      "layer": "structure",
+      "grounded": true,
+      "layout": {
+        "centerX": 0,
+        "centerY": 0,
+        "width": 280,
+        "height": 220,
+        "attachTo": 2,
+        "attachEdge": "top",
+        "offsetX": 0,
+        "offsetY": -2
+      }
+    },
+    {
+      "index": 4,
+      "label": "校门牌匾与门洞细节",
+      "description": "校门牌匾与门洞线条细节，作为牌坊内的简笔画细节层，依附牌坊中心区域。",
+      "layer": "detail",
+      "grounded": false,
+      "layout": {
+        "centerX": 0,
+        "centerY": 0,
+        "width": 210,
+        "height": 90,
+        "attachTo": 3,
+        "attachEdge": "center",
+        "offsetX": 0,
+        "offsetY": -35
+      }
+    },
+    {
+      "index": 5,
+      "label": "两侧树影",
+      "description": "两侧低矮树影/灌木剪影，位于道路两边地面上，增强校园入口氛围但不遮挡校门主体。",
+      "layer": "foreground",
+      "grounded": true,
+      "layout": {
+        "centerX": 0,
+        "centerY": 0,
+        "width": 680,
+        "height": 95,
+        "attachTo": 1,
+        "attachEdge": "top",
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    }
+  ]
+}
