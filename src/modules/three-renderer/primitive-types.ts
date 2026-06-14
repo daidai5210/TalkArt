@@ -1,9 +1,8 @@
-import type { GeometryKind } from './geometry-catalog';
 import type { StepLayoutSpec } from '../leafer-renderer/step-layout-aligner';
+import type { SceneLayer } from './scene-composition';
 
-/** Single Three.js primitive emitted by LLM via renderThreeStep tool. */
 export interface ThreePrimitive {
-  kind: GeometryKind;
+  kind: import('./geometry-catalog').GeometryKind;
   x: number;
   y: number;
   z?: number;
@@ -26,7 +25,6 @@ export interface ThreePrimitive {
   strokeWidth?: number;
 }
 
-/** Parsed renderThreeStep tool output. */
 export interface ThreeStepSpec {
   stepIndex: number;
   label: string;
@@ -37,12 +35,15 @@ export interface DrawingPlanStep {
   index: number;
   label: string;
   description: string;
+  layer: SceneLayer;
+  grounded?: boolean;
   layout?: StepLayoutSpec;
 }
 
 export interface DrawingPlan {
   planId: string;
   totalSteps: number;
+  scene: import('./scene-composition').SceneMeta;
   steps: DrawingPlanStep[];
 }
 

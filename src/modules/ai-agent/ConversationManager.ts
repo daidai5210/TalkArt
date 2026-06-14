@@ -312,6 +312,9 @@ export class ConversationManager {
       stepLabel: string;
       stepDescription: string;
       stepLayout?: import('../leafer-renderer/step-layout-aligner').StepLayoutSpec;
+      stepLayer?: import('../three-renderer/scene-composition').SceneLayer;
+      stepGrounded?: boolean;
+      sceneMeta?: import('../three-renderer/scene-composition').SceneMeta;
       resolvedLayoutTarget?: LayoutTarget | null;
       completedSteps: CompletedStepContext[];
       planSteps: PlanStepContext[];
@@ -329,6 +332,9 @@ export class ConversationManager {
       stepLabel: params.stepLabel,
       stepDescription: params.stepDescription,
       stepLayout: params.stepLayout,
+      stepLayer: params.stepLayer,
+      stepGrounded: params.stepGrounded,
+      sceneMeta: params.sceneMeta,
       resolvedLayoutTarget: params.resolvedLayoutTarget,
       completedSteps: params.completedSteps,
       planSteps: params.planSteps,
