@@ -3,6 +3,7 @@
  */
 
 import { ALLOWED_LEAFER_TAGS, type LeaferStepJSON } from './types';
+import { parseStepLayoutSpec } from './step-layout-aligner';
 
 export interface ValidationResult {
   valid: boolean;
@@ -68,7 +69,7 @@ export function validateLeaferJson(input: unknown): ValidationResult {
 export function parseDrawingPlan(args: Record<string, unknown>): {
   planId: string;
   totalSteps: number;
-  steps: Array<{ index: number; label: string; description: string }>;
+  steps: Array<{ index: number; label: string; description: string; layout?: ReturnType<typeof parseStepLayoutSpec> }>;
 } | null {
   const planId = typeof args.planId === 'string' ? args.planId : `plan-${Date.now()}`;
   const steps = args.steps;
@@ -82,9 +83,15 @@ export function parseDrawingPlan(args: Record<string, unknown>): {
         index: typeof step.index === 'number' ? step.index : i,
         label: String(step.label ?? `步骤 ${i + 1}`),
         description: String(step.description ?? step.label ?? ''),
+        layout: parseStepLayoutSpec(step.layout),
       };
     })
-    .filter(Boolean) as Array<{ index: number; label: string; description: string }>;
+    .filter(Boolean) as Array<{
+      index: number;
+      label: string;
+      description: string;
+      layout?: ReturnType<typeof parseStepLayoutSpec>;
+    }>;
 
   if (parsed.length === 0) return null;
 

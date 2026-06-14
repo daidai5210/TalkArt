@@ -7,6 +7,22 @@ import {
   formatCompletedSteps,
   formatPlanOverview,
 } from '../leafer-renderer/scene-bounds';
+import type { StepLayoutSpec } from '../leafer-renderer/step-layout-aligner';
+
+function formatLayoutSpec(layout: StepLayoutSpec | undefined): string {
+  if (!layout) return '（未指定，请按 description 坐标绘制）';
+  if (layout.centerX != null && layout.centerY != null) {
+    const size =
+      layout.width && layout.height
+        ? ` 目标尺寸 ${layout.width}×${layout.height}px`
+        : '';
+    return `中心 (${layout.centerX}, ${layout.centerY})${size}`;
+  }
+  if (layout.attachTo != null) {
+    return `依附步骤 ${layout.attachTo + 1} 的 ${layout.attachEdge ?? 'center'} 边，偏移 (${layout.offsetX ?? 0}, ${layout.offsetY ?? 0})${layout.width ? ` 尺寸 ${layout.width}×${layout.height}px` : ''}`;
+  }
+  return '（未指定）';
+}
 
 export function buildLeaferPlanningPrompt(ctx: {
   width: number;
@@ -26,11 +42,12 @@ export function buildLeaferPlanningPrompt(ctx: {
 2. 简单图形（圆、矩形、单物体）：1~3 步
 3. 复杂场景（动物、人物、多物体、场景）：5~15 步
 4. 步骤顺序：背景/大轮廓 → 主体 → 细节装饰
-5. **每步 description 必须写清精确像素坐标**，供后续步骤对齐拼合，格式示例：
-   - 「身体：Ellipse 中心(${cx},${cy + 80}) 宽200 高140 填充#FFDAB9」
-   - 「头部：Ellipse 中心(${cx},${cy - 40}) 宽120 高100」
-   - 「左耳：Polygon 中心(${cx - 40},${cy - 90}) 宽40 高50」
-6. 先规划整体构图锚点（主体居中），后续步骤坐标必须基于前面步骤的位置，确保能拼成完整图形
+5. **每步必须填写 layout 对象**（系统代码会强制对齐，LLM 坐标仅作参考）：
+   - 第一步主体（身体/轮廓）：{ centerX, centerY, width, height }，主体居中，如 centerX=${cx}
+   - 依附部件（头/耳/腿/尾/五官）：{ attachTo: 上一步index, attachEdge: "top"|"bottom"|"left"|"right", offsetX, offsetY, width, height }
+   - 示例：身体 layout { centerX:${cx}, centerY:${cy + 80}, width:220, height:130 }
+   - 示例：头部 layout { attachTo:0, attachEdge:"top", offsetY:-55, width:120, height:100 }
+6. description 写清形状与颜色；layout 写清空间关系
 7. 禁止反问、禁止纯文字回复`;
 }
 
@@ -42,6 +59,7 @@ export function buildLeaferRenderPrompt(ctx: {
   totalSteps: number;
   stepLabel: string;
   stepDescription: string;
+  stepLayout?: StepLayoutSpec;
   completedSteps: CompletedStepContext[];
   planSteps: PlanStepContext[];
 }): string {
@@ -53,6 +71,7 @@ export function buildLeaferRenderPrompt(ctx: {
     totalSteps,
     stepLabel,
     stepDescription,
+    stepLayout,
     completedSteps,
     planSteps,
   } = ctx;
@@ -76,6 +95,7 @@ export function buildLeaferRenderPrompt(ctx: {
 用户原始需求：${userIntent}
 本步标签：${stepLabel}
 本步说明：${stepDescription}
+本步空间锚点：${formatLayoutSpec(stepLayout)}
 画布：${width}×${height}px，原点左上角，中心约 (${cx}, ${cy})
 
 ## 已有画布内容（本步必须与之对齐拼合）
@@ -89,7 +109,7 @@ ${planOverview}
 2. Rect / Box：x,y 为**左上角**
 3. Line：x,y 为起点，toX/toY 或 to 为终点
 4. 本步图形必须与已有步骤的空间位置衔接，禁止漂浮错位
-5. 严格按本步说明中的坐标绘制；若说明含坐标，必须原样使用
+5. 主图形应落在「本步空间锚点」附近（系统会自动对齐，但仍请尽量接近）
 
 ## 输出规则
 1. 必须调用 renderLeaferStep 工具

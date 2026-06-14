@@ -13,6 +13,16 @@ export interface PlanStepContext {
   index: number;
   label: string;
   description: string;
+  layout?: {
+    centerX?: number;
+    centerY?: number;
+    width?: number;
+    height?: number;
+    attachTo?: number;
+    attachEdge?: string;
+    offsetX?: number;
+    offsetY?: number;
+  };
 }
 
 export interface CanvasContext {

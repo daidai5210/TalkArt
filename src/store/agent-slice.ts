@@ -20,6 +20,10 @@ import {
   extractLeaferJsonBounds,
   summarizeLeaferJson,
 } from '../modules/leafer-renderer/scene-bounds';
+import {
+  alignStepJsonToLayout,
+  resolveStepLayoutTarget,
+} from '../modules/leafer-renderer/step-layout-aligner';
 
 /** Conversation message with metadata for UI display. */
 export interface ConversationMessage {
@@ -76,6 +80,7 @@ function buildCanvasContext(get: () => CanvasSlice & AgentSlice): CanvasContext 
       index: s.index,
       label: s.label,
       description: s.description,
+      layout: s.layout,
     })),
   };
 }
@@ -96,7 +101,7 @@ async function renderSingleStep(
   manager: ConversationManager,
   get: () => CanvasSlice & AgentSlice,
   userIntent: string,
-  step: { index: number; label: string; description: string },
+  step: { index: number; label: string; description: string; layout?: DrawingPlan['steps'][0]['layout'] },
   totalSteps: number,
 ): Promise<{ success: boolean; error?: string }> {
   const {
@@ -131,6 +136,7 @@ async function renderSingleStep(
         totalSteps,
         stepLabel: step.label,
         stepDescription: step.description,
+        stepLayout: step.layout,
         completedSteps: canvasContext.completed_steps ?? [],
         planSteps: canvasContext.plan_steps ?? [],
       },
@@ -164,20 +170,28 @@ async function renderSingleStep(
       return { success: false, error: 'Leafer JSON 格式无效' };
     }
 
+    const layoutTarget = resolveStepLayoutTarget(
+      step.layout,
+      get().completedStepLayouts,
+    );
+    const leaferJson = layoutTarget
+      ? alignStepJsonToLayout(parsed.leaferJson, layoutTarget)
+      : parsed.leaferJson;
+
     try {
       const stepId = await getLeaferManager().addStepWithFadeIn(
-        parsed.leaferJson,
+        leaferJson,
         step.index,
       );
       pushLeaferStepId(stepId);
 
-      const bounds = extractLeaferJsonBounds(parsed.leaferJson);
+      const bounds = extractLeaferJsonBounds(leaferJson);
       if (bounds) {
         get().pushStepLayout({
           stepIndex: step.index,
           label: step.label,
           bounds,
-          summary: summarizeLeaferJson(parsed.leaferJson),
+          summary: summarizeLeaferJson(leaferJson),
         });
       }
 
