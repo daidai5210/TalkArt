@@ -225,6 +225,34 @@ export function alignStepJsonToCenter(
   });
 }
 
+export function describeLayoutTargetForPrompt(target: LayoutTarget): string {
+  const snapLabel: Record<LayoutTarget['snapEdge'], string> = {
+    top: '上边缘',
+    bottom: '下边缘',
+    left: '左边缘',
+    right: '右边缘',
+    center: '中心',
+  };
+  const ax = Math.round(target.anchorX);
+  const ay = Math.round(target.anchorY);
+  const size =
+    target.width && target.height
+      ? `，目标尺寸约 ${Math.round(target.width)}×${Math.round(target.height)}px`
+      : '';
+  return `系统将把本步图形${snapLabel[target.snapEdge]}对齐到锚点 (${ax}, ${ay})${size}。请在此附近绘制，不要偏离超过 30px。`;
+}
+
+export function formatAttachReference(
+  layout: StepLayoutSpec | undefined,
+  completed: StepLayoutRecord[],
+): string {
+  if (layout?.attachTo == null) return '';
+  const ref = completed.find((s) => s.stepIndex === layout.attachTo);
+  if (!ref) return '';
+  const b = ref.bounds;
+  return `本步依附步骤${ref.stepIndex + 1}「${ref.label}」的实际位置：包围盒(${Math.round(b.minX)},${Math.round(b.minY)})-(${Math.round(b.maxX)},${Math.round(b.maxY)})，attachEdge=${layout.attachEdge ?? 'center'} offset=(${layout.offsetX ?? 0},${layout.offsetY ?? 0})`;
+}
+
 export function parseStepLayoutSpec(raw: unknown): StepLayoutSpec | undefined {
   if (!raw || typeof raw !== 'object') return undefined;
   const o = raw as Record<string, unknown>;

@@ -39,6 +39,7 @@ const {
   alignStepJsonToLayout,
   resolveStepLayoutTarget,
 } = await import('../src/modules/leafer-renderer/step-layout-aligner.ts');
+const { resolveLlmEnvConfig } = await import('../src/modules/ai-agent/llm-env-config.ts');
 
 const args = process.argv.slice(2);
 const noAlign = args.includes('--no-align');
@@ -54,29 +55,17 @@ const outDir = join(root, 'scripts', 'iterations', `iter-${String(iteration).pad
 mkdirSync(outDir, { recursive: true });
 
 function getLlmConfig() {
-  const provider = (process.env.LLM_PROVIDER || 'openai').toLowerCase();
-  if (provider === 'deepseek') {
-    return {
-      url: 'https://api.deepseek.com/v1/chat/completions',
-      apiKey: process.env.DEEPSEEK_API_KEY,
-      model: process.env.LLM_MODEL || 'deepseek-chat',
-    };
-  }
-  return {
-    url: 'https://api.openai.com/v1/chat/completions',
-    apiKey: process.env.OPENAI_API_KEY,
-    model: process.env.LLM_MODEL || 'gpt-4o-mini',
-  };
+  return resolveLlmEnvConfig(process.env);
 }
 
 async function callLlm(messages, tools, retries = 3) {
   const cfg = getLlmConfig();
-  if (!cfg.apiKey) throw new Error('LLM API key missing in .env');
+  if (!cfg.apiKey) throw new Error('LLM API key missing — set LLM_API_KEY in .env');
 
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const res = await fetch(cfg.url, {
+      const res = await fetch(cfg.chatCompletionsUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -180,6 +169,7 @@ const renderedSteps = [];
 
 for (const step of planData.steps) {
   const canvasCtx = buildCanvasContext(completedStepLayouts, planData.steps);
+  const resolvedLayoutTarget = resolveStepLayoutTarget(step.layout, completedStepLayouts);
   const renderPrompt = buildLeaferRenderPrompt({
     width: CANVAS.width,
     height: CANVAS.height,
@@ -189,6 +179,7 @@ for (const step of planData.steps) {
     stepLabel: step.label,
     stepDescription: step.description,
     stepLayout: step.layout,
+    resolvedLayoutTarget,
     completedSteps: canvasCtx.completed_steps ?? [],
     planSteps: canvasCtx.plan_steps ?? [],
   });

@@ -51,9 +51,22 @@ function createVercelResponse(res: ServerResponse): VercelResponse {
   return response;
 }
 
+/** Env keys that must always sync from .env when Vite reloads (not stick to stale process.env). */
+const REFRESH_ENV_KEYS = new Set([
+  'LLM_BASE_URL',
+  'LLM_API_KEY',
+  'LLM_MODEL',
+  'LLM_PROVIDER',
+  'OPENAI_API_KEY',
+  'DEEPSEEK_API_KEY',
+  'MIMO_API_KEY',
+  'MIMO_BASE_URL',
+  'STT_MODEL',
+]);
+
 export function apiDevPlugin(env: Record<string, string>): Plugin {
   for (const [key, value] of Object.entries(env)) {
-    if (process.env[key] === undefined) {
+    if (REFRESH_ENV_KEYS.has(key) || process.env[key] === undefined) {
       process.env[key] = value;
     }
   }

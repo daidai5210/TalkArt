@@ -4,6 +4,10 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { buildDrawingSystemPrompt } from '../src/modules/ai-agent/drawing-system-prompt';
+import { formatCanvasSpec } from '../src/modules/leafer-renderer/scene-bounds';
+import { resolveLlmEnvConfig } from '../src/modules/ai-agent/llm-env-config';
+import { fetchLlmUpstream, isConnectTimeoutError } from '../src/modules/ai-agent/llm-fetch';
+import { LLM_REQUEST_TIMEOUT_MS } from '../src/modules/ai-agent/llm-config';
 
 // ---------- Types ----------
 
@@ -81,34 +85,16 @@ function buildSystemPrompt(canvasContext?: CanvasContext): string {
     elementCount,
     elementsSummary: `选中:${selectedElement}；${elementsSummary}`,
     completedStepsSummary,
+    canvasSpec: formatCanvasSpec(width, height),
   });
 }
 
 // ---------- Provider Config ----------
 
-interface ProviderConfig {
-  url: string;
-  apiKey: string;
-  model: string;
-}
-
-function getProviderConfig(): ProviderConfig {
-  const provider = (process.env.LLM_PROVIDER || 'openai').toLowerCase();
-  const model = process.env.LLM_MODEL || 'gpt-4o-mini';
-
-  if (provider === 'deepseek') {
-    const apiKey = process.env.DEEPSEEK_API_KEY || '';
-    return {
-      url: 'https://api.deepseek.com/v1/chat/completions',
-      apiKey,
-      model: model === 'gpt-4o-mini' ? 'deepseek-chat' : model,
-    };
-  }
-
-  // Default: OpenAI
-  const apiKey = process.env.OPENAI_API_KEY || '';
+function getProviderConfig() {
+  const { chatCompletionsUrl, apiKey, model } = resolveLlmEnvConfig();
   return {
-    url: 'https://api.openai.com/v1/chat/completions',
+    url: chatCompletionsUrl,
     apiKey,
     model,
   };
@@ -196,7 +182,7 @@ export default async function handler(
   // 6. Forward to LLM API with timeout
   try {
     const response = await withTimeout(
-      fetch(config.url, {
+      fetchLlmUpstream(config.url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -204,7 +190,7 @@ export default async function handler(
         },
         body: JSON.stringify(payload),
       }),
-      90_000 // 90 seconds — complex tool calls need more time
+      LLM_REQUEST_TIMEOUT_MS,
     );
 
     // 7. Handle LLM API errors
@@ -214,8 +200,20 @@ export default async function handler(
         `LLM API error: status=${response.status}, body=${errorBody}`
       );
 
+      let upstreamMessage = '';
+      try {
+        const parsed = JSON.parse(errorBody) as {
+          error?: { message?: string; code?: string };
+          message?: string;
+        };
+        upstreamMessage =
+          parsed.error?.message || parsed.message || '';
+      } catch {
+        upstreamMessage = errorBody.slice(0, 200);
+      }
+
       if (response.status === 401 || response.status === 403) {
-        sendError(res, 500, 'llm_error', 'AI 服务认证失败，请检查 API Key 配置');
+        sendError(res, 500, 'llm_error', 'AI 服务认证失败，请检查 LLM_API_KEY 与 LLM_BASE_URL');
         return;
       }
 
@@ -224,7 +222,22 @@ export default async function handler(
         return;
       }
 
-      sendError(res, 500, 'llm_error', 'AI 服务暂时不可用，请稍后重试');
+      if (/model not found|10404/i.test(upstreamMessage)) {
+        sendError(
+          res,
+          500,
+          'llm_error',
+          `模型不可用：请检查 LLM_MODEL（当前: ${config.model}）与 LLM_BASE_URL 是否匹配`,
+        );
+        return;
+      }
+
+      sendError(
+        res,
+        500,
+        'llm_error',
+        upstreamMessage ? `AI 服务错误：${upstreamMessage.slice(0, 180)}` : 'AI 服务暂时不可用，请稍后重试',
+      );
       return;
     }
 
@@ -299,9 +312,14 @@ export default async function handler(
       content: message.content || '',
     });
   } catch (err: unknown) {
-    // 9. Handle timeout and other fetch errors
     if (err instanceof Error && err.message.includes('timed out')) {
       sendError(res, 504, 'timeout', 'AI 响应超时，请重试');
+      return;
+    }
+
+    if (isConnectTimeoutError(err)) {
+      console.error('LLM proxy connect timeout:', err);
+      sendError(res, 504, 'timeout', '连接 AI 服务超时，请检查网络或稍后重试');
       return;
     }
 
