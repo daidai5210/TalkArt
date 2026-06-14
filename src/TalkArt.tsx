@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { LeaferCanvas } from './modules/leafer-renderer';
+import { ThreeCanvas } from './modules/three-renderer';
 import { DrawingProgressIndicator } from './components/DrawingProgressIndicator';
 import { useTalkArt } from './hooks/useTalkArt';
 import { useStore } from './store';
@@ -167,7 +167,7 @@ const TalkArt: React.FC = () => {
         />
 
         <div className="flex-1 flex items-center justify-center p-4">
-          <LeaferCanvas />
+          <ThreeCanvas />
         </div>
 
         {voiceError && (

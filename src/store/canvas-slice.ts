@@ -1,7 +1,7 @@
 import { StateCreator } from 'zustand';
-import type { StepLayoutRecord } from '../modules/leafer-renderer/scene-bounds';
-import type { DrawingPlan, StepProgress } from '../modules/leafer-renderer/types';
-import { getLeaferManager } from '../modules/leafer-renderer';
+import type { StepLayoutRecord } from '../modules/three-renderer/scene-bounds';
+import type { DrawingPlan, StepProgress } from '../modules/three-renderer/types';
+import { getThreeManager } from '../modules/three-renderer';
 
 export interface CanvasState {
   canvasWidth: number;
@@ -62,7 +62,7 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
   setPendingRetry: (pendingRetry) => set({ pendingRetry }),
 
   undoLastStep: () => {
-    const removed = getLeaferManager().undoLastStep();
+    const removed = getThreeManager().undoLastStep();
     if (removed) {
       set((state) => ({
         leaferStepIds: state.leaferStepIds.slice(0, -1),
@@ -72,7 +72,7 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
   },
 
   clearCanvas: () => {
-    getLeaferManager().clear();
+    getThreeManager().clear();
     set({
       leaferStepIds: [],
       completedStepLayouts: [],

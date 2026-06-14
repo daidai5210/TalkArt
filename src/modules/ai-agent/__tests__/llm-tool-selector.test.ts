@@ -22,6 +22,6 @@ describe('llm-tool-selector', () => {
 
   it('exports planning and render tool subsets', () => {
     expect(PLANNING_TOOLS[0].function.name).toBe('planDrawingSteps');
-    expect(RENDER_TOOLS[0].function.name).toBe('renderLeaferStep');
+    expect(RENDER_TOOLS[0].function.name).toBe('renderThreeStep');
   });
 });

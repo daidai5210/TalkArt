@@ -26,7 +26,7 @@ import { WakeWordDetector } from '@/modules/voice-input/WakeWordDetector';
 import { EndPhraseDetector } from '@/modules/voice-input/EndPhraseDetector';
 import { VoiceCommandRouter } from '@/modules/voice-input/VoiceCommandRouter';
 import { normalizeVoiceTranscript } from '@/modules/voice-input/normalize-transcript';
-import { getLeaferManager } from '@/modules/leafer-renderer';
+import { getThreeManager } from '@/modules/three-renderer';
 import { exportLeaferSVG, exportLeaferPNG } from '@/modules/export/leafer-exporter';
 import { useDemoMode } from './useDemoMode';
 import type { AgentState } from '@/modules/ai-agent/types';
@@ -342,7 +342,7 @@ export function useTalkArt(): TalkArtState {
   /** Export canvas as SVG file. */
   const exportSVGAction = useCallback(async () => {
     try {
-      const svg = await getLeaferManager().exportSVG();
+      const svg = await getThreeManager().exportSVG();
       await exportLeaferSVG(svg, `talkart-${Date.now()}`);
     } catch (_err) {
       setError('SVG 导出失败');
@@ -354,7 +354,7 @@ export function useTalkArt(): TalkArtState {
   /** Export canvas as PNG file. */
   const exportPNGAction = useCallback(async () => {
     try {
-      const dataUrl = await getLeaferManager().exportPNG();
+      const dataUrl = await getThreeManager().exportPNG();
       await exportLeaferPNG(dataUrl, `talkart-${Date.now()}`);
     } catch (_err) {
       setError('PNG 导出失败');

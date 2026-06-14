@@ -1,6 +1,6 @@
 /**
  * @module store/agent-slice
- * Zustand slice for AI Agent + LeaferJS progressive drawing orchestration.
+ * Zustand slice for AI Agent + Three.js progressive drawing orchestration.
  */
 
 import { StateCreator } from 'zustand';
@@ -10,20 +10,17 @@ import type { LLMFunctionCall } from '../modules/ai-agent/types';
 import { isLLMServiceError } from '../modules/ai-agent/llm-response-utils';
 import type { CanvasContext } from '../modules/ai-agent/canvas-context';
 import type { CanvasSlice } from './canvas-slice';
-import type { DrawingPlan } from '../modules/leafer-renderer/types';
-import { getLeaferManager, stepDelayMs } from '../modules/leafer-renderer';
+import type { DrawingPlan } from '../modules/three-renderer/types';
 import {
   parseDrawingPlan,
-  parseRenderLeaferStep,
-} from '../modules/leafer-renderer/leafer-json-validator';
-import {
-  extractLeaferJsonBounds,
-  summarizeLeaferJson,
-} from '../modules/leafer-renderer/scene-bounds';
-import {
+  parseRenderThreeStep,
+  getThreeManager,
+  stepDelayMs,
+  extractThreeJsonBounds,
+  summarizeThreeJson,
   alignStepJsonToLayout,
   resolveStepLayoutTarget,
-} from '../modules/leafer-renderer/step-layout-aligner';
+} from '../modules/three-renderer';
 
 /** Conversation message with metadata for UI display. */
 export interface ConversationMessage {
@@ -156,47 +153,47 @@ async function renderSingleStep(
     const call = extractFunctionCall(response);
     if (!call) {
       if (attempt < MAX_STEP_RETRIES) continue;
-      return { success: false, error: '模型未返回 renderLeaferStep' };
+      return { success: false, error: '模型未返回 renderThreeStep' };
     }
 
-    if (call.name === 'clearLeaferCanvas') {
+    if (call.name === 'clearThreeCanvas') {
       get().clearCanvas();
       return { success: true };
     }
 
-    if (call.name !== 'renderLeaferStep') {
+    if (call.name !== 'renderThreeStep') {
       if (attempt < MAX_STEP_RETRIES) continue;
       return { success: false, error: `意外的工具调用: ${call.name}` };
     }
 
-    const parsed = parseRenderLeaferStep(call.arguments);
+    const parsed = parseRenderThreeStep(call.arguments);
     if (!parsed) {
       if (attempt < MAX_STEP_RETRIES) continue;
-      return { success: false, error: 'Leafer JSON 格式无效' };
+      return { success: false, error: 'Three.js JSON 格式无效' };
     }
 
     const layoutTarget = resolveStepLayoutTarget(
       step.layout,
       get().completedStepLayouts,
     );
-    const leaferJson = layoutTarget
-      ? alignStepJsonToLayout(parsed.leaferJson, layoutTarget)
-      : parsed.leaferJson;
+    const threeJson = layoutTarget
+      ? alignStepJsonToLayout(parsed.threeJson, layoutTarget)
+      : parsed.threeJson;
 
     try {
-      const stepId = await getLeaferManager().addStepWithFadeIn(
-        leaferJson,
+      const stepId = await getThreeManager().addStepWithFadeIn(
+        threeJson,
         step.index,
       );
       pushLeaferStepId(stepId);
 
-      const bounds = extractLeaferJsonBounds(leaferJson);
+      const bounds = extractThreeJsonBounds(threeJson);
       if (bounds) {
         get().pushStepLayout({
           stepIndex: step.index,
           label: step.label,
           bounds,
-          summary: summarizeLeaferJson(leaferJson),
+          summary: summarizeThreeJson(threeJson),
         });
       }
 

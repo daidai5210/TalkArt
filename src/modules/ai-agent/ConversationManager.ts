@@ -40,9 +40,9 @@ import { sendToLLM } from './llm-client';
 import { normalizeVoiceTranscript } from '../voice-input/normalize-transcript';
 import { isComplexDrawingRequest, selectToolsForRequest, PLANNING_TOOLS, RENDER_TOOLS } from './llm-tool-selector';
 import {
-  buildLeaferPlanningPrompt,
-  buildLeaferRenderPrompt,
-} from './leafer-system-prompt';
+  buildThreePlanningPrompt,
+  buildThreeRenderPrompt,
+} from './three-system-prompt';
 import type { LayoutTarget } from '../leafer-renderer/step-layout-aligner';
 
 /** Maximum number of messages to keep in conversation history. */
@@ -279,7 +279,7 @@ export class ConversationManager {
     this.messages.push({ role: 'user', content: cleaned });
     this.canvasContext = canvasContext;
 
-    const planningPrompt = buildLeaferPlanningPrompt({
+    const planningPrompt = buildThreePlanningPrompt({
       width: canvasContext.width,
       height: canvasContext.height,
       stepCount: existingStepCount,
@@ -320,7 +320,7 @@ export class ConversationManager {
   ): Promise<LLMResponse> {
     this.canvasContext = canvasContext;
 
-    const renderPrompt = buildLeaferRenderPrompt({
+    const renderPrompt = buildThreeRenderPrompt({
       width: canvasContext.width,
       height: canvasContext.height,
       userIntent: params.userIntent,
