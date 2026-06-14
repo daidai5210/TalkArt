@@ -1,9 +1,10 @@
 /**
  * Align LLM-produced Leafer JSON to planned step layout (code-side coordinate enforcement).
+ * Uses edge snapping so parts connect (head on body, legs under body, tail on side).
  */
 
 import type { LeaferStepJSON } from './types';
-import type { StepLayoutRecord } from './scene-bounds';
+import type { Bounds, StepLayoutRecord } from './scene-bounds';
 import { extractLeaferJsonBounds } from './scene-bounds';
 
 export interface StepLayoutSpec {
@@ -11,16 +12,36 @@ export interface StepLayoutSpec {
   centerY?: number;
   width?: number;
   height?: number;
-  /** Attach to a previous step index (0-based). */
   attachTo?: number;
   attachEdge?: 'top' | 'bottom' | 'left' | 'right' | 'center';
   offsetX?: number;
   offsetY?: number;
 }
 
+/** Where a step's bbox should snap on the canvas. */
+export interface LayoutTarget {
+  anchorX: number;
+  anchorY: number;
+  /** Which edge of THIS step's bbox aligns to the anchor point. */
+  snapEdge: 'top' | 'bottom' | 'left' | 'right' | 'center';
+  width?: number;
+  height?: number;
+}
+
 function num(v: unknown, fallback = 0): number {
   return typeof v === 'number' && Number.isFinite(v) ? v : fallback;
 }
+
+const PARENT_TO_CHILD_SNAP: Record<
+  NonNullable<StepLayoutSpec['attachEdge']>,
+  LayoutTarget['snapEdge']
+> = {
+  top: 'bottom',
+  bottom: 'top',
+  left: 'right',
+  right: 'left',
+  center: 'center',
+};
 
 function translateNode(node: LeaferStepJSON, dx: number, dy: number): LeaferStepJSON {
   const out: LeaferStepJSON = { ...node };
@@ -81,10 +102,28 @@ function scaleNodeAround(
   return out;
 }
 
+function snapDelta(bounds: Bounds, target: LayoutTarget): { dx: number; dy: number } {
+  const cx = (bounds.minX + bounds.maxX) / 2;
+  const cy = (bounds.minY + bounds.maxY) / 2;
+
+  switch (target.snapEdge) {
+    case 'top':
+      return { dx: target.anchorX - cx, dy: target.anchorY - bounds.minY };
+    case 'bottom':
+      return { dx: target.anchorX - cx, dy: target.anchorY - bounds.maxY };
+    case 'left':
+      return { dx: target.anchorX - bounds.minX, dy: target.anchorY - cy };
+    case 'right':
+      return { dx: target.anchorX - bounds.maxX, dy: target.anchorY - cy };
+    default:
+      return { dx: target.anchorX - cx, dy: target.anchorY - cy };
+  }
+}
+
 export function resolveStepLayoutTarget(
   spec: StepLayoutSpec | undefined,
   completed: StepLayoutRecord[],
-): { centerX: number; centerY: number; width?: number; height?: number } | null {
+): LayoutTarget | null {
   if (!spec) return null;
 
   const ox = num(spec.offsetX);
@@ -92,8 +131,9 @@ export function resolveStepLayoutTarget(
 
   if (spec.centerX != null && spec.centerY != null) {
     return {
-      centerX: spec.centerX + ox,
-      centerY: spec.centerY + oy,
+      anchorX: spec.centerX + ox,
+      anchorY: spec.centerY + oy,
+      snapEdge: 'center',
       width: spec.width,
       height: spec.height,
     };
@@ -108,67 +148,81 @@ export function resolveStepLayoutTarget(
   const rcy = (b.minY + b.maxY) / 2;
   const edge = spec.attachEdge ?? 'center';
 
-  let centerX = rcx;
-  let centerY = rcy;
+  let anchorX = rcx;
+  let anchorY = rcy;
   switch (edge) {
     case 'top':
-      centerX = rcx;
-      centerY = b.minY;
+      anchorX = rcx;
+      anchorY = b.minY;
       break;
     case 'bottom':
-      centerX = rcx;
-      centerY = b.maxY;
+      anchorX = rcx;
+      anchorY = b.maxY;
       break;
     case 'left':
-      centerX = b.minX;
-      centerY = rcy;
+      anchorX = b.minX;
+      anchorY = rcy;
       break;
     case 'right':
-      centerX = b.maxX;
-      centerY = rcy;
+      anchorX = b.maxX;
+      anchorY = rcy;
       break;
     default:
       break;
   }
 
   return {
-    centerX: centerX + ox,
-    centerY: centerY + oy,
+    anchorX: anchorX + ox,
+    anchorY: anchorY + oy,
+    snapEdge: PARENT_TO_CHILD_SNAP[edge],
     width: spec.width,
     height: spec.height,
   };
 }
 
-export function alignStepJsonToLayout(
-  json: LeaferStepJSON,
-  target: { centerX: number; centerY: number; width?: number; height?: number },
-): LeaferStepJSON {
-  const bounds = extractLeaferJsonBounds(json);
-  if (!bounds) return json;
+export function alignStepJsonToLayout(json: LeaferStepJSON, target: LayoutTarget): LeaferStepJSON {
+  const initialBounds = extractLeaferJsonBounds(json);
+  if (!initialBounds) return json;
 
-  const cx = (bounds.minX + bounds.maxX) / 2;
-  const cy = (bounds.minY + bounds.maxY) / 2;
-  const dx = target.centerX - cx;
-  const dy = target.centerY - cy;
+  let aligned = json;
+  const icx = (initialBounds.minX + initialBounds.maxX) / 2;
+  const icy = (initialBounds.minY + initialBounds.maxY) / 2;
+  const bw = initialBounds.maxX - initialBounds.minX;
+  const bh = initialBounds.maxY - initialBounds.minY;
 
-  let aligned = translateNode(json, dx, dy);
-
-  const bw = bounds.maxX - bounds.minX;
-  const bh = bounds.maxY - bounds.minY;
-  if (target.width && target.height && bw > 4 && bh > 4) {
+  if (target.width && target.height && bw > 1 && bh > 1) {
     const scaleX = target.width / bw;
     const scaleY = target.height / bh;
-    const needsScale =
-      Math.abs(scaleX - 1) > 0.25 ||
-      Math.abs(scaleY - 1) > 0.25 ||
-      Math.max(bw, bh) > Math.max(target.width, target.height) * 2;
-    if (needsScale) {
-      const uniform = Math.min(scaleX, scaleY);
-      aligned = scaleNodeAround(aligned, target.centerX, target.centerY, uniform, uniform);
+    const shouldScale =
+      (target.width >= 48 && target.height >= 48) ||
+      bw > target.width * 1.8 ||
+      bh > target.height * 1.8;
+    if (shouldScale) {
+      aligned = scaleNodeAround(aligned, icx, icy, scaleX, scaleY);
     }
   }
 
-  return aligned;
+  const bounds = extractLeaferJsonBounds(aligned);
+  if (!bounds) return aligned;
+
+  const { dx, dy } = snapDelta(bounds, target);
+  return translateNode(aligned, dx, dy);
+}
+
+/** @deprecated Use LayoutTarget — kept for tests migrating from center-only API */
+export function alignStepJsonToCenter(
+  json: LeaferStepJSON,
+  centerX: number,
+  centerY: number,
+  size?: { width?: number; height?: number },
+): LeaferStepJSON {
+  return alignStepJsonToLayout(json, {
+    anchorX: centerX,
+    anchorY: centerY,
+    snapEdge: 'center',
+    width: size?.width,
+    height: size?.height,
+  });
 }
 
 export function parseStepLayoutSpec(raw: unknown): StepLayoutSpec | undefined {

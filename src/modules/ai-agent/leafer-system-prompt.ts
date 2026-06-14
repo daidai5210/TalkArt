@@ -42,13 +42,19 @@ export function buildLeaferPlanningPrompt(ctx: {
 2. 简单图形（圆、矩形、单物体）：1~3 步
 3. 复杂场景（动物、人物、多物体、场景）：5~15 步
 4. 步骤顺序：背景/大轮廓 → 主体 → 细节装饰
-5. **每步必须填写 layout 对象**（系统代码会强制对齐，LLM 坐标仅作参考）：
-   - 第一步主体（身体/轮廓）：{ centerX, centerY, width, height }，主体居中，如 centerX=${cx}
-   - 依附部件（头/耳/腿/尾/五官）：{ attachTo: 上一步index, attachEdge: "top"|"bottom"|"left"|"right", offsetX, offsetY, width, height }
-   - 示例：身体 layout { centerX:${cx}, centerY:${cy + 80}, width:220, height:130 }
-   - 示例：头部 layout { attachTo:0, attachEdge:"top", offsetY:-55, width:120, height:100 }
-6. description 写清形状与颜色；layout 写清空间关系
-7. 禁止反问、禁止纯文字回复`;
+5. **每步必须填写 layout 对象**（系统会按边对齐拼合，LLM 坐标仅作形状参考）：
+   - 动物/人物：身体/头用 **Ellipse**，不用 Rect
+   - 身体（步骤0）：{ centerX:${cx}, centerY:${cy + 70}, width:200, height:120 }
+   - 头部：{ attachTo:0, attachEdge:"top", offsetY:-8, width:110, height:95 }（offsetY 负值=压入身体）
+   - 耳朵：{ attachTo:1, attachEdge:"top", offsetX:±35, offsetY:-5, width:36, height:40 }
+   - 腿：{ attachTo:0, attachEdge:"bottom", offsetX:±45, offsetY:6, width:28, height:50 }
+   - 尾巴：{ attachTo:0, attachEdge:"right", offsetX:8, offsetY:-15, width:45, height:28 }
+   - 五官/斑点：{ attachTo:对应步骤, attachEdge:"center", width/height 写清 }
+   - 斑点步骤：多个小 Ellipse（半径 4~12px），禁止用一个大的黑色图形盖住整步区域
+   - 五官步骤：眼睛/鼻子用多个小 Ellipse，layout 的 width/height 表示区域大小，不要画一个实心大圆
+6. description 写形状与颜色；layout 写拼合关系（系统会把本步贴到参照步骤对应边上）
+7. 禁止画背景全屏步骤（浪费一步且干扰构图）
+8. 禁止反问、禁止纯文字回复`;
 }
 
 export function buildLeaferRenderPrompt(ctx: {
@@ -116,8 +122,10 @@ ${planOverview}
 2. leaferJson 根节点用 tag:"Group"，name:"step-${stepIndex}"
 3. 只画本步内容，不要重复画已完成步骤的图形
 4. 可用 tag：Rect, Ellipse, Line, Polygon, Star, Path, Text, Group, Box
-5. 颜色用 hex 或中文转 hex（红色=#FF0000，黄色=#FFD700）
-6. 禁止纯文字回复
+5. 动物身体/头部优先 Ellipse；腿可用 Rect 或 Ellipse
+6. 斑点/五官：多个**小** Ellipse 分散排列，每个 width/height 8~24px，禁止单色大圆覆盖
+7. 颜色用 hex 或中文转 hex（红色=#FF0000，白色=#FFFFFF）
+8. 禁止纯文字回复
 
 ## JSON 示例
 {
