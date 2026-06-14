@@ -1,4 +1,5 @@
 import { StateCreator } from 'zustand';
+import type { StepLayoutRecord } from '../modules/leafer-renderer/scene-bounds';
 import type { DrawingPlan, StepProgress } from '../modules/leafer-renderer/types';
 import { getLeaferManager } from '../modules/leafer-renderer';
 
@@ -8,6 +9,8 @@ export interface CanvasState {
   drawingPlan: DrawingPlan | null;
   drawingProgress: StepProgress | null;
   leaferStepIds: string[];
+  /** Spatial records for completed render steps (for LLM alignment). */
+  completedStepLayouts: StepLayoutRecord[];
   stepError: string | null;
   /** Context for retrying the failed step */
   pendingRetry: {
@@ -22,6 +25,7 @@ export interface CanvasSlice extends CanvasState {
   setDrawingPlan: (plan: DrawingPlan | null) => void;
   setDrawingProgress: (progress: StepProgress | null) => void;
   pushLeaferStepId: (stepId: string) => void;
+  pushStepLayout: (layout: StepLayoutRecord) => void;
   setStepError: (error: string | null) => void;
   setPendingRetry: (ctx: CanvasState['pendingRetry']) => void;
   undoLastStep: () => void;
@@ -35,6 +39,7 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
   drawingPlan: null,
   drawingProgress: null,
   leaferStepIds: [],
+  completedStepLayouts: [],
   stepError: null,
   pendingRetry: null,
 
@@ -46,6 +51,12 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
     set((state) => ({ leaferStepIds: [...state.leaferStepIds, stepId] }));
   },
 
+  pushStepLayout: (layout) => {
+    set((state) => ({
+      completedStepLayouts: [...state.completedStepLayouts, layout],
+    }));
+  },
+
   setStepError: (stepError) => set({ stepError }),
 
   setPendingRetry: (pendingRetry) => set({ pendingRetry }),
@@ -55,6 +66,7 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
     if (removed) {
       set((state) => ({
         leaferStepIds: state.leaferStepIds.slice(0, -1),
+        completedStepLayouts: state.completedStepLayouts.slice(0, -1),
       }));
     }
   },
@@ -63,6 +75,7 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
     getLeaferManager().clear();
     set({
       leaferStepIds: [],
+      completedStepLayouts: [],
       drawingPlan: null,
       drawingProgress: null,
       stepError: null,

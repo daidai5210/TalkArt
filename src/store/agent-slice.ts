@@ -16,6 +16,14 @@ import {
   parseDrawingPlan,
   parseRenderLeaferStep,
 } from '../modules/leafer-renderer/leafer-json-validator';
+import {
+  extractLeaferJsonBounds,
+  summarizeLeaferJson,
+} from '../modules/leafer-renderer/scene-bounds';
+import {
+  alignStepJsonToLayout,
+  resolveStepLayoutTarget,
+} from '../modules/leafer-renderer/step-layout-aligner';
 
 /** Conversation message with metadata for UI display. */
 export interface ConversationMessage {
@@ -62,6 +70,18 @@ function buildCanvasContext(get: () => CanvasSlice & AgentSlice): CanvasContext 
     elements: [],
     selectedId: null,
     element_count: state.leaferStepIds.length,
+    completed_steps: state.completedStepLayouts.map((s) => ({
+      stepIndex: s.stepIndex,
+      label: s.label,
+      bounds: s.bounds,
+      summary: s.summary,
+    })),
+    plan_steps: state.drawingPlan?.steps.map((s) => ({
+      index: s.index,
+      label: s.label,
+      description: s.description,
+      layout: s.layout,
+    })),
   };
 }
 
@@ -81,7 +101,7 @@ async function renderSingleStep(
   manager: ConversationManager,
   get: () => CanvasSlice & AgentSlice,
   userIntent: string,
-  step: { index: number; label: string; description: string },
+  step: { index: number; label: string; description: string; layout?: DrawingPlan['steps'][0]['layout'] },
   totalSteps: number,
 ): Promise<{ success: boolean; error?: string }> {
   const {
@@ -116,6 +136,9 @@ async function renderSingleStep(
         totalSteps,
         stepLabel: step.label,
         stepDescription: step.description,
+        stepLayout: step.layout,
+        completedSteps: canvasContext.completed_steps ?? [],
+        planSteps: canvasContext.plan_steps ?? [],
       },
       canvasContext,
     );
@@ -147,12 +170,30 @@ async function renderSingleStep(
       return { success: false, error: 'Leafer JSON 格式无效' };
     }
 
+    const layoutTarget = resolveStepLayoutTarget(
+      step.layout,
+      get().completedStepLayouts,
+    );
+    const leaferJson = layoutTarget
+      ? alignStepJsonToLayout(parsed.leaferJson, layoutTarget)
+      : parsed.leaferJson;
+
     try {
       const stepId = await getLeaferManager().addStepWithFadeIn(
-        parsed.leaferJson,
+        leaferJson,
         step.index,
       );
       pushLeaferStepId(stepId);
+
+      const bounds = extractLeaferJsonBounds(leaferJson);
+      if (bounds) {
+        get().pushStepLayout({
+          stepIndex: step.index,
+          label: step.label,
+          bounds,
+          summary: summarizeLeaferJson(leaferJson),
+        });
+      }
 
       setDrawingProgress({
         isDrawing: true,

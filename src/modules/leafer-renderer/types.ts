@@ -6,10 +6,14 @@ export type LeaferStepJSON = {
   [key: string]: unknown;
 };
 
+import type { StepLayoutSpec } from './step-layout-aligner';
+
 export interface DrawingPlanStep {
   index: number;
   label: string;
   description: string;
+  /** Planned spatial anchor — enforced by code-side aligner after LLM render. */
+  layout?: StepLayoutSpec;
 }
 
 export interface DrawingPlan {

@@ -34,8 +34,27 @@ export const PLAN_DRAWING_STEPS_DEFINITION: ToolDefinition = {
                 type: 'string',
                 description: '本步详细绘制说明，供下一步 renderLeaferStep 使用',
               },
+              layout: {
+                type: 'object',
+                description:
+                  '本步空间锚点（必填）。主体用 centerX/centerY/width/height；依附部件用 attachTo+attachEdge+offsetX/offsetY',
+                properties: {
+                  centerX: { type: 'number', description: '主图形中心 X（px）' },
+                  centerY: { type: 'number', description: '主图形中心 Y（px）' },
+                  width: { type: 'number', description: '目标宽度（px）' },
+                  height: { type: 'number', description: '目标高度（px）' },
+                  attachTo: { type: 'number', description: '依附的步骤 index（0 起）' },
+                  attachEdge: {
+                    type: 'string',
+                    enum: ['top', 'bottom', 'left', 'right', 'center'],
+                    description: '依附到参考步骤的哪条边',
+                  },
+                  offsetX: { type: 'number', description: '相对锚点 X 偏移（px）' },
+                  offsetY: { type: 'number', description: '相对锚点 Y 偏移（px）' },
+                },
+              },
             },
-            required: ['index', 'label', 'description'],
+            required: ['index', 'label', 'description', 'layout'],
           },
         },
       },
