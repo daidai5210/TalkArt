@@ -14,6 +14,8 @@ import {
   describeLayoutTargetForPrompt,
   formatAttachReference,
 } from '../leafer-renderer/step-layout-aligner';
+import { formatPaletteForPrompt } from '../three-renderer/children-palette';
+import { MAX_SKETCH_STEPS } from '../three-renderer/sketch-config';
 
 const SUBJECT_ONLY_RULES = `## 主体绘图原则（最高优先级）
 - 画布是**白纸**（#FFFFFF），背景由系统提供，**禁止画背景**
@@ -54,15 +56,18 @@ ${SUBJECT_ONLY_RULES}
 
 已有步骤数：${stepCount}
 
-## 规划规则
+## 规划规则（简笔画模式）
 1. 必须调用 planDrawingSteps
-2. 简单主体 1~3 步，复杂主体 5~15 步
-3. 顺序：主体大轮廓 → 部件 → 细节（第一步就是主体，不是背景）
-4. 每步必须含 layout：
+2. **总步骤不得超过 ${MAX_SKETCH_STEPS} 步**（硬上限，超出会被截断）
+3. 简笔画要粗线条、大形状，合并细节：例如「头部+耳朵+眼睛」可合并为一步「五官」
+4. 推荐 3~${MAX_SKETCH_STEPS} 步：① 主体大轮廓 ② 主要部件 ③ 五官/细节（可选）
+5. 禁止拆得过细（不要单独一步画胡须、内耳等微小部件）
+6. 每步必须含 layout：
    - 身体：{ centerX:${cx}, centerY:${cy + 70}, width:200, height:120 }
    - 头部：{ attachTo:0, attachEdge:"top", offsetY:-8, width:110, height:95 }
-   - 腿：{ attachTo:0, attachEdge:"bottom", offsetX:±45, offsetY:6, width:28, height:50 }
-5. 禁止反问；禁止天空/地面/背景步骤`;
+7. 禁止反问；禁止天空/地面/背景步骤
+
+${formatPaletteForPrompt()}`;
 }
 
 export function buildThreeRenderPrompt(ctx: {
@@ -145,10 +150,12 @@ ${planOverview}
 
 ${geoRef}
 
+${formatPaletteForPrompt()}
+
 ## 输出规则
 1. 必须调用 renderThreeStep，primitives 使用**画布像素坐标**（左上角原点）
 2. 只画本步主体部件；禁止背景/天空/草地/全屏底色
-3. 主体颜色不要用 #FFFFFF（会与白纸融合）
+3. color 必须从上方儿童配色表中选取，**禁止深色/褐色**
 4. 禁止纯文字回复
 
 ## 示例
@@ -156,7 +163,7 @@ ${geoRef}
   "stepIndex": ${stepIndex},
   "label": "${stepLabel}",
   "primitives": [
-    { "kind": "circle", "x": ${cx}, "y": ${cy}, "width": 200, "height": 120, "color": "#F4A460" }
+    { "kind": "circle", "x": ${cx}, "y": ${cy}, "width": 200, "height": 120, "color": "#FFD93D" }
   ]
 }`;
 }

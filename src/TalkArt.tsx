@@ -14,6 +14,8 @@ import { DesktopControlBar } from './components/DesktopControlBar';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { MicrophoneButton } from './components/MicrophoneButton';
 import { TextInputBar } from './components/TextInputBar';
+import { CanvasThinkingOverlay } from './components/CanvasThinkingOverlay';
+import { DrawingHistoryModal } from './components/DrawingHistoryModal';
 import { MaterialIcon } from './components/MaterialIcon';
 import { getXiaoZhiMessage } from './lib/xiao-zhi-message';
 
@@ -35,6 +37,8 @@ const TalkArt: React.FC = () => {
     canUndo,
     undo,
     clearCanvas,
+    saveDrawingToHistory,
+    loadDrawingFromHistory,
     exportPNGAction,
     conversation,
     demoMode,
@@ -43,9 +47,11 @@ const TalkArt: React.FC = () => {
   const drawingProgress = useStore((s) => s.drawingProgress);
   const drawingPlan = useStore((s) => s.drawingPlan);
   const stepError = useStore((s) => s.stepError);
+  const drawingSessionComplete = useStore((s) => s.drawingSessionComplete);
   const retryCurrentStep = useStore((s) => s.retryCurrentStep);
 
   const [textInput, setTextInput] = useState('');
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const xiaoZhiMessage = getXiaoZhiMessage({
     agentState,
@@ -61,10 +67,16 @@ const TalkArt: React.FC = () => {
     drawingProgress?.isDrawing === true &&
     drawingProgress.message === '正在规划绘制步骤...';
 
+  const isDrawingActive =
+    drawingProgress?.isDrawing === true || agentState === 'executing';
+
   const planSteps =
     drawingPlan?.steps.map((s) => ({ index: s.index, label: s.label })) ?? [];
 
   const currentStepNum = drawingProgress?.currentStep ?? 0;
+
+  /** Only show undo/redraw/save after all steps finished. */
+  const showOperationControls = drawingSessionComplete && !isDrawingActive && stepCount > 0;
 
   const handleTextSubmit = () => {
     if (textInput.trim()) {
@@ -74,24 +86,38 @@ const TalkArt: React.FC = () => {
   };
 
   const handleSave = () => {
+    void saveDrawingToHistory();
+  };
+
+  /** Disable voice during planning or active drawing. */
+  const voiceDisabled = isPlanning || isDrawingActive;
+
+  const handleDownload = () => {
     void exportPNGAction();
   };
 
-  const hasContent = stepCount > 0;
+  const handleClear = () => {
+    if (window.confirm('确定要清空画布，重新开始吗？')) {
+      clearCanvas();
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen text-on-surface font-body-md overflow-x-hidden">
-      <AppHeader agentState={agentState} />
+      <AppHeader
+        agentState={agentState}
+        onOpenHistory={demoMode ? undefined : () => setHistoryOpen(true)}
+      />
 
       <main className="flex-1 w-full max-w-6xl mx-auto px-margin-mobile md:px-margin-desktop py-6 md:py-8 flex flex-col items-center gap-stack-gap relative z-10 pb-36 md:pb-32">
         <XiaoZhiBubble message={xiaoZhiMessage} />
 
-        {/* Canvas paper sheet — Level 1 */}
         <div className="w-full aspect-square md:aspect-[4/3] max-h-[614px] bg-surface-container-lowest rounded-[3rem] border-2 border-outline-variant tactile-shadow-level-1 overflow-hidden relative flex items-center justify-center m-2 md:m-4">
           <ThreeCanvas className="w-full h-full" />
+          <CanvasThinkingOverlay visible={isPlanning} />
         </div>
 
-        {planSteps.length > 0 && (
+        {planSteps.length > 0 && isDrawingActive && (
           <StepProgressBar
             steps={planSteps}
             currentStep={currentStepNum}
@@ -113,17 +139,18 @@ const TalkArt: React.FC = () => {
           </div>
         )}
 
-        {!demoMode && (
+        {!demoMode && showOperationControls && (
           <DesktopControlBar
             canUndo={canUndo}
-            hasContent={hasContent}
+            hasContent={stepCount > 0}
             onUndo={undo}
-            onClear={clearCanvas}
+            onClear={handleClear}
             onSave={handleSave}
+            onDownload={handleDownload}
           />
         )}
 
-        {!demoMode && !isSupported && (
+        {!demoMode && !isSupported && !isDrawingActive && (
           <TextInputBar
             value={textInput}
             onChange={setTextInput}
@@ -136,17 +163,27 @@ const TalkArt: React.FC = () => {
         agentState={agentState}
         isListening={isListening}
         isSupported={isSupported}
+        disabled={voiceDisabled}
         onStartListening={startListening}
         onStopListening={stopListening}
       />
 
-      {!demoMode && (
+      {!demoMode && showOperationControls && (
         <MobileBottomNav
           canUndo={canUndo}
-          hasContent={hasContent}
+          hasContent={stepCount > 0}
           onUndo={undo}
-          onClear={clearCanvas}
+          onClear={handleClear}
           onSave={handleSave}
+          onDownload={handleDownload}
+        />
+      )}
+
+      {!demoMode && (
+        <DrawingHistoryModal
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          onSelect={loadDrawingFromHistory}
         />
       )}
 

@@ -1,5 +1,5 @@
 /**
- * Top navigation bar — TalkArt brand + status + profile.
+ * Top navigation bar — TalkArt brand + status + portfolio.
  */
 
 import React from 'react';
@@ -8,6 +8,7 @@ import { MaterialIcon } from './MaterialIcon';
 
 interface AppHeaderProps {
   agentState: AgentState;
+  onOpenHistory?: () => void;
 }
 
 function getStatusLabel(agentState: AgentState): string {
@@ -26,7 +27,7 @@ function getStatusLabel(agentState: AgentState): string {
   }
 }
 
-export const AppHeader: React.FC<AppHeaderProps> = ({ agentState }) => {
+export const AppHeader: React.FC<AppHeaderProps> = ({ agentState, onOpenHistory }) => {
   const statusLabel = getStatusLabel(agentState);
   const isActive =
     agentState === 'executing' ||
@@ -55,13 +56,19 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ agentState }) => {
           {statusLabel}
         </div>
 
-        <button
-          type="button"
-          className="text-on-surface-variant hover:bg-surface-container-high transition-colors p-2 rounded-full tactile-active flex items-center justify-center"
-          aria-label="用户账户"
-        >
-          <MaterialIcon name="account_circle" className="text-3xl" />
-        </button>
+        {onOpenHistory ? (
+          <button
+            type="button"
+            onClick={onOpenHistory}
+            className="flex items-center gap-1.5 text-on-secondary-container bg-secondary-container hover:bg-secondary hover:text-on-secondary transition-colors px-4 py-2 rounded-full tactile-active font-label-bold text-sm border-2 border-surface-container-lowest tactile-shadow-level-1"
+            aria-label="我的作品集"
+          >
+            <MaterialIcon name="collections" className="text-2xl" filled />
+            <span className="hidden sm:inline">作品集</span>
+          </button>
+        ) : (
+          <div className="w-10" aria-hidden />
+        )}
       </div>
     </header>
   );

@@ -28,6 +28,7 @@ import { VoiceCommandRouter } from '@/modules/voice-input/VoiceCommandRouter';
 import { normalizeVoiceTranscript } from '@/modules/voice-input/normalize-transcript';
 import { getThreeManager } from '@/modules/three-renderer';
 import { exportLeaferSVG, exportLeaferPNG } from '@/modules/export/leafer-exporter';
+import { saveDrawing, fetchDrawingById } from '@/modules/drawing-history/client';
 import { useDemoMode } from './useDemoMode';
 import type { AgentState } from '@/modules/ai-agent/types';
 import type { ConversationMessage } from '@/store/agent-slice';
@@ -77,6 +78,10 @@ export interface TalkArtState {
   exportSVGAction: () => void;
   /** Export canvas as PNG file. */
   exportPNGAction: () => void;
+  /** Save current drawing to server history. */
+  saveDrawingToHistory: () => Promise<void>;
+  /** Restore a saved drawing onto canvas. */
+  loadDrawingFromHistory: (id: string) => Promise<void>;
 
   // Conversation
   /** Conversation history for display. */
@@ -95,15 +100,23 @@ export function useTalkArt(): TalkArtState {
   const error = useStore((s) => s.error);
   const conversation = useStore((s) => s.conversation);
   const leaferStepIds = useStore((s) => s.leaferStepIds);
+  const savedStepData = useStore((s) => s.savedStepData);
+  const currentUserIntent = useStore((s) => s.currentUserIntent);
+  const canvasWidth = useStore((s) => s.canvasWidth);
+  const canvasHeight = useStore((s) => s.canvasHeight);
+  const drawingPlan = useStore((s) => s.drawingPlan);
 
   const setAgentState = useStore((s) => s.setAgentState);
   const setTranscript = useStore((s) => s.setTranscript);
   const setConfirmation = useStore((s) => s.setConfirmation);
   const setError = useStore((s) => s.setError);
+  const addMessage = useStore((s) => s.addMessage);
   const processVoiceInput = useStore((s) => s.processVoiceInput);
   const processConfirmation = useStore((s) => s.processConfirmation);
   const undoLastStep = useStore((s) => s.undoLastStep);
   const clearCanvas = useStore((s) => s.clearCanvas);
+  const loadSavedDrawingOnCanvas = useStore((s) => s.loadSavedDrawingOnCanvas);
+  const setCurrentUserIntent = useStore((s) => s.setCurrentUserIntent);
 
   // ---------------------------------------------------------------------------
   // Singleton instances (persist across re-renders)
@@ -361,6 +374,58 @@ export function useTalkArt(): TalkArtState {
     }
   }, [setError]);
 
+  const saveDrawingToHistory = useCallback(async () => {
+    if (savedStepData.length === 0) {
+      setError('还没有可保存的内容');
+      return;
+    }
+    try {
+      const thumbnail = await getThreeManager().exportPNG();
+      const title =
+        currentUserIntent.trim() ||
+        drawingPlan?.steps[0]?.label ||
+        `简笔画 ${new Date().toLocaleDateString('zh-CN')}`;
+      await saveDrawing({
+        title,
+        userIntent: currentUserIntent || title,
+        thumbnail,
+        canvasWidth,
+        canvasHeight,
+        steps: savedStepData,
+        planSteps: drawingPlan?.steps.map((s) => ({ label: s.label })),
+      });
+      addMessage({ role: 'assistant', content: `已保存到作品集：${title}` });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '保存作品失败');
+    }
+  }, [
+    savedStepData,
+    currentUserIntent,
+    canvasWidth,
+    canvasHeight,
+    drawingPlan,
+    setError,
+    addMessage,
+  ]);
+
+  const loadDrawingFromHistory = useCallback(
+    async (id: string) => {
+      try {
+        const drawing = await fetchDrawingById(id);
+        loadSavedDrawingOnCanvas(
+          drawing.steps,
+          drawing.planSteps?.map((s) => s.label),
+        );
+        setCurrentUserIntent(drawing.userIntent || drawing.title);
+        addMessage({ role: 'assistant', content: `已打开作品：${drawing.title}` });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '加载作品失败');
+        throw err;
+      }
+    },
+    [loadSavedDrawingOnCanvas, setCurrentUserIntent, addMessage, setError],
+  );
+
   // ---------------------------------------------------------------------------
   // Derived state
   // ---------------------------------------------------------------------------
@@ -396,6 +461,8 @@ export function useTalkArt(): TalkArtState {
     clearCanvas,
     exportSVGAction,
     exportPNGAction,
+    saveDrawingToHistory,
+    loadDrawingFromHistory,
 
     // Conversation
     conversation,

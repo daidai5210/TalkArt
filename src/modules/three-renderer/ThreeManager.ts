@@ -124,6 +124,30 @@ export class ThreeManager {
     return stepName;
   }
 
+  /** Add step without fade animation (for restoring saved drawings). */
+  addStepImmediate(primitives: ThreePrimitive[], stepIndex: number): string {
+    if (!this.scene) {
+      throw new Error('Three.js 未初始化');
+    }
+    const stepName = `step-${stepIndex}`;
+    const group = buildStepGroupFromPrimitives(primitives, stepName);
+    this.scene.add(group);
+    this.stepGroups.push(group);
+    this.stepIds.push(stepName);
+    this.renderFrame();
+    return stepName;
+  }
+
+  /** Replace canvas content with saved steps. */
+  loadFromSavedSteps(
+    steps: Array<{ label: string; primitives: ThreePrimitive[] }>,
+  ): void {
+    this.clear();
+    steps.forEach((step, i) => {
+      this.addStepImmediate(step.primitives, i);
+    });
+  }
+
   undoLastStep(): boolean {
     if (!this.scene || this.stepGroups.length === 0) return false;
     const last = this.stepGroups.pop()!;

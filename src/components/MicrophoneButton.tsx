@@ -10,6 +10,7 @@ interface MicrophoneButtonProps {
   agentState: AgentState;
   isListening: boolean;
   isSupported: boolean;
+  disabled?: boolean;
   onStartListening: () => void;
   onStopListening: () => void;
 }
@@ -18,10 +19,12 @@ export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({
   agentState,
   isListening,
   isSupported,
+  disabled = false,
   onStartListening,
   onStopListening,
 }) => {
   const handleClick = () => {
+    if (disabled) return;
     if (isListening) onStopListening();
     else onStartListening();
   };
@@ -30,6 +33,7 @@ export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({
   const isExecuting = agentState === 'executing';
 
   const getAriaLabel = (): string => {
+    if (disabled) return '小智思考或绘制中，请稍候';
     if (!isSupported) return '语音识别不可用';
     if (isExecuting) return '正在绘制中';
     if (isListeningState) return '正在聆听，点击停止';
@@ -40,22 +44,23 @@ export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({
     <button
       type="button"
       onClick={handleClick}
-      disabled={!isSupported && agentState !== 'error'}
+      disabled={disabled || (!isSupported && agentState !== 'error')}
       aria-label={getAriaLabel()}
       className={`
-        fixed z-50 tactile-active transition-all
+        fixed z-50 transition-all
         bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-12
         right-margin-mobile md:right-margin-desktop
         w-24 h-24 rounded-full flex items-center justify-center
         border-4 border-surface-container-lowest
-        shadow-[#005e2d] tactile-button-shadow
-        ${!isSupported ? 'bg-surface-variant opacity-50 cursor-not-allowed' : ''}
-        ${isSupported && !isListeningState && !isExecuting ? 'bg-primary-container text-on-primary-container pulse-halo' : ''}
-        ${isListeningState ? 'bg-tertiary text-on-tertiary pulse-halo' : ''}
-        ${isExecuting ? 'bg-secondary-container text-on-secondary-container' : ''}
+        ${disabled ? 'bg-surface-variant text-on-surface-variant opacity-50 cursor-not-allowed shadow-none' : 'tactile-active shadow-[#005e2d] tactile-button-shadow'}
+        ${!disabled && isSupported && !isListeningState && !isExecuting ? 'bg-primary-container text-on-primary-container pulse-halo' : ''}
+        ${!disabled && isListeningState ? 'bg-tertiary text-on-tertiary pulse-halo' : ''}
+        ${!disabled && isExecuting ? 'bg-secondary-container text-on-secondary-container' : ''}
       `}
     >
-      {isExecuting ? (
+      {disabled ? (
+        <MaterialIcon name="hourglass_top" className="text-4xl animate-pulse" />
+      ) : isExecuting ? (
         <MaterialIcon name="brush" className="text-5xl animate-pulse" filled />
       ) : isListeningState ? (
         <MaterialIcon name="stop" className="text-5xl" filled />

@@ -9,6 +9,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 const API_ROUTES: Record<string, () => Promise<{ default: (req: VercelRequest, res: VercelResponse) => Promise<void> }>> = {
   '/api/llm': () => import('../api/llm'),
   '/api/stt': () => import('../api/stt'),
+  '/api/drawings': () => import('../api/drawings'),
 };
 
 function readBody(req: IncomingMessage): Promise<unknown> {
@@ -81,7 +82,26 @@ export function apiDevPlugin(env: Record<string, string>): Plugin {
           return next();
         }
 
-        if (req.method !== 'POST') {
+        const method = req.method ?? 'GET';
+        const urlObj = new URL(req.url ?? '/', 'http://localhost');
+        const query: Record<string, string | string[]> = {};
+        urlObj.searchParams.forEach((value, key) => {
+          query[key] = value;
+        });
+
+        if (method !== 'POST' && url !== '/api/drawings') {
+          res.statusCode = 405;
+          res.setHeader('Allow', 'POST');
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ error: 'method_not_allowed', message: '仅支持 POST 请求' }));
+          return;
+        }
+
+        if (method === 'GET' && url === '/api/drawings') {
+          // GET allowed for drawings list/detail
+        } else if (method === 'DELETE' && url === '/api/drawings') {
+          // DELETE allowed for drawings
+        } else if (method !== 'POST') {
           res.statusCode = 405;
           res.setHeader('Allow', 'POST');
           res.setHeader('Content-Type', 'application/json');
@@ -90,12 +110,12 @@ export function apiDevPlugin(env: Record<string, string>): Plugin {
         }
 
         try {
-          const body = await readBody(req);
+          const body = method === 'POST' ? await readBody(req) : {};
           const handler = (await loader()).default;
           const vercelReq = Object.assign(req, {
             body,
-            method: 'POST',
-            query: {},
+            method,
+            query,
           }) as VercelRequest;
           const vercelRes = createVercelResponse(res);
           await handler(vercelReq, vercelRes);

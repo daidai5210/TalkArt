@@ -21,6 +21,7 @@ import {
 } from '../modules/three-renderer';
 import { parseComposedDrawingPlan } from '../modules/three-renderer/scene-composition';
 import { assembleComponentOnCanvas } from '../modules/three-renderer/component-assembler';
+import { normalizePrimitivesColors } from '../modules/three-renderer/children-palette';
 
 /** Conversation message with metadata for UI display. */
 export interface ConversationMessage {
@@ -106,6 +107,7 @@ async function renderSingleStep(
     pushLeaferStepId,
     setStepError,
     setPendingRetry,
+    pushStepData,
   } = get();
 
   setStepError(null);
@@ -171,11 +173,13 @@ async function renderSingleStep(
       return { success: false, error: 'Three.js 图元格式无效' };
     }
 
-    const primitives = assembleComponentOnCanvas(parsed.primitives, {
-      layoutTarget,
-      layer: step.layer ?? 'structure',
-      coordinateMode: 'absolute',
-    });
+    const primitives = normalizePrimitivesColors(
+      assembleComponentOnCanvas(parsed.primitives, {
+        layoutTarget,
+        layer: step.layer ?? 'structure',
+        coordinateMode: 'absolute',
+      }),
+    );
 
     try {
       const stepId = await getThreeManager().addStepWithFadeIn(
@@ -183,6 +187,7 @@ async function renderSingleStep(
         step.index,
       );
       pushLeaferStepId(stepId);
+      pushStepData({ label: step.label, primitives });
 
       const bounds = extractPrimitiveBounds(primitives);
       if (bounds) {
@@ -226,7 +231,12 @@ async function processProgressiveDrawing(
     setPendingRetry,
     clearCanvas,
     leaferStepIds,
+    setCurrentUserIntent,
+    setDrawingSessionComplete,
   } = get();
+
+  setCurrentUserIntent(userIntent);
+  setDrawingSessionComplete(false);
 
   const manager = getConversationManager();
   const canvasContext = buildCanvasContext(get);
@@ -286,6 +296,7 @@ async function processProgressiveDrawing(
   setDrawingProgress(null);
   setStepError(null);
   setPendingRetry(null);
+  setDrawingSessionComplete(true);
   addMessage({ role: 'assistant', content: '绘制完成！' });
   return { success: true };
 }

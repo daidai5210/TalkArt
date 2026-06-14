@@ -6,6 +6,15 @@ import type { AgentState } from '@/modules/ai-agent/types';
 import type { ConversationMessage } from '@/store/agent-slice';
 import type { StepProgress } from '@/modules/leafer-renderer/types';
 
+/** Build a natural「先画 xxx」instruction from a step label. */
+export function formatStepDrawGuide(label: string): string {
+  const trimmed = label.trim();
+  if (!trimmed) return '现在让我们开始画吧！';
+  if (/^画/.test(trimmed)) return `现在让我们${trimmed}吧！`;
+  if (/^添加|^加上|^画上/.test(trimmed)) return `现在让我们${trimmed}吧！`;
+  return `现在让我们先画${trimmed}吧！`;
+}
+
 export function getXiaoZhiMessage(params: {
   agentState: AgentState;
   drawingProgress: StepProgress | null;
@@ -40,12 +49,11 @@ export function getXiaoZhiMessage(params: {
     if (drawingProgress.message) {
       const msg = drawingProgress.message;
       if (/^已完成：/.test(msg)) {
-        return '太棒了！我们继续下一步吧！';
+        const label = msg.replace(/^已完成：/, '').trim();
+        return `太棒了！${label}画好了，我们继续下一步吧！`;
       }
-      if (/^第 \d+/.test(msg) || msg.includes('步')) {
-        return `现在让我们${msg.replace(/^第 \d+\/\d+ 步[：:]?\s*/, '')}吧！`;
-      }
-      return `现在让我们${msg}吧！`;
+      // Current step label (e.g. "头部", "耳朵")
+      return formatStepDrawGuide(msg);
     }
   }
 
@@ -67,7 +75,10 @@ export function getXiaoZhiMessage(params: {
       return '步骤准备好啦，跟着小智一步一步画吧！';
     }
     if (lastAssistant.content === '绘制完成！') {
-      return '哇，你画完啦！要不要保存起来？';
+      return '哇，你画完啦！快点击保存作品，把它放进作品集吧！';
+    }
+    if (lastAssistant.content.includes('已保存')) {
+      return lastAssistant.content;
     }
     return lastAssistant.content;
   }

@@ -6,6 +6,7 @@ import { parseStepLayoutSpec } from '../leafer-renderer/step-layout-aligner';
 import type { StepLayoutSpec, LayoutTarget } from '../leafer-renderer/step-layout-aligner';
 import { resolveStepLayoutTarget } from '../leafer-renderer/step-layout-aligner';
 import type { StepLayoutRecord } from '../leafer-renderer/scene-bounds';
+import { MAX_SKETCH_STEPS } from './sketch-config';
 
 export type SceneLayer = 'background' | 'ground' | 'structure' | 'detail' | 'foreground';
 
@@ -117,11 +118,13 @@ export function parseComposedDrawingPlan(
 
   if (parsed.length === 0) return null;
 
+  const capped = parsed.slice(0, MAX_SKETCH_STEPS).map((s, i) => ({ ...s, index: i }));
+
   return {
     planId,
-    totalSteps: typeof args.totalSteps === 'number' ? args.totalSteps : parsed.length,
+    totalSteps: capped.length,
     scene: parseSceneMeta(args.scene, canvasWidth, canvasHeight),
-    steps: parsed,
+    steps: capped,
   };
 }
 
