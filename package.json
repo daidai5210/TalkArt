@@ -12,6 +12,11 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "@leafer-in/animate": "^2.1.6",
+    "@leafer-in/export": "^2.1.6",
+    "@leafer-ui/core": "^2.1.6",
+    "@leafer-ui/draw": "^2.1.6",
+    "leafer-ui": "^2.1.6",
     "openai": "^4.52.0",
     "paper": "^0.12.18",
     "react": "^18.3.1",

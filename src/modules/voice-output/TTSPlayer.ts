@@ -9,12 +9,10 @@
 const DEFAULT_LANG = 'zh-CN';
 
 export class TTSPlayer {
-  private voicesReady = false;
-
   constructor() {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       const loadVoices = () => {
-        this.voicesReady = window.speechSynthesis.getVoices().length > 0;
+        void window.speechSynthesis.getVoices().length;
       };
       loadVoices();
       window.speechSynthesis.addEventListener('voiceschanged', loadVoices);

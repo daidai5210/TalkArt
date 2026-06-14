@@ -27,5 +27,13 @@
     }
   },
   "include": ["src"],
+  "exclude": [
+    "src/**/__tests__/**",
+    "src/modules/svg-renderer/**",
+    "src/modules/canvas-renderer/**",
+    "src/modules/paper-renderer/**",
+    "src/modules/drawing-tools/**",
+    "src/store/store.test.ts",
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

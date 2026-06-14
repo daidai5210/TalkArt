@@ -4,7 +4,7 @@
  */
 
 import type { Message, LLMResponse } from './types';
-import type { CanvasContext } from '../drawing-tools/types';
+import type { CanvasContext } from './canvas-context';
 import { LLM_REQUEST_TIMEOUT_MS } from './llm-config';
 
 const SERVICE_UNAVAILABLE_MSG = '抱歉，AI 服务暂时不可用，请稍后重试。';
@@ -20,7 +20,7 @@ function buildPayload(messages: Message[], tools: unknown[], canvasContext: Canv
       width: canvasContext.width,
       height: canvasContext.height,
       element_count: canvasContext.elements.length,
-      element_types: canvasContext.elements.map((el) => el.type),
+      element_types: canvasContext.elements.map((el: { type: string }) => el.type),
       selected_id: canvasContext.selectedId,
     },
   };

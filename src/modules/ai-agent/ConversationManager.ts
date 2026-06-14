@@ -35,10 +35,14 @@
  */
 
 import type { Message, LLMResponse } from './types';
-import type { CanvasContext } from '../drawing-tools/types';
+import type { CanvasContext } from './canvas-context';
 import { sendToLLM } from './llm-client';
 import { normalizeVoiceTranscript } from '../voice-input/normalize-transcript';
-import { isComplexDrawingRequest, selectToolsForRequest } from './llm-tool-selector';
+import { isComplexDrawingRequest, selectToolsForRequest, PLANNING_TOOLS, RENDER_TOOLS } from './llm-tool-selector';
+import {
+  buildLeaferPlanningPrompt,
+  buildLeaferRenderPrompt,
+} from './leafer-system-prompt';
 
 /** Maximum number of messages to keep in conversation history. */
 const MAX_HISTORY_LENGTH = 20;
@@ -259,6 +263,78 @@ export class ConversationManager {
     // Trim history if it exceeds the maximum length
     this.trimHistory();
 
+    return response;
+  }
+
+  /**
+   * Plan drawing steps for a user intent (Leafer progressive drawing phase 1).
+   */
+  async planDrawing(
+    userText: string,
+    canvasContext: CanvasContext,
+    existingStepCount = 0,
+  ): Promise<LLMResponse> {
+    const cleaned = normalizeVoiceTranscript(userText);
+    this.messages.push({ role: 'user', content: cleaned });
+    this.canvasContext = canvasContext;
+
+    const planningPrompt = buildLeaferPlanningPrompt({
+      width: canvasContext.width,
+      height: canvasContext.height,
+      stepCount: existingStepCount,
+    });
+
+    const messages: Message[] = [
+      { role: 'system', content: planningPrompt },
+      ...this.buildRequestMessages(),
+    ];
+
+    const response = await sendToLLM(
+      messages,
+      PLANNING_TOOLS as typeof this.tools,
+      canvasContext,
+    );
+
+    this.addAssistantResponse(response);
+    this.trimHistory();
+    return response;
+  }
+
+  /**
+   * Render a single drawing step (Leafer progressive drawing phase 2).
+   */
+  async renderStep(
+    params: {
+      userIntent: string;
+      stepIndex: number;
+      totalSteps: number;
+      stepLabel: string;
+      stepDescription: string;
+    },
+    canvasContext: CanvasContext,
+  ): Promise<LLMResponse> {
+    this.canvasContext = canvasContext;
+
+    const renderPrompt = buildLeaferRenderPrompt({
+      width: canvasContext.width,
+      height: canvasContext.height,
+      userIntent: params.userIntent,
+      stepIndex: params.stepIndex,
+      totalSteps: params.totalSteps,
+      stepLabel: params.stepLabel,
+      stepDescription: params.stepDescription,
+    });
+
+    this.messages.push({ role: 'user', content: renderPrompt });
+
+    const response = await sendToLLM(
+      this.buildRequestMessages(),
+      RENDER_TOOLS as typeof this.tools,
+      canvasContext,
+    );
+
+    this.addAssistantResponse(response);
+    this.trimHistory();
     return response;
   }
 

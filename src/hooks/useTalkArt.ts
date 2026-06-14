@@ -26,10 +26,10 @@ import { WakeWordDetector } from '@/modules/voice-input/WakeWordDetector';
 import { EndPhraseDetector } from '@/modules/voice-input/EndPhraseDetector';
 import { VoiceCommandRouter } from '@/modules/voice-input/VoiceCommandRouter';
 import { normalizeVoiceTranscript } from '@/modules/voice-input/normalize-transcript';
-import { exportSVG, exportPNG } from '@/modules/export';
+import { getLeaferManager } from '@/modules/leafer-renderer';
+import { exportLeaferSVG, exportLeaferPNG } from '@/modules/export/leafer-exporter';
 import { useDemoMode } from './useDemoMode';
 import type { AgentState } from '@/modules/ai-agent/types';
-import type { SVGElement } from '@/store/canvas-slice';
 import type { ConversationMessage } from '@/store/agent-slice';
 
 /** Return type of the useTalkArt hook. */
@@ -63,20 +63,14 @@ export interface TalkArtState {
   clearVoiceError: () => void;
 
   // Canvas state
-  /** Elements on the canvas. */
-  elements: SVGElement[];
-  /** Currently selected element ID. */
-  selectedId: string | null;
+  /** Number of rendered Leafer steps on canvas. */
+  stepCount: number;
   /** Whether undo is available. */
   canUndo: boolean;
-  /** Whether redo is available. */
-  canRedo: boolean;
 
   // Canvas actions
-  /** Undo the last change. */
+  /** Undo the last drawing step. */
   undo: () => void;
-  /** Redo the last undone change. */
-  redo: () => void;
   /** Clear all elements from the canvas. */
   clearCanvas: () => void;
   /** Export canvas as SVG file. */
@@ -100,10 +94,7 @@ export function useTalkArt(): TalkArtState {
   const confirmationText = useStore((s) => s.confirmationText);
   const error = useStore((s) => s.error);
   const conversation = useStore((s) => s.conversation);
-  const elements = useStore((s) => s.elements);
-  const selectedId = useStore((s) => s.selectedId);
-  const history = useStore((s) => s.history);
-  const historyIndex = useStore((s) => s.historyIndex);
+  const leaferStepIds = useStore((s) => s.leaferStepIds);
 
   const setAgentState = useStore((s) => s.setAgentState);
   const setTranscript = useStore((s) => s.setTranscript);
@@ -111,8 +102,7 @@ export function useTalkArt(): TalkArtState {
   const setError = useStore((s) => s.setError);
   const processVoiceInput = useStore((s) => s.processVoiceInput);
   const processConfirmation = useStore((s) => s.processConfirmation);
-  const undo = useStore((s) => s.undo);
-  const redo = useStore((s) => s.redo);
+  const undoLastStep = useStore((s) => s.undoLastStep);
   const clearCanvas = useStore((s) => s.clearCanvas);
 
   // ---------------------------------------------------------------------------
@@ -136,7 +126,7 @@ export function useTalkArt(): TalkArtState {
   const setErrorRef = useRef(setError);
   const processVoiceInputRef = useRef(processVoiceInput);
   const processConfirmationRef = useRef(processConfirmation);
-  const undoRef = useRef(undo);
+  const undoRef = useRef(undoLastStep);
   const exportSVGActionRef = useRef<(() => void) | null>(null);
 
   // Keep refs in sync with latest values
@@ -147,7 +137,7 @@ export function useTalkArt(): TalkArtState {
   setErrorRef.current = setError;
   processVoiceInputRef.current = processVoiceInput;
   processConfirmationRef.current = processConfirmation;
-  undoRef.current = undo;
+  undoRef.current = undoLastStep;
 
   // Lazy initialization
   if (!voiceManagerRef.current) {
@@ -350,32 +340,32 @@ export function useTalkArt(): TalkArtState {
   }, [voiceManager]);
 
   /** Export canvas as SVG file. */
-  const exportSVGAction = useCallback(() => {
-    const svg = document.querySelector('svg') as SVGSVGElement | null;
-    if (svg) {
-      exportSVG(svg, `talkart-${Date.now()}`);
+  const exportSVGAction = useCallback(async () => {
+    try {
+      const svg = await getLeaferManager().exportSVG();
+      await exportLeaferSVG(svg, `talkart-${Date.now()}`);
+    } catch (_err) {
+      setError('SVG 导出失败');
     }
-  }, []);
+  }, [setError]);
 
   exportSVGActionRef.current = exportSVGAction;
 
   /** Export canvas as PNG file. */
   const exportPNGAction = useCallback(async () => {
-    const svg = document.querySelector('svg') as SVGSVGElement | null;
-    if (svg) {
-      try {
-        await exportPNG(svg, `talkart-${Date.now()}`);
-      } catch (_err) {
-        setError('PNG 导出失败');
-      }
+    try {
+      const dataUrl = await getLeaferManager().exportPNG();
+      await exportLeaferPNG(dataUrl, `talkart-${Date.now()}`);
+    } catch (_err) {
+      setError('PNG 导出失败');
     }
   }, [setError]);
 
   // ---------------------------------------------------------------------------
   // Derived state
   // ---------------------------------------------------------------------------
-  const canUndo = historyIndex > 0;
-  const canRedo = historyIndex < history.length - 1;
+  const canUndo = leaferStepIds.length > 0;
+  const stepCount = leaferStepIds.length;
 
   // ---------------------------------------------------------------------------
   // Return
@@ -398,14 +388,11 @@ export function useTalkArt(): TalkArtState {
     clearVoiceError,
 
     // Canvas state
-    elements,
-    selectedId,
+    stepCount,
     canUndo,
-    canRedo,
 
     // Canvas actions
-    undo,
-    redo,
+    undo: undoLastStep,
     clearCanvas,
     exportSVGAction,
     exportPNGAction,

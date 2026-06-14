@@ -8,3 +8,4 @@
 
 export { exportSVG } from './SvgExporter';
 export { exportPNG } from './PngExporter';
+export { exportLeaferSVG, exportLeaferPNG } from './leafer-exporter';
