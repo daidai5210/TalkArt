@@ -1,6 +1,11 @@
 /**
- * LLM tool schemas for progressive Three.js drawing.
+ * LLM tool schemas for progressive Three.js drawing (structured primitives API).
  */
+
+import {
+  GEOMETRY_KINDS,
+  buildPrimitiveItemSchema,
+} from '../three-renderer/geometry-catalog';
 
 export interface ToolDefinition {
   type: 'function';
@@ -32,7 +37,8 @@ export const PLAN_DRAWING_STEPS_DEFINITION: ToolDefinition = {
               label: { type: 'string', description: '步骤简短标签，如「画背景」' },
               description: {
                 type: 'string',
-                description: '本步详细绘制说明，供下一步 renderThreeStep 使用',
+                description:
+                  '本步详细绘制说明：用哪些 kind 图元、颜色、相对位置。供 renderThreeStep 使用',
               },
               layout: {
                 type: 'object',
@@ -67,42 +73,21 @@ export const RENDER_THREE_STEP_DEFINITION: ToolDefinition = {
   type: 'function',
   function: {
     name: 'renderThreeStep',
-    description:
-      '渲染单个绘制步骤：输出 Three.js 场景 JSON（tag + children），只画当前步骤内容，不要画其他步骤的图形。',
+    description: `渲染单个绘制步骤：输出 primitives 图元数组（${GEOMETRY_KINDS.join('|')}），只画本步内容。每个图元对应 Three.js 内置几何体 + 参数配置。`,
     parameters: {
       type: 'object',
       properties: {
         stepIndex: { type: 'number', description: '当前步骤序号' },
         label: { type: 'string', description: '步骤标签' },
-        threeJson: {
-          type: 'object',
+        primitives: {
+          type: 'array',
           description:
-            'Three.js 场景 JSON。根节点建议 tag:Group，children 可含 Plane/Rect/Ellipse/Circle/Box/Sphere/Cylinder/Cone/Torus/Ring/Line 等',
-          properties: {
-            tag: {
-              type: 'string',
-              enum: [
-                'Group',
-                'Rect',
-                'Plane',
-                'Ellipse',
-                'Circle',
-                'Box',
-                'Sphere',
-                'Cylinder',
-                'Cone',
-                'Torus',
-                'Ring',
-                'Line',
-              ],
-            },
-            name: { type: 'string' },
-            children: { type: 'array', items: { type: 'object' } },
-          },
-          required: ['tag'],
+            '本步图元列表。每项含 kind + 坐标 + 尺寸 + color。系统校验后渲染为 Three.js Mesh',
+          items: buildPrimitiveItemSchema(),
+          minItems: 1,
         },
       },
-      required: ['stepIndex', 'label', 'threeJson'],
+      required: ['stepIndex', 'label', 'primitives'],
     },
   },
 };

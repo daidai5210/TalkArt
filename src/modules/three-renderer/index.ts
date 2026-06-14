@@ -1,36 +1,48 @@
 export { ThreeCanvas, LeaferCanvas } from './ThreeCanvas';
 export { ThreeManager, getThreeManager, getLeaferManager } from './ThreeManager';
 export { stepDelayMs, fadeDurationMs } from './ThreeStepAnimator';
-export type { ThreeStepJSON, DrawingPlan, DrawingPlanStep, StepProgress } from './types';
-export { ALLOWED_THREE_TAGS } from './types';
+export type {
+  ThreePrimitive,
+  ThreeStepSpec,
+  DrawingPlan,
+  DrawingPlanStep,
+  StepProgress,
+} from './primitive-types';
 export {
-  validateThreeJson,
+  GEOMETRY_CATALOG,
+  GEOMETRY_KINDS,
+  formatGeometryCatalogForPrompt,
+  getGeometryDef,
+} from './geometry-catalog';
+export type { GeometryKind, GeometryDef } from './geometry-catalog';
+export {
+  validatePrimitives,
   parseDrawingPlan,
   parseRenderThreeStep,
-} from './three-json-validator';
-export type { ValidationResult } from './three-json-validator';
+} from './primitive-validator';
+export type { ValidationResult } from './primitive-validator';
 export {
-  extractThreeJsonBounds,
-  summarizeThreeJson,
-  extractLeaferJsonBounds,
-  summarizeLeaferJson,
+  extractPrimitiveBounds,
+  summarizePrimitives,
+  summarizePrimitive,
+} from './primitive-bounds';
+export { alignPrimitivesToLayout } from './primitive-aligner';
+export {
   formatCanvasSpec,
   formatSceneStateBlock,
 } from './scene-bounds';
-
-/** @deprecated use parseRenderThreeStep */
-export { parseRenderThreeStep as parseRenderLeaferStep } from './three-json-validator';
-
-/** @deprecated use validateThreeJson */
-export { validateThreeJson as validateLeaferJson } from './three-json-validator';
-
 export {
-  alignStepJsonToLayout,
   resolveStepLayoutTarget,
   describeLayoutTargetForPrompt,
   formatAttachReference,
   parseStepLayoutSpec,
 } from '../leafer-renderer/step-layout-aligner';
-
 export type { StepLayoutSpec, LayoutTarget } from '../leafer-renderer/step-layout-aligner';
 export type { Bounds, StepLayoutRecord } from './scene-bounds';
+
+/** @deprecated use extractPrimitiveBounds */
+export { extractPrimitiveBounds as extractThreeJsonBounds } from './primitive-bounds';
+/** @deprecated use summarizePrimitives */
+export { summarizePrimitives as summarizeThreeJson } from './primitive-bounds';
+/** @deprecated use alignPrimitivesToLayout */
+export { alignPrimitivesToLayout as alignStepJsonToLayout } from './primitive-aligner';

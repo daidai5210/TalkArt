@@ -4,8 +4,8 @@
  */
 
 import * as THREE from 'three';
-import type { ThreeStepJSON } from './types';
-import { buildStepGroup } from './ThreeStepBuilder';
+import type { ThreePrimitive } from './primitive-types';
+import { buildStepGroupFromPrimitives } from './ThreeStepBuilder';
 import { fadeDurationMs } from './ThreeStepAnimator';
 
 let instance: ThreeManager | null = null;
@@ -109,13 +109,13 @@ export class ThreeManager {
     });
   }
 
-  async addStepWithFadeIn(stepJson: ThreeStepJSON, stepIndex: number): Promise<string> {
+  async addStepWithFadeIn(primitives: ThreePrimitive[], stepIndex: number): Promise<string> {
     if (!this.scene) {
       throw new Error('Three.js 未初始化');
     }
 
-    const stepName = stepJson.name ?? `step-${stepIndex}`;
-    const group = buildStepGroup(stepJson, stepName);
+    const stepName = `step-${stepIndex}`;
+    const group = buildStepGroupFromPrimitives(primitives, stepName);
     this.scene.add(group);
     this.stepGroups.push(group);
     this.stepIds.push(stepName);

@@ -10,15 +10,15 @@ import type { LLMFunctionCall } from '../modules/ai-agent/types';
 import { isLLMServiceError } from '../modules/ai-agent/llm-response-utils';
 import type { CanvasContext } from '../modules/ai-agent/canvas-context';
 import type { CanvasSlice } from './canvas-slice';
-import type { DrawingPlan } from '../modules/three-renderer/types';
+import type { DrawingPlan } from '../modules/three-renderer/primitive-types';
 import {
   parseDrawingPlan,
   parseRenderThreeStep,
   getThreeManager,
   stepDelayMs,
-  extractThreeJsonBounds,
-  summarizeThreeJson,
-  alignStepJsonToLayout,
+  extractPrimitiveBounds,
+  summarizePrimitives,
+  alignPrimitivesToLayout,
   resolveStepLayoutTarget,
 } from '../modules/three-renderer';
 
@@ -169,31 +169,31 @@ async function renderSingleStep(
     const parsed = parseRenderThreeStep(call.arguments);
     if (!parsed) {
       if (attempt < MAX_STEP_RETRIES) continue;
-      return { success: false, error: 'Three.js JSON 格式无效' };
+      return { success: false, error: 'Three.js 图元格式无效' };
     }
 
     const layoutTarget = resolveStepLayoutTarget(
       step.layout,
       get().completedStepLayouts,
     );
-    const threeJson = layoutTarget
-      ? alignStepJsonToLayout(parsed.threeJson, layoutTarget)
-      : parsed.threeJson;
+    const primitives = layoutTarget
+      ? alignPrimitivesToLayout(parsed.primitives, layoutTarget)
+      : parsed.primitives;
 
     try {
       const stepId = await getThreeManager().addStepWithFadeIn(
-        threeJson,
+        primitives,
         step.index,
       );
       pushLeaferStepId(stepId);
 
-      const bounds = extractThreeJsonBounds(threeJson);
+      const bounds = extractPrimitiveBounds(primitives);
       if (bounds) {
         get().pushStepLayout({
           stepIndex: step.index,
           label: step.label,
           bounds,
-          summary: summarizeThreeJson(threeJson),
+          summary: summarizePrimitives(primitives),
         });
       }
 

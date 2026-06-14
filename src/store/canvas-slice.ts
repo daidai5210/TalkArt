@@ -1,6 +1,6 @@
 import { StateCreator } from 'zustand';
 import type { StepLayoutRecord } from '../modules/three-renderer/scene-bounds';
-import type { DrawingPlan, StepProgress } from '../modules/three-renderer/types';
+import type { DrawingPlan, StepProgress } from '../modules/three-renderer/primitive-types';
 import { getThreeManager } from '../modules/three-renderer';
 
 export interface CanvasState {
