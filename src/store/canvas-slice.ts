@@ -1,4 +1,5 @@
 import { StateCreator } from 'zustand';
+import type { ErrorReport } from '../modules/canvas-renderer/ErrorHandler';
 
 export interface Layer {
   id: string;
@@ -32,6 +33,29 @@ export interface CanvasState {
   defaultUnit: 'mm' | 'px';
   history: { elements: SVGElement[]; selectedId: string | null }[];
   historyIndex: number;
+  // Canvas 代码生成状态
+  canvasCode: string | null;
+  canvasCodeVersion: number;
+  // Paper.js 状态
+  paperCode: string | null;
+  paperCodeVersion: number;
+  paperTemplates: Array<{
+    template: string;
+    center?: { x: number; y: number };
+    size?: number;
+    color?: string;
+    strokeColor?: string;
+  }>;
+  // 绘制进度状态
+  drawingProgress: {
+    isDrawing: boolean;
+    progress: number;
+    currentStep: number;
+    totalSteps: number;
+    message: string;
+  } | null;
+  // 错误报告状态
+  lastError: ErrorReport | null;
 }
 
 export interface CanvasSlice extends CanvasState {
@@ -52,6 +76,29 @@ export interface CanvasSlice extends CanvasState {
   redo: () => void;
   clearCanvas: () => void;
   getSelectedElement: () => SVGElement | null;
+  // Canvas 代码生成
+  setCanvasCode: (code: string | null) => void;
+  clearCanvasCode: () => void;
+  // Paper.js
+  setPaperCode: (code: string | null) => void;
+  clearPaperCode: () => void;
+  addPaperTemplate: (template: {
+    template: string;
+    center?: { x: number; y: number };
+    size?: number;
+    color?: string;
+    strokeColor?: string;
+  }) => void;
+  clearPaperTemplates: () => void;
+  // 绘制进度
+  setDrawingProgress: (progress: {
+    isDrawing: boolean;
+    progress: number;
+    currentStep: number;
+    totalSteps: number;
+    message: string;
+  } | null) => void;
+  setLastError: (error: ErrorReport | null) => void;
 }
 
 export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
@@ -65,6 +112,15 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
   defaultUnit: 'mm',
   history: [],
   historyIndex: -1,
+  // Canvas 代码生成初始状态
+  canvasCode: null,
+  canvasCodeVersion: 0,
+  // Paper.js 初始状态
+  paperCode: null,
+  paperCodeVersion: 0,
+  paperTemplates: [],
+  drawingProgress: null,
+  lastError: null,
 
   addElement: (el: SVGElement) => {
     set((state) => {
@@ -241,5 +297,58 @@ export const createCanvasSlice: StateCreator<CanvasSlice> = (set, get) => ({
   getSelectedElement: () => {
     const state = get();
     return state.elements.find((el) => el.id === state.selectedId) || null;
+  },
+
+  setCanvasCode: (code: string | null) => {
+    set((state) => ({
+      canvasCode: code,
+      canvasCodeVersion: state.canvasCodeVersion + 1,
+    }));
+  },
+
+  clearCanvasCode: () => {
+    set({
+      canvasCode: null,
+      canvasCodeVersion: 0,
+    });
+  },
+
+  // Paper.js 方法
+  setPaperCode: (code: string | null) => {
+    set((state) => ({
+      paperCode: code,
+      paperCodeVersion: state.paperCodeVersion + 1,
+    }));
+  },
+
+  clearPaperCode: () => {
+    set({
+      paperCode: null,
+      paperCodeVersion: 0,
+    });
+  },
+
+  addPaperTemplate: (template) => {
+    set((state) => ({
+      paperTemplates: [...state.paperTemplates, template],
+    }));
+  },
+
+  clearPaperTemplates: () => {
+    set({
+      paperTemplates: [],
+    });
+  },
+
+  setDrawingProgress: (progress) => {
+    set({
+      drawingProgress: progress,
+    });
+  },
+
+  setLastError: (error) => {
+    set({
+      lastError: error,
+    });
   },
 });

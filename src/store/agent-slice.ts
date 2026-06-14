@@ -31,10 +31,13 @@ import type { ExtendedToolResult } from '../modules/ai-agent/ToolDispatcher';
 import { TOOL_DEFINITIONS } from '../modules/drawing-tools';
 import { PHASE5_TOOL_DEFINITIONS } from '../modules/drawing-tools/v2/phase5-tool-definitions';
 import { EXECUTE_DRAWING_PLAN_DEFINITION } from '../modules/drawing-tools/v2/tool-schema-skeleton';
+import { EXECUTE_CANVAS_CODE_DEFINITION } from '../modules/drawing-tools/v2/canvas-code-tools';
+import { PAPER_TOOL_DEFINITIONS } from '../modules/drawing-tools/v2/paper-tools';
 import type { LLMFunctionCall } from '../modules/ai-agent/types';
 import { isLLMServiceError } from '../modules/ai-agent/llm-response-utils';
 import type { CanvasContext } from '../modules/drawing-tools/types';
 import type { CanvasSlice, SVGElement } from './canvas-slice';
+import { buildRepairPrompt } from '../modules/canvas-renderer/ErrorHandler';
 
 /** Conversation message with metadata for UI display. */
 export interface ConversationMessage {
@@ -98,6 +101,17 @@ export interface AgentSlice {
    * @param text - The user's confirmation text
    */
   processConfirmation: (text: string) => Promise<void>;
+
+  /**
+   * Process code execution error and trigger LLM repair.
+   *
+   * Called when Canvas/Paper code execution fails.
+   * Sends error context back to LLM for automatic code repair.
+   *
+   * @param originalCode - The code that failed
+   * @param codeType - The type of code ('canvas' | 'paper')
+   */
+  processCodeError: (originalCode: string, codeType: 'canvas' | 'paper') => Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
@@ -127,6 +141,8 @@ function getConversationManager(): ConversationManager {
       ...TOOL_DEFINITIONS,
       EXECUTE_DRAWING_PLAN_DEFINITION,
       ...PHASE5_TOOL_DEFINITIONS,
+      EXECUTE_CANVAS_CODE_DEFINITION,
+      ...PAPER_TOOL_DEFINITIONS,
     ]);
   }
   return conversationManager;
@@ -237,6 +253,33 @@ function handleFunctionCall(
         props: el.props,
       })),
     );
+    return result;
+  }
+
+  // --- executeCanvasCode: 代码生成绘图 ---
+  if (functionName === 'executeCanvasCode' && element && element.type === 'canvasCode') {
+    const code = element.props.code as string;
+    store.setCanvasCode(code);
+    return result;
+  }
+
+  // --- executePaperCode: Paper.js 代码生成绘图 ---
+  if (functionName === 'executePaperCode' && element && element.type === 'paperCode') {
+    const code = element.props.code as string;
+    store.setPaperCode(code);
+    return result;
+  }
+
+  // --- renderTemplate: 渲染预设模板 ---
+  if (functionName === 'renderTemplate' && element && element.type === 'template') {
+    const template = element.props.template as string;
+    store.addPaperTemplate({
+      template,
+      center: element.props.center as { x: number; y: number } | undefined,
+      size: element.props.size as number | undefined,
+      color: element.props.color as string | undefined,
+      strokeColor: element.props.strokeColor as string | undefined,
+    });
     return result;
   }
 
@@ -547,6 +590,61 @@ export const createAgentSlice: StateCreator<CanvasSlice & AgentSlice, [], [], Ag
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : '处理确认时出错';
+      setError(message);
+      setAgentState('error');
+    }
+  },
+
+  processCodeError: async (originalCode: string, _codeType: 'canvas' | 'paper') => {
+    const { addMessage, setAgentState, setConfirmation, setError } = get();
+
+    setAgentState('executing');
+    setError(null);
+
+    try {
+      const manager = getConversationManager();
+      const canvasContext = buildCanvasContext(get);
+      const dispatcher = getToolDispatcher(canvasContext);
+
+      // 分析错误并构建修复提示
+      // 注意：这里我们拿到的是 store 中的 lastError，
+      // 但实际错误分析已经在 CanvasLayer 中完成
+      const errorReport = get().lastError;
+
+      if (!errorReport) {
+        setError('没有可用的错误信息，无法修复');
+        setAgentState('error');
+        return;
+      }
+
+      const repairPrompt = buildRepairPrompt(originalCode, errorReport);
+
+      // 发送修复请求
+      const response: LLMResponse = await manager.processErrorRepair(repairPrompt, canvasContext);
+
+      if (response.type === 'error' || isLLMServiceError(response.content)) {
+        const content = response.content || 'AI 修复失败，请重试';
+        addMessage({ role: 'assistant', content });
+        setError(content);
+        setConfirmation('');
+        setAgentState('error');
+      } else if (response.type === 'function_call' || response.type === 'tool_calls') {
+        const outcome = processLLMToolResponse(response, dispatcher, get, addMessage);
+        if (outcome.success) {
+          // 修复成功，添加成功消息
+          addMessage({ role: 'assistant', content: '已修复代码并重新绘制' });
+          setAgentState('idle');
+          setConfirmation('');
+        } else {
+          setError(outcome.error || '修复后仍然失败');
+          setAgentState('error');
+        }
+      } else {
+        setError('LLM 未返回有效的修复代码');
+        setAgentState('error');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '代码修复时出错';
       setError(message);
       setAgentState('error');
     }

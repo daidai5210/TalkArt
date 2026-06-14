@@ -18,6 +18,8 @@
 
 import React, { useState } from 'react';
 import { Canvas } from './modules/svg-renderer';
+import { CanvasLayer } from './modules/canvas-renderer';
+import { PaperLayer } from './modules/paper-renderer';
 import { useTalkArt } from './hooks/useTalkArt';
 import { MicrophoneButton } from './components/MicrophoneButton';
 import { TranscriptPanel } from './components/TranscriptPanel';
@@ -175,7 +177,11 @@ const TalkArt: React.FC = () => {
 
         {/* SVG Canvas */}
         <div className="flex-1 flex items-center justify-center p-4">
-          <Canvas />
+          <div className="relative">
+            <Canvas />
+            <CanvasLayer zIndex={5} />
+            <PaperLayer zIndex={15} />
+          </div>
         </div>
 
         {/* Voice warning (non-blocking) */}
