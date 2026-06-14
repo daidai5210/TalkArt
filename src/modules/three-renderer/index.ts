@@ -2,12 +2,16 @@ export { ThreeCanvas, LeaferCanvas } from './ThreeCanvas';
 export { ThreeManager, getThreeManager, getLeaferManager } from './ThreeManager';
 export { stepDelayMs, fadeDurationMs } from './ThreeStepAnimator';
 export type {
-  ThreePrimitive,
-  ThreeStepSpec,
+  SketchMark,
+  SketchPoint,
+  SketchStepSpec,
   DrawingPlan,
   DrawingPlanStep,
   StepProgress,
-} from './primitive-types';
+} from './sketch-types';
+export type { ThreePrimitive, ThreeStepSpec } from './primitive-types';
+export { SKETCH_MARK_KINDS, formatSketchCatalogForPrompt } from './sketch-catalog';
+export type { SketchMarkKind } from './sketch-catalog';
 export {
   GEOMETRY_CATALOG,
   GEOMETRY_KINDS,
@@ -17,16 +21,27 @@ export {
 export type { GeometryKind, GeometryDef } from './geometry-catalog';
 export {
   validatePrimitives,
-  parseDrawingPlan,
   parseRenderThreeStep,
 } from './primitive-validator';
 export type { ValidationResult } from './primitive-validator';
+export {
+  validateSketchMarks,
+  parseDrawingPlan,
+  parseRenderSketchStep,
+} from './sketch-validator';
+export type { SketchValidationResult } from './sketch-validator';
 export {
   extractPrimitiveBounds,
   summarizePrimitives,
   summarizePrimitive,
 } from './primitive-bounds';
 export { alignPrimitivesToLayout } from './primitive-aligner';
+export {
+  extractSketchBounds,
+  summarizeSketchMarks,
+  summarizeSketchMark,
+} from './sketch-bounds';
+export { alignSketchMarksToLayout } from './sketch-aligner';
 export {
   formatCanvasSpec,
   formatSceneStateBlock,

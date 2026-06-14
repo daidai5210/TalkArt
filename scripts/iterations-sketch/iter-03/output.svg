@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<rect width="100%" height="100%" fill="#fffef8"/>
+<g id="step-0" data-label="画树冠">
+<ellipse cx="400" cy="250" rx="83.04597701149426" ry="73.05194805194805" stroke="#222222" stroke-width="3.9080459770114944" stroke-linecap="round" stroke-linejoin="round" opacity="1" fill="none"/>
+</g>
+<g id="step-1" data-label="画树干">
+<line x1="386.5" y1="302.46913580246917" x2="386.5" y2="397.53086419753083" stroke="#222222" stroke-width="4.938271604938271" stroke-linecap="round" stroke-linejoin="round" opacity="1" fill="none"/>
+<line x1="413.5" y1="302.46913580246917" x2="413.5" y2="397.53086419753083" stroke="#222222" stroke-width="4.938271604938271" stroke-linecap="round" stroke-linejoin="round" opacity="1" fill="none"/>
+<line x1="379.75" y1="397.53086419753083" x2="420.25" y2="397.53086419753083" stroke="#222222" stroke-width="4.938271604938271" stroke-linecap="round" stroke-linejoin="round" opacity="1" fill="none"/>
+</g>
+</svg>

@@ -13,12 +13,12 @@ import type { CanvasSlice } from './canvas-slice';
 import type { DrawingPlan } from '../modules/three-renderer/primitive-types';
 import {
   parseDrawingPlan,
-  parseRenderThreeStep,
+  parseRenderSketchStep,
   getThreeManager,
   stepDelayMs,
-  extractPrimitiveBounds,
-  summarizePrimitives,
-  alignPrimitivesToLayout,
+  extractSketchBounds,
+  summarizeSketchMarks,
+  alignSketchMarksToLayout,
   resolveStepLayoutTarget,
 } from '../modules/three-renderer';
 
@@ -153,7 +153,7 @@ async function renderSingleStep(
     const call = extractFunctionCall(response);
     if (!call) {
       if (attempt < MAX_STEP_RETRIES) continue;
-      return { success: false, error: '模型未返回 renderThreeStep' };
+      return { success: false, error: '模型未返回 renderSketchStep' };
     }
 
     if (call.name === 'clearThreeCanvas') {
@@ -161,39 +161,39 @@ async function renderSingleStep(
       return { success: true };
     }
 
-    if (call.name !== 'renderThreeStep') {
+    if (call.name !== 'renderSketchStep' && call.name !== 'renderThreeStep') {
       if (attempt < MAX_STEP_RETRIES) continue;
       return { success: false, error: `意外的工具调用: ${call.name}` };
     }
 
-    const parsed = parseRenderThreeStep(call.arguments);
+    const parsed = parseRenderSketchStep(call.arguments);
     if (!parsed) {
       if (attempt < MAX_STEP_RETRIES) continue;
-      return { success: false, error: 'Three.js 图元格式无效' };
+      return { success: false, error: '线稿笔画格式无效' };
     }
 
     const layoutTarget = resolveStepLayoutTarget(
       step.layout,
       get().completedStepLayouts,
     );
-    const primitives = layoutTarget
-      ? alignPrimitivesToLayout(parsed.primitives, layoutTarget)
-      : parsed.primitives;
+    const marks = layoutTarget
+      ? alignSketchMarksToLayout(parsed.marks, layoutTarget)
+      : parsed.marks;
 
     try {
-      const stepId = await getThreeManager().addStepWithFadeIn(
-        primitives,
+      const stepId = await getThreeManager().addSketchStepWithFadeIn(
+        marks,
         step.index,
       );
       pushLeaferStepId(stepId);
 
-      const bounds = extractPrimitiveBounds(primitives);
+      const bounds = extractSketchBounds(marks);
       if (bounds) {
         get().pushStepLayout({
           stepIndex: step.index,
           label: step.label,
           bounds,
-          summary: summarizePrimitives(primitives),
+          summary: summarizeSketchMarks(marks),
         });
       }
 

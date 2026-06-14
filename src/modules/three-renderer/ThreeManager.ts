@@ -5,7 +5,9 @@
 
 import * as THREE from 'three';
 import type { ThreePrimitive } from './primitive-types';
+import type { SketchMark } from './sketch-types';
 import { buildStepGroupFromPrimitives } from './ThreeStepBuilder';
+import { buildStepGroupFromSketchMarks } from './ThreeSketchBuilder';
 import { fadeDurationMs } from './ThreeStepAnimator';
 
 let instance: ThreeManager | null = null;
@@ -116,6 +118,21 @@ export class ThreeManager {
 
     const stepName = `step-${stepIndex}`;
     const group = buildStepGroupFromPrimitives(primitives, stepName);
+    this.scene.add(group);
+    this.stepGroups.push(group);
+    this.stepIds.push(stepName);
+
+    await this.fadeIn(group, fadeDurationMs());
+    return stepName;
+  }
+
+  async addSketchStepWithFadeIn(marks: SketchMark[], stepIndex: number): Promise<string> {
+    if (!this.scene) {
+      throw new Error('Three.js 未初始化');
+    }
+
+    const stepName = `step-${stepIndex}`;
+    const group = buildStepGroupFromSketchMarks(marks, stepName);
     this.scene.add(group);
     this.stepGroups.push(group);
     this.stepIds.push(stepName);

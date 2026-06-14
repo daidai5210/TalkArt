@@ -1,11 +1,8 @@
 /**
- * LLM tool schemas for progressive Three.js drawing (structured primitives API).
+ * LLM tool schemas for progressive minimal sketch drawing.
  */
 
-import {
-  GEOMETRY_KINDS,
-  buildPrimitiveItemSchema,
-} from '../three-renderer/geometry-catalog';
+import { SKETCH_MARK_KINDS } from '../three-renderer/sketch-catalog';
 
 export interface ToolDefinition {
   type: 'function';
@@ -21,7 +18,7 @@ export const PLAN_DRAWING_STEPS_DEFINITION: ToolDefinition = {
   function: {
     name: 'planDrawingSteps',
     description:
-      '分析用户绘图需求，输出分步绘制计划（仅主体，不含背景）。简单图形 1~3 步，复杂主体 5~15 步。必须先调用此工具再逐步渲染。',
+      '分析用户绘图需求，输出极简线稿分步计划（仅主体，不含背景）。简单对象 1~2 步，复杂主体 3~5 步。',
     parameters: {
       type: 'object',
       properties: {
@@ -38,7 +35,7 @@ export const PLAN_DRAWING_STEPS_DEFINITION: ToolDefinition = {
               description: {
                 type: 'string',
                 description:
-                  '本步详细绘制说明：用哪些 kind 图元、颜色、相对位置。供 renderThreeStep 使用',
+                  '本步详细绘制说明：使用哪些极简笔画 mark，以及它们与主体的相对位置。供 renderSketchStep 使用',
               },
               layout: {
                 type: 'object',
@@ -69,28 +66,60 @@ export const PLAN_DRAWING_STEPS_DEFINITION: ToolDefinition = {
   },
 };
 
-export const RENDER_THREE_STEP_DEFINITION: ToolDefinition = {
+const POINT_SCHEMA = {
+  type: 'array',
+  description: '[x,y] 坐标点',
+  items: { type: 'number' },
+  minItems: 2,
+  maxItems: 2,
+};
+
+const MARK_SCHEMA = {
+  type: 'object',
+  description: '单个极简笔画 mark，kind 决定必填字段',
+  properties: {
+    kind: { type: 'string', enum: SKETCH_MARK_KINDS, description: '笔画类型' },
+    from: POINT_SCHEMA,
+    to: POINT_SCHEMA,
+    points: { type: 'array', items: POINT_SCHEMA, description: 'polyline/curve/polygon 的点列表' },
+    center: POINT_SCHEMA,
+    rx: { type: 'number', description: 'ellipse 横向半径' },
+    ry: { type: 'number', description: 'ellipse 纵向半径' },
+    r: { type: 'number', description: 'dot 半径' },
+    stroke: { type: 'string', description: '描边颜色，默认 #222222' },
+    fill: { type: 'string', description: '少量填充色；无填充用 none 或省略' },
+    width: { type: 'number', description: '线宽，默认 3' },
+    opacity: { type: 'number', description: '透明度 0~1' },
+  },
+  required: ['kind'],
+};
+
+export const RENDER_SKETCH_STEP_DEFINITION: ToolDefinition = {
   type: 'function',
   function: {
-    name: 'renderThreeStep',
-    description: `渲染单个绘制步骤的主体部件：输出 primitives 图元数组（${GEOMETRY_KINDS.join('|')}）。禁止画背景/天空/草地/全屏底色，白纸画布由系统提供。`,
+    name: 'renderSketchStep',
+    description: `渲染单个极简线稿步骤：输出 marks 数组（${SKETCH_MARK_KINDS.join('|')}）。禁止背景、阴影、纹理和复杂装饰。`,
     parameters: {
       type: 'object',
       properties: {
         stepIndex: { type: 'number', description: '当前步骤序号' },
         label: { type: 'string', description: '步骤标签' },
-        primitives: {
+        marks: {
           type: 'array',
           description:
-            '本步图元列表。每项含 kind + 坐标 + 尺寸 + color。系统校验后渲染为 Three.js Mesh',
-          items: buildPrimitiveItemSchema(),
+            '本步笔画列表。每项是 line/polyline/curve/ellipse/polygon/dot。每步 1~8 个 mark，越少越好。',
+          items: MARK_SCHEMA,
           minItems: 1,
+          maxItems: 8,
         },
       },
-      required: ['stepIndex', 'label', 'primitives'],
+      required: ['stepIndex', 'label', 'marks'],
     },
   },
 };
+
+/** @deprecated use RENDER_SKETCH_STEP_DEFINITION */
+export const RENDER_THREE_STEP_DEFINITION = RENDER_SKETCH_STEP_DEFINITION;
 
 export const CLEAR_THREE_CANVAS_DEFINITION: ToolDefinition = {
   type: 'function',
@@ -103,6 +132,6 @@ export const CLEAR_THREE_CANVAS_DEFINITION: ToolDefinition = {
 
 export const THREE_DRAWING_TOOLS = [
   PLAN_DRAWING_STEPS_DEFINITION,
-  RENDER_THREE_STEP_DEFINITION,
+  RENDER_SKETCH_STEP_DEFINITION,
   CLEAR_THREE_CANVAS_DEFINITION,
 ];

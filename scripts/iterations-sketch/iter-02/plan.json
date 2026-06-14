@@ -1,0 +1,51 @@
+{
+  "planId": "simple_house_001",
+  "totalSteps": 3,
+  "steps": [
+    {
+      "index": 0,
+      "label": "画房身",
+      "description": "画一个正方形房身轮廓，用简单矩形线稿表示小房子的主体。",
+      "layout": {
+        "centerX": 400,
+        "centerY": 330,
+        "width": 210,
+        "height": 170,
+        "attachTo": 0,
+        "attachEdge": "center",
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    },
+    {
+      "index": 1,
+      "label": "画屋顶",
+      "description": "在房身上方画一个三角形屋顶，底边贴住房身顶部，尖角居中。",
+      "layout": {
+        "centerX": 400,
+        "centerY": 0,
+        "width": 250,
+        "height": 100,
+        "attachTo": 0,
+        "attachEdge": "top",
+        "offsetX": 0,
+        "offsetY": -50
+      }
+    },
+    {
+      "index": 2,
+      "label": "画门窗",
+      "description": "在房身内画一个小矩形门和一个小方窗，保留极简识别特征。",
+      "layout": {
+        "centerX": 400,
+        "centerY": 330,
+        "width": 170,
+        "height": 130,
+        "attachTo": 0,
+        "attachEdge": "center",
+        "offsetX": 0,
+        "offsetY": 10
+      }
+    }
+  ]
+}

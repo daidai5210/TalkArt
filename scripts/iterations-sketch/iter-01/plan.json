@@ -1,0 +1,66 @@
+{
+  "planId": "cute_simple_cat",
+  "totalSteps": 4,
+  "steps": [
+    {
+      "index": 0,
+      "label": "画头和耳朵",
+      "description": "画一个圆润的猫头椭圆轮廓，并在头顶左右各画一个小三角耳朵，形成可爱猫咪的主要外形。",
+      "layout": {
+        "centerX": 400,
+        "centerY": 285,
+        "width": 200,
+        "height": 170,
+        "attachTo": 0,
+        "attachEdge": "center",
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    },
+    {
+      "index": 1,
+      "label": "画身体和前爪",
+      "description": "在头部下方画一个小椭圆身体，左右各用一条短曲线表示前爪，让身体贴在猫头下面。",
+      "layout": {
+        "centerX": 400,
+        "centerY": 390,
+        "width": 150,
+        "height": 130,
+        "attachTo": 0,
+        "attachEdge": "bottom",
+        "offsetX": 0,
+        "offsetY": 8
+      }
+    },
+    {
+      "index": 2,
+      "label": "画表情胡须",
+      "description": "在脸上画两点眼睛、一个小三角鼻子和两侧各三根短胡须，保留极简可爱表情。",
+      "layout": {
+        "centerX": 400,
+        "centerY": 285,
+        "width": 150,
+        "height": 90,
+        "attachTo": 0,
+        "attachEdge": "center",
+        "offsetX": 0,
+        "offsetY": 8
+      }
+    },
+    {
+      "index": 3,
+      "label": "画尾巴",
+      "description": "在身体右侧画一条向上弯的尾巴曲线，尾巴根部贴近身体侧边。",
+      "layout": {
+        "centerX": 500,
+        "centerY": 370,
+        "width": 90,
+        "height": 120,
+        "attachTo": 1,
+        "attachEdge": "right",
+        "offsetX": 8,
+        "offsetY": -15
+      }
+    }
+  ]
+}

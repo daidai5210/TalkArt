@@ -1,0 +1,36 @@
+{
+  "planId": "simple_small_tree_minimal",
+  "totalSteps": 2,
+  "steps": [
+    {
+      "index": 0,
+      "label": "画树冠",
+      "description": "画一个简化树冠：用一个近圆的椭圆或几段圆润曲线组成蓬松外轮廓，位于画布中心偏上。",
+      "layout": {
+        "centerX": 400,
+        "centerY": 250,
+        "width": 170,
+        "height": 150,
+        "attachTo": 0,
+        "attachEdge": "center",
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    },
+    {
+      "index": 1,
+      "label": "画树干",
+      "description": "在树冠下方画细短树干：两条竖线和底部一条短线，顶部贴进树冠下缘。",
+      "layout": {
+        "centerX": 400,
+        "centerY": 345,
+        "width": 45,
+        "height": 100,
+        "attachTo": 0,
+        "attachEdge": "bottom",
+        "offsetX": 0,
+        "offsetY": 5
+      }
+    }
+  ]
+}

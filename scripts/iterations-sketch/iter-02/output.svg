@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+<rect width="100%" height="100%" fill="#fffef8"/>
+<g id="step-0" data-label="画房身">
+<polyline points="296.96,246.95 503.04,246.95 503.04,413.05 296.96,413.05 296.96,246.95" stroke="#222222" stroke-width="3.925233644859813" stroke-linecap="round" stroke-linejoin="round" opacity="1" fill="none"/>
+</g>
+<g id="step-1" data-label="画屋顶">
+<polyline points="277.14,-2.38 400,-97.62 522.86,-2.38" stroke="#222222" stroke-width="4.761904761904762" stroke-linecap="round" stroke-linejoin="round" opacity="1" fill="none"/>
+</g>
+<g id="step-2" data-label="画门窗">
+<polyline points="317.98,402.82 317.98,315.42 377.63,315.42 377.63,402.82" stroke="#222222" stroke-width="5.964912280701754" stroke-linecap="round" stroke-linejoin="round" opacity="1" fill="none"/>
+<polygon points="414.91,277.18 482.02,277.18 482.02,326.34 414.91,326.34" stroke="#222222" stroke-width="5.964912280701754" stroke-linecap="round" stroke-linejoin="round" opacity="1" fill="none"/>
+<circle cx="365.70175438596493" cy="360.21008403361344" r="4.473684210526316" fill="#222222" opacity="1"/>
+</g>
+</svg>

@@ -1,0 +1,43 @@
+{
+  "iteration": 2,
+  "prompt": "一个简单的小房子，几笔线条的简笔画",
+  "planSteps": 3,
+  "totalMarks": 5,
+  "stepLayouts": [
+    {
+      "stepIndex": 0,
+      "label": "画房身",
+      "bounds": {
+        "minX": 295.00000000000006,
+        "minY": 244.99140616607585,
+        "maxX": 504.99999999999994,
+        "maxY": 415.0085938339241
+      },
+      "summary": "折线 5点"
+    },
+    {
+      "stepIndex": 1,
+      "label": "画屋顶",
+      "bounds": {
+        "minX": 274.7557997557997,
+        "minY": -100,
+        "maxX": 525.2442002442002,
+        "maxY": 1.3322676295501878e-15
+      },
+      "summary": "折线 3点"
+    },
+    {
+      "stepIndex": 2,
+      "label": "画门窗",
+      "bounds": {
+        "minX": 315,
+        "minY": 274.2024178092289,
+        "maxX": 485,
+        "maxY": 405.7975821907711
+      },
+      "summary": "折线 4点; 多边形 4点; 点 (366,360) r=4"
+    }
+  ],
+  "outputSvg": "D:\\Code\\TalkArt\\scripts\\iterations-sketch\\iter-02\\output.svg",
+  "timestamp": "2026-06-14T07:36:39.761Z"
+}

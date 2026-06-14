@@ -1,10 +1,10 @@
 /**
- * Select Three.js drawing tools for LLM requests by phase.
+ * Select sketch drawing tools for LLM requests by phase.
  */
 
 import {
   PLAN_DRAWING_STEPS_DEFINITION,
-  RENDER_THREE_STEP_DEFINITION,
+  RENDER_SKETCH_STEP_DEFINITION,
   CLEAR_THREE_CANVAS_DEFINITION,
 } from './three-tool-definitions';
 
@@ -12,10 +12,10 @@ export const DRAWING_INTENT_PATTERN =
   /画|绘|绘制|帮我画|帮我做|做一|生成|圆|方|三角|猫|狗|鸟|花|树|人|车|五环|奥运|国旗|包装/i;
 
 export const PLANNING_TOOLS = [PLAN_DRAWING_STEPS_DEFINITION];
-export const RENDER_TOOLS = [RENDER_THREE_STEP_DEFINITION];
+export const RENDER_TOOLS = [RENDER_SKETCH_STEP_DEFINITION];
 export const THREE_TOOLS = [
   PLAN_DRAWING_STEPS_DEFINITION,
-  RENDER_THREE_STEP_DEFINITION,
+  RENDER_SKETCH_STEP_DEFINITION,
   CLEAR_THREE_CANVAS_DEFINITION,
 ];
 

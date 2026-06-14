@@ -117,7 +117,9 @@ export function buildCodeGenStepPrompt(ctx: CodeGenContext): string {
     }
   }
 
-  prompt += `## 现在请画第 ${currentStep + 1} 步
+  const stepTotalLabel = totalSteps ? `/${totalSteps}` : '';
+
+  prompt += `## 现在请画第 ${currentStep + 1}${stepTotalLabel} 步
 ${currentStep === 0 ? '先画主体（如身体或大轮廓），用简单的圆圈。' : '继续添加细节，保持简约。'}
 
 只输出 drawStep 函数代码。`;
