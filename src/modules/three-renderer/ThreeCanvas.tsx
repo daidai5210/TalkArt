@@ -4,45 +4,51 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import { useStore } from '@/store';
 import { getThreeManager } from './ThreeManager';
 
 interface ThreeCanvasProps {
   className?: string;
 }
 
-export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({ className }) => {
+export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({ className = '' }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasWidth = useStore((s) => s.canvasWidth);
-  const canvasHeight = useStore((s) => s.canvasHeight);
+  const attachedRef = useRef(false);
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
-    const manager = getThreeManager();
-    manager.attach(el, canvasWidth, canvasHeight);
+    const syncSize = () => {
+      const w = el.clientWidth;
+      const h = el.clientHeight;
+      if (w <= 0 || h <= 0) return;
+
+      const manager = getThreeManager();
+      if (!attachedRef.current) {
+        manager.attach(el, w, h);
+        attachedRef.current = true;
+      } else {
+        manager.resize(w, h);
+      }
+    };
+
+    syncSize();
+    const ro = new ResizeObserver(syncSize);
+    ro.observe(el);
 
     return () => {
-      manager.destroy();
+      ro.disconnect();
+      if (attachedRef.current) {
+        getThreeManager().destroy();
+        attachedRef.current = false;
+      }
     };
   }, []);
-
-  useEffect(() => {
-    getThreeManager().resize(canvasWidth, canvasHeight);
-  }, [canvasWidth, canvasHeight]);
 
   return (
     <div
       ref={containerRef}
-      className={className}
-      style={{
-        width: canvasWidth,
-        height: canvasHeight,
-        borderRadius: 8,
-        overflow: 'hidden',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
-      }}
+      className={`w-full h-full ${className}`}
       data-testid="three-canvas"
     />
   );

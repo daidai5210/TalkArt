@@ -1,18 +1,21 @@
 /**
  * @component TalkArt
- * Main application shell for TalkArt voice-controlled LeaferJS drawing.
+ * Main application shell — Artful Play / Digital Papercraft UI.
  */
 
 import React, { useState } from 'react';
 import { ThreeCanvas } from './modules/three-renderer';
-import { DrawingProgressIndicator } from './components/DrawingProgressIndicator';
 import { useTalkArt } from './hooks/useTalkArt';
 import { useStore } from './store';
+import { AppHeader } from './components/AppHeader';
+import { XiaoZhiBubble } from './components/XiaoZhiBubble';
+import { StepProgressBar } from './components/StepProgressBar';
+import { DesktopControlBar } from './components/DesktopControlBar';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { MicrophoneButton } from './components/MicrophoneButton';
-import { TranscriptPanel } from './components/TranscriptPanel';
-import { ConfirmationBubble } from './components/ConfirmationBubble';
-import { StatusBar } from './components/StatusBar';
-import { Toolbar } from './components/Toolbar';
+import { TextInputBar } from './components/TextInputBar';
+import { MaterialIcon } from './components/MaterialIcon';
+import { getXiaoZhiMessage } from './lib/xiao-zhi-message';
 
 const TalkArt: React.FC = () => {
   const {
@@ -32,243 +35,153 @@ const TalkArt: React.FC = () => {
     canUndo,
     undo,
     clearCanvas,
-    exportSVGAction,
     exportPNGAction,
     conversation,
     demoMode,
   } = useTalkArt();
 
   const drawingProgress = useStore((s) => s.drawingProgress);
+  const drawingPlan = useStore((s) => s.drawingPlan);
   const stepError = useStore((s) => s.stepError);
   const retryCurrentStep = useStore((s) => s.retryCurrentStep);
 
   const [textInput, setTextInput] = useState('');
 
-  const handleTextInputSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const xiaoZhiMessage = getXiaoZhiMessage({
+    agentState,
+    drawingProgress,
+    confirmationText,
+    currentTranscript,
+    isListening,
+    stepError,
+    conversation,
+  });
+
+  const isPlanning =
+    drawingProgress?.isDrawing === true &&
+    drawingProgress.message === '正在规划绘制步骤...';
+
+  const planSteps =
+    drawingPlan?.steps.map((s) => ({ index: s.index, label: s.label })) ?? [];
+
+  const currentStepNum = drawingProgress?.currentStep ?? 0;
+
+  const handleTextSubmit = () => {
     if (textInput.trim()) {
       submitTextInput(textInput.trim());
       setTextInput('');
     }
   };
 
+  const handleSave = () => {
+    void exportPNGAction();
+  };
+
+  const hasContent = stepCount > 0;
+
   return (
-    <div className="flex flex-col h-screen bg-talkart-bg overflow-hidden">
-      <header className="flex items-center justify-between px-6 py-3 bg-talkart-surface border-b border-gray-700/50 shrink-0">
-        <h1 className="text-xl font-bold text-white flex items-center gap-2">
-          <svg
-            viewBox="0 0 24 24"
-            className="w-6 h-6 text-talkart-primary"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-            <path d="M12 19v4" />
-            <path d="M8 23h8" />
-          </svg>
-          <span>
-            <span className="text-talkart-primary">Talk</span>Art
-          </span>
-        </h1>
+    <div className="flex flex-col min-h-screen text-on-surface font-body-md overflow-x-hidden">
+      <AppHeader agentState={agentState} />
 
-        <div className="flex items-center gap-3">
-          <span
-            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-              agentState === 'idle'
-                ? 'bg-gray-700 text-gray-300'
-                : agentState === 'listening' || agentState === 'wake_word'
-                ? 'bg-green-900/50 text-talkart-success'
-                : agentState === 'confirming'
-                ? 'bg-purple-900/50 text-talkart-primary'
-                : agentState === 'executing'
-                ? 'bg-yellow-900/50 text-talkart-warning'
-                : agentState === 'error'
-                ? 'bg-red-900/50 text-talkart-error'
-                : 'bg-gray-700 text-gray-300'
-            }`}
-          >
-            <span
-              className={`w-2 h-2 rounded-full ${
-                agentState === 'listening' || agentState === 'wake_word'
-                  ? 'bg-talkart-success animate-pulse'
-                  : agentState === 'confirming'
-                  ? 'bg-talkart-primary animate-pulse'
-                  : agentState === 'executing'
-                  ? 'bg-talkart-warning animate-pulse'
-                  : agentState === 'error'
-                  ? 'bg-talkart-error'
-                  : 'bg-gray-400'
-              }`}
-            />
-            {agentState === 'idle' && '等待唤醒'}
-            {agentState === 'wake_word' && '检测到唤醒词'}
-            {agentState === 'listening' && '聆听中'}
-            {agentState === 'confirming' && '确认中'}
-            {agentState === 'executing' && '绘制中'}
-            {agentState === 'error' && '出错'}
-          </span>
+      <main className="flex-1 w-full max-w-6xl mx-auto px-margin-mobile md:px-margin-desktop py-6 md:py-8 flex flex-col items-center gap-stack-gap relative z-10 pb-36 md:pb-32">
+        <XiaoZhiBubble message={xiaoZhiMessage} />
 
-          {demoMode && (
-            <span className="text-xs text-talkart-primary bg-talkart-primary/10 px-2 py-0.5 rounded">
-              纯语音演示
-            </span>
-          )}
-
-          {!demoMode && (
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => void exportSVGAction()}
-                disabled={stepCount === 0}
-                className="px-3 py-1.5 bg-gray-700/50 hover:bg-gray-700/70 disabled:bg-gray-800/30 disabled:text-gray-600 text-gray-300 text-xs rounded transition-colors"
-                title="导出 SVG"
-              >
-                SVG ⬇️
-              </button>
-              <button
-                type="button"
-                onClick={() => void exportPNGAction()}
-                disabled={stepCount === 0}
-                className="px-3 py-1.5 bg-gray-700/50 hover:bg-gray-700/70 disabled:bg-gray-800/30 disabled:text-gray-600 text-gray-300 text-xs rounded transition-colors"
-                title="导出 PNG"
-              >
-                PNG ⬇️
-              </button>
-            </div>
-          )}
-        </div>
-      </header>
-
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-        <div className="absolute top-3 left-3 right-3 z-10 space-y-2 pointer-events-none">
-          <div className="pointer-events-auto">
-            <TranscriptPanel
-              currentTranscript={currentTranscript}
-              conversation={conversation}
-              isListening={isListening}
-            />
-          </div>
-          <div className="pointer-events-auto">
-            <ConfirmationBubble
-              confirmationText={confirmationText}
-              isVisible={agentState === 'confirming'}
-            />
-          </div>
+        {/* Canvas paper sheet — Level 1 */}
+        <div className="w-full aspect-square md:aspect-[4/3] max-h-[614px] bg-surface-container-lowest rounded-[3rem] border-2 border-outline-variant tactile-shadow-level-1 overflow-hidden relative flex items-center justify-center m-2 md:m-4">
+          <ThreeCanvas className="w-full h-full" />
         </div>
 
-        <DrawingProgressIndicator
-          progress={drawingProgress}
-          error={stepError}
-          onRetry={stepError ? () => void retryCurrentStep() : undefined}
-        />
+        {planSteps.length > 0 && (
+          <StepProgressBar
+            steps={planSteps}
+            currentStep={currentStepNum}
+            isPlanning={isPlanning}
+          />
+        )}
 
-        <div className="flex-1 flex items-center justify-center p-4">
-          <ThreeCanvas />
-        </div>
-
-        {voiceError && (
-          <div className="absolute bottom-36 right-6 z-20 max-w-xs">
-            <div className="bg-amber-900/90 backdrop-blur-sm border border-amber-500/30 rounded-lg px-3 py-2 shadow-lg">
-              <div className="flex items-start gap-2">
-                <p className="text-xs text-amber-100 flex-1">{voiceError}</p>
-                <button
-                  type="button"
-                  onClick={clearVoiceError}
-                  className="text-amber-300 hover:text-white transition-colors shrink-0"
-                  aria-label="关闭语音提示"
-                >
-                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2}>
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+        {stepError && (
+          <div className="bg-error-container text-on-error-container border-2 border-error/20 rounded-2xl px-6 py-3 flex items-center gap-4 max-w-md tactile-shadow-level-1">
+            <MaterialIcon name="error" className="text-2xl shrink-0" />
+            <p className="font-body-md flex-1">{stepError}</p>
+            <button
+              type="button"
+              onClick={() => void retryCurrentStep()}
+              className="shrink-0 bg-error text-on-error font-label-bold px-4 py-2 rounded-full tactile-active text-sm"
+            >
+              重试
+            </button>
           </div>
         )}
 
-        <div className="absolute bottom-20 right-6 z-20">
-          <MicrophoneButton
-            agentState={agentState}
-            isListening={isListening}
-            isSupported={isSupported}
-            onStartListening={startListening}
-            onStopListening={stopListening}
+        {!demoMode && (
+          <DesktopControlBar
+            canUndo={canUndo}
+            hasContent={hasContent}
+            onUndo={undo}
+            onClear={clearCanvas}
+            onSave={handleSave}
           />
-        </div>
-      </div>
+        )}
+
+        {!demoMode && !isSupported && (
+          <TextInputBar
+            value={textInput}
+            onChange={setTextInput}
+            onSubmit={handleTextSubmit}
+          />
+        )}
+      </main>
+
+      <MicrophoneButton
+        agentState={agentState}
+        isListening={isListening}
+        isSupported={isSupported}
+        onStartListening={startListening}
+        onStopListening={stopListening}
+      />
 
       {!demoMode && (
-        <Toolbar
-          stepCount={stepCount}
+        <MobileBottomNav
           canUndo={canUndo}
+          hasContent={hasContent}
           onUndo={undo}
           onClear={clearCanvas}
-          onExportSVG={() => void exportSVGAction()}
-          onExportPNG={() => void exportPNGAction()}
+          onSave={handleSave}
         />
       )}
 
-      <StatusBar agentState={agentState} stepCount={stepCount} error={error} />
-
-      {!demoMode && (
-        <div className="px-4 py-3 bg-talkart-surface border-t border-gray-700/50">
-          <form onSubmit={handleTextInputSubmit} className="flex gap-2">
-            <input
-              type="text"
-              value={textInput}
-              onChange={(e) => setTextInput(e.target.value)}
-              placeholder="输入绘图指令，例如：画一只黄色的猫"
-              className="flex-1 px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-talkart-primary focus:ring-1 focus:ring-talkart-primary"
-              aria-label="文字输入"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-talkart-primary hover:bg-talkart-primary/80 text-white rounded-lg text-sm font-medium transition-colors"
-            >
-              发送
-            </button>
-          </form>
-          <p className="text-xs text-gray-500 mt-1">
-            {isSupported
-              ? '语音交互：麦克风录音 → 小米 MiMo 转写；LeaferJS 分步渐显绘图'
-              : '当前浏览器不支持麦克风录音，请使用文字输入'}
-          </p>
+      {voiceError && (
+        <div className="fixed bottom-40 md:bottom-28 right-margin-mobile md:right-36 z-50 max-w-xs">
+          <div className="bg-tertiary-container border-2 border-tertiary/30 rounded-2xl px-4 py-3 ambient-float-shadow">
+            <div className="flex items-start gap-2">
+              <MaterialIcon name="mic_off" className="text-tertiary shrink-0 mt-0.5" />
+              <p className="text-sm text-on-tertiary-container flex-1 font-body-md">{voiceError}</p>
+              <button
+                type="button"
+                onClick={clearVoiceError}
+                className="text-tertiary hover:text-on-tertiary-container transition-colors shrink-0"
+                aria-label="关闭语音提示"
+              >
+                <MaterialIcon name="close" className="text-xl" />
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
       {error && agentState === 'error' && (
-        <div className="absolute top-16 right-4 z-30 max-w-sm">
-          <div className="bg-red-900/90 backdrop-blur-sm border border-talkart-error/30 rounded-lg px-4 py-3 shadow-lg">
+        <div className="fixed top-24 right-margin-mobile md:right-margin-desktop z-50 max-w-sm">
+          <div className="bg-error-container border-2 border-error/30 rounded-2xl px-4 py-3 ambient-float-shadow">
             <div className="flex items-start gap-3">
-              <svg
-                viewBox="0 0 24 24"
-                className="w-5 h-5 text-talkart-error shrink-0 mt-0.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="15" y1="9" x2="9" y2="15" />
-                <line x1="9" y1="9" x2="15" y2="15" />
-              </svg>
-              <div className="flex-1">
-                <p className="text-sm text-red-100">{error}</p>
-              </div>
+              <MaterialIcon name="error" className="text-error shrink-0 mt-0.5" />
+              <p className="text-sm text-on-error-container flex-1 font-body-md">{error}</p>
               <button
                 type="button"
                 onClick={clearError}
-                className="text-red-300 hover:text-white transition-colors shrink-0"
+                className="text-error hover:text-on-error-container transition-colors shrink-0"
                 aria-label="关闭错误提示"
               >
-                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2}>
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                <MaterialIcon name="close" className="text-xl" />
               </button>
             </div>
           </div>

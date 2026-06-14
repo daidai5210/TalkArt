@@ -20,7 +20,6 @@ import {
   resolveStepLayoutTarget,
 } from '../modules/three-renderer';
 import { parseComposedDrawingPlan } from '../modules/three-renderer/scene-composition';
-import { resolveCompositionLayoutTarget } from '../modules/three-renderer/scene-composition';
 import { assembleComponentOnCanvas } from '../modules/three-renderer/component-assembler';
 
 /** Conversation message with metadata for UI display. */
@@ -101,7 +100,6 @@ async function renderSingleStep(
   userIntent: string,
   step: DrawingPlan['steps'][0],
   totalSteps: number,
-  plan: DrawingPlan,
 ): Promise<{ success: boolean; error?: string }> {
   const {
     setDrawingProgress,
@@ -129,15 +127,8 @@ async function renderSingleStep(
   for (let attempt = 0; attempt <= MAX_STEP_RETRIES; attempt++) {
     const canvasContext = buildCanvasContext(get);
     const completed = get().completedStepLayouts;
-    const layoutTarget =
-      resolveCompositionLayoutTarget(
-        step,
-        plan.scene,
-        completed,
-        canvasContext.width,
-        canvasContext.height,
-      ) ??
-      resolveStepLayoutTarget(step.layout, completed);
+    const layoutTarget = resolveStepLayoutTarget(step.layout, completed);
+
     const response = await manager.renderStep(
       {
         userIntent,
@@ -146,9 +137,6 @@ async function renderSingleStep(
         stepLabel: step.label,
         stepDescription: step.description,
         stepLayout: step.layout,
-        stepLayer: step.layer,
-        stepGrounded: step.grounded,
-        sceneMeta: plan.scene,
         resolvedLayoutTarget: layoutTarget,
         completedSteps: canvasContext.completed_steps ?? [],
         planSteps: canvasContext.plan_steps ?? [],
@@ -183,13 +171,10 @@ async function renderSingleStep(
       return { success: false, error: 'Three.js 图元格式无效' };
     }
 
-    const coordinateMode =
-      call.arguments.coordinateMode === 'absolute' ? 'absolute' : 'local';
-
     const primitives = assembleComponentOnCanvas(parsed.primitives, {
       layoutTarget,
-      layer: step.layer,
-      coordinateMode,
+      layer: step.layer ?? 'structure',
+      coordinateMode: 'absolute',
     });
 
     try {
@@ -291,7 +276,7 @@ async function processProgressiveDrawing(
   });
 
   for (const step of plan.steps) {
-    const result = await renderSingleStep(manager, get, userIntent, step, plan.totalSteps, plan);
+    const result = await renderSingleStep(manager, get, userIntent, step, plan.totalSteps);
     if (!result.success) {
       setStepError(result.error || '步骤渲染失败');
       return result;
@@ -417,7 +402,6 @@ export const createAgentSlice: StateCreator<CanvasSlice & AgentSlice, [], [], Ag
         pendingRetry.userIntent,
         step,
         drawingPlan.totalSteps,
-        drawingPlan,
       );
 
       if (result.success) {

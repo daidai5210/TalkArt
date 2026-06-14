@@ -40,7 +40,7 @@ export class ThreeManager {
     this.height = height;
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color('#1a1a2e');
+    this.scene.background = new THREE.Color('#ffffff');
 
     this.camera = new THREE.OrthographicCamera(0, width, 0, -height, 0.1, 2000);
     this.camera.position.set(0, 0, 500);

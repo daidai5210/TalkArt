@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TalkArt - 绘画课堂</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@700&amp;family=Plus+Jakarta+Sans:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#003c70",
+                        "surface": "#fdf9e9",
+                        "on-surface": "#1c1c13",
+                        "on-primary-fixed": "#00210c",
+                        "surface-container-low": "#f8f4e4",
+                        "primary-container": "#4ade80",
+                        "on-primary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed": "#3d0026",
+                        "primary": "#006d36",
+                        "surface-container-high": "#ece8d9",
+                        "on-error": "#ffffff",
+                        "secondary-container": "#64a8fe",
+                        "tertiary": "#a43073",
+                        "on-secondary-fixed": "#001c39",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#85145a",
+                        "primary-fixed-dim": "#4de082",
+                        "surface-bright": "#fdf9e9",
+                        "tertiary-fixed-dim": "#ffafd3",
+                        "surface-tint": "#006d36",
+                        "on-primary-container": "#005e2d",
+                        "tertiary-fixed": "#ffd8e7",
+                        "on-surface-variant": "#3d4a3e",
+                        "inverse-on-surface": "#f5f1e1",
+                        "surface-container-highest": "#e6e3d3",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#323126",
+                        "surface-container": "#f2eede",
+                        "on-primary-fixed-variant": "#005227",
+                        "secondary-fixed": "#d4e3ff",
+                        "secondary": "#0060ac",
+                        "surface-variant": "#e6e3d3",
+                        "surface-dim": "#dedacb",
+                        "on-tertiary-container": "#932265",
+                        "on-secondary-fixed-variant": "#004883",
+                        "secondary-fixed-dim": "#a4c9ff",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#6d7b6d",
+                        "background": "#fdf9e9",
+                        "inverse-primary": "#4de082",
+                        "outline-variant": "#bccabb",
+                        "on-background": "#1c1c13",
+                        "tertiary-container": "#ffacd2",
+                        "primary-fixed": "#6dfe9c",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "48px",
+                        "stack-gap": "16px",
+                        "base": "8px",
+                        "gutter": "24px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "label-bold": ["Quicksand"],
+                        "headline-lg": ["Quicksand"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "headline-xl": ["Quicksand"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Quicksand"]
+                    },
+                    "fontSize": {
+                        "label-bold": ["18px", {"lineHeight": "24px", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "body-lg": ["20px", {"lineHeight": "30px", "fontWeight": "500"}],
+                        "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: var(--tw-colors-background);
+            background-image: radial-gradient(var(--tw-colors-surface-container-high) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        
+        .tactile-shadow-level-1 {
+            box-shadow: 0px 4px 0px 0px rgba(0,0,0,0.05);
+        }
+        
+        .tactile-button-shadow {
+            box-shadow: 0px 6px 0px 0px var(--tw-shadow-color);
+        }
+        
+        .tactile-active:active {
+            transform: translateY(6px);
+            box-shadow: 0px 0px 0px 0px transparent;
+        }
+
+        .ambient-float-shadow {
+            box-shadow: 0px 20px 40px -10px rgba(0,0,0,0.1);
+        }
+
+        .pulse-halo {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.8), 0px 6px 0px 0px var(--tw-shadow-color); }
+            70% { box-shadow: 0 0 0 30px rgba(74, 222, 128, 0), 0px 6px 0px 0px var(--tw-shadow-color); }
+            100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0), 0px 6px 0px 0px var(--tw-shadow-color); }
+        }
+
+        .draw-animation {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: dash 3s ease-in-out forwards;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+    </style>
+</head>
+<body class="text-on-surface font-body-md min-h-screen flex flex-col relative overflow-x-hidden">
+<!-- TopNavBar (Shared Component Implemented) -->
+<header class="bg-surface-container-low shadow-[0px_4px_0px_0px_rgba(0,0,0,0.05)] w-full relative z-20">
+<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1;">draw</span>
+<span class="font-headline-xl text-primary tracking-tight">TalkArt</span>
+</div>
+<!-- Status Indicator -->
+<div class="hidden md:flex items-center bg-secondary-container text-on-secondary-container px-6 py-2 rounded-full font-label-bold tactile-shadow-level-1 border-2 border-surface-container-lowest">
+<span class="material-symbols-outlined mr-2" style="font-variation-settings: 'FILL' 1;">face_4</span>
+                小智老师正在教你画画
+            </div>
+<button class="text-on-surface-variant hover:bg-surface-container-high transition-colors p-2 rounded-full tactile-active flex items-center justify-center">
+<span class="material-symbols-outlined text-3xl">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Canvas Area -->
+<main class="flex-1 w-full max-w-6xl mx-auto px-margin-mobile md:px-margin-desktop py-8 flex flex-col items-center gap-stack-gap relative z-10 pb-32">
+<!-- Floating Dialog (Xiao Zhi) - Level 3 -->
+<div class="bg-surface-container-lowest rounded-[2rem] p-6 ambient-float-shadow relative self-start md:self-center ml-4 md:ml-0 mb-2 z-30 max-w-md border-2 border-surface-container animate-[bounce_3s_ease-in-out_infinite]">
+<!-- Speech Bubble Tail -->
+<div class="absolute -bottom-4 left-10 w-0 h-0 border-l-[16px] border-l-transparent border-t-[16px] border-t-surface-container-lowest border-r-[16px] border-r-transparent filter drop-shadow-sm"></div>
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 bg-secondary-container rounded-full flex items-center justify-center shrink-0 border-[3px] border-surface-container-lowest tactile-shadow-level-1">
+<span class="material-symbols-outlined text-on-secondary-container text-3xl" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+</div>
+<p class="font-headline-lg-mobile text-on-surface leading-tight">现在让我们给小房子画上圆圆的房顶吧！</p>
+</div>
+</div>
+<!-- The Canvas - Level 1 Paper -->
+<div class="w-full aspect-square md:aspect-[4/3] max-h-[614px] bg-surface-container-lowest rounded-[3rem] border-2 border-outline-variant tactile-shadow-level-1 overflow-hidden relative flex flex-col items-center justify-center m-4">
+<!-- Sketch Graphic -->
+<svg class="w-2/3 h-2/3" fill="none" viewbox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+<!-- Body (Completed) -->
+<rect fill="#E6E3D3" height="80" stroke="#6D7B6D" stroke-linejoin="round" stroke-width="4" width="100" x="50" y="100"></rect>
+<!-- Chimney (Completed) -->
+<rect fill="#DEDACB" height="30" stroke="#6D7B6D" stroke-linejoin="round" stroke-width="4" width="15" x="130" y="50"></rect>
+<!-- Roof (Being Drawn) -->
+<path class="draw-animation" d="M35 100 L100 40 L165 100 Z" fill="none" stroke="#006D36" stroke-linecap="round" stroke-linejoin="round" stroke-width="8"></path>
+<!-- Guidelines for doors/windows -->
+<rect fill="none" height="40" stroke="#BCCABB" stroke-dasharray="4 4" stroke-width="2" width="30" x="85" y="140"></rect>
+<rect fill="none" height="20" stroke="#BCCABB" stroke-dasharray="4 4" stroke-width="2" width="20" x="60" y="120"></rect>
+<rect fill="none" height="20" stroke="#BCCABB" stroke-dasharray="4 4" stroke-width="2" width="20" x="120" y="120"></rect>
+</svg>
+</div>
+<!-- Progress Indicator -->
+<div class="flex items-center justify-center gap-3 md:gap-6 mt-4 w-full overflow-x-auto px-4 py-2">
+<!-- Step 1: Done -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-headline-lg border-2 border-surface-container-lowest shadow-[0px_4px_0px_0px_#004883] tactile-active transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'wght' 700;">check</span>
+</div>
+<span class="font-label-bold text-on-surface-variant">身体</span>
+</div>
+<div class="w-6 md:w-12 h-2 bg-surface-container-high rounded-full"></div>
+<!-- Step 2: Active -->
+<div class="flex flex-col items-center gap-2 transform scale-110 origin-bottom">
+<div class="w-16 h-16 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-headline-xl border-4 border-surface-container-lowest shadow-[0px_6px_0px_0px_#005e2d] tactile-active transition-transform relative">
+<div class="absolute inset-0 rounded-full border-4 border-primary-container animate-ping opacity-20"></div>
+                    2
+                </div>
+<span class="font-label-bold text-primary">房顶</span>
+</div>
+<div class="w-6 md:w-12 h-2 bg-surface-container-high rounded-full"></div>
+<!-- Step 3: Pending -->
+<div class="flex flex-col items-center gap-2 opacity-60">
+<div class="w-12 h-12 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center font-headline-lg border-2 border-surface-container-highest">
+                    3
+                </div>
+<span class="font-label-bold text-on-surface-variant">烟囱</span>
+</div>
+<div class="w-6 md:w-12 h-2 bg-surface-container-high rounded-full opacity-60"></div>
+<!-- Step 4: Pending -->
+<div class="flex flex-col items-center gap-2 opacity-60">
+<div class="w-12 h-12 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center font-headline-lg border-2 border-surface-container-highest">
+                    4
+                </div>
+<span class="font-label-bold text-on-surface-variant">门窗</span>
+</div>
+</div>
+<!-- Desktop Controls (Hidden on Mobile) -->
+<div class="hidden md:flex items-center gap-8 mt-8 bg-surface-container-lowest px-8 py-4 rounded-full border-2 border-outline-variant tactile-shadow-level-1">
+<button class="flex items-center gap-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-high px-4 py-2 rounded-2xl transition-all font-label-bold tactile-active">
+<span class="material-symbols-outlined text-3xl">undo</span>
+                撤销这一步
+            </button>
+<div class="w-px h-8 bg-surface-container-highest"></div>
+<button class="flex items-center gap-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-high px-4 py-2 rounded-2xl transition-all font-label-bold tactile-active">
+<span class="material-symbols-outlined text-3xl">restart_alt</span>
+                重画
+            </button>
+<div class="w-px h-8 bg-surface-container-highest"></div>
+<button class="flex items-center gap-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-high px-4 py-2 rounded-2xl transition-all font-label-bold tactile-active">
+<span class="material-symbols-outlined text-3xl">save</span>
+                保存作品
+            </button>
+</div>
+</main>
+<!-- Primary CTA - Large Voice Button -->
+<button class="fixed bottom-24 md:bottom-12 right-margin-mobile md:right-margin-desktop w-24 h-24 bg-primary-container text-on-primary-container rounded-full flex items-center justify-center z-50 tactile-active transition-all pulse-halo shadow-[#005e2d] tactile-button-shadow border-4 border-surface-container-lowest">
+<span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'FILL' 1;">mic</span>
+</button>
+<!-- BottomNavBar (Shared Component Implemented - Mobile Only) -->
+<!-- Content logic follows JSON strictly for structure/labels -->
+<nav class="fixed bottom-0 left-0 w-full z-40 flex justify-around items-center px-margin-mobile py-4 pb-safe md:hidden bg-surface-container-lowest border-t-2 border-outline-variant shadow-[0px_-4px_10px_rgba(0,0,0,0.05)] rounded-t-[2rem]">
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-2 hover:bg-surface-container-high rounded-2xl transition-colors tactile-active">
+<span class="material-symbols-outlined text-3xl mb-1">undo</span>
+<span class="font-label-bold text-sm">Undo</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-2 hover:bg-surface-container-high rounded-2xl transition-colors tactile-active">
+<span class="material-symbols-outlined text-3xl mb-1">restart_alt</span>
+<span class="font-label-bold text-sm">Reset</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-2 hover:bg-surface-container-high rounded-2xl transition-colors tactile-active">
+<span class="material-symbols-outlined text-3xl mb-1">save</span>
+<span class="font-label-bold text-sm">Save</span>
+</button>
+</nav>
+</body></html>
