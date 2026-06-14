@@ -16,6 +16,10 @@ import {
   parseDrawingPlan,
   parseRenderLeaferStep,
 } from '../modules/leafer-renderer/leafer-json-validator';
+import {
+  extractLeaferJsonBounds,
+  summarizeLeaferJson,
+} from '../modules/leafer-renderer/scene-bounds';
 
 /** Conversation message with metadata for UI display. */
 export interface ConversationMessage {
@@ -62,6 +66,17 @@ function buildCanvasContext(get: () => CanvasSlice & AgentSlice): CanvasContext 
     elements: [],
     selectedId: null,
     element_count: state.leaferStepIds.length,
+    completed_steps: state.completedStepLayouts.map((s) => ({
+      stepIndex: s.stepIndex,
+      label: s.label,
+      bounds: s.bounds,
+      summary: s.summary,
+    })),
+    plan_steps: state.drawingPlan?.steps.map((s) => ({
+      index: s.index,
+      label: s.label,
+      description: s.description,
+    })),
   };
 }
 
@@ -116,6 +131,8 @@ async function renderSingleStep(
         totalSteps,
         stepLabel: step.label,
         stepDescription: step.description,
+        completedSteps: canvasContext.completed_steps ?? [],
+        planSteps: canvasContext.plan_steps ?? [],
       },
       canvasContext,
     );
@@ -153,6 +170,16 @@ async function renderSingleStep(
         step.index,
       );
       pushLeaferStepId(stepId);
+
+      const bounds = extractLeaferJsonBounds(parsed.leaferJson);
+      if (bounds) {
+        get().pushStepLayout({
+          stepIndex: step.index,
+          label: step.label,
+          bounds,
+          summary: summarizeLeaferJson(parsed.leaferJson),
+        });
+      }
 
       setDrawingProgress({
         isDrawing: true,

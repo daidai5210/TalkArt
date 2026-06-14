@@ -19,9 +19,11 @@ function buildPayload(messages: Message[], tools: unknown[], canvasContext: Canv
     canvas_context: {
       width: canvasContext.width,
       height: canvasContext.height,
-      element_count: canvasContext.elements.length,
+      element_count: canvasContext.element_count ?? canvasContext.elements.length,
       element_types: canvasContext.elements.map((el: { type: string }) => el.type),
       selected_id: canvasContext.selectedId,
+      completed_steps: canvasContext.completed_steps,
+      plan_steps: canvasContext.plan_steps,
     },
   };
 }

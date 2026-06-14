@@ -35,7 +35,7 @@
  */
 
 import type { Message, LLMResponse } from './types';
-import type { CanvasContext } from './canvas-context';
+import type { CanvasContext, CompletedStepContext, PlanStepContext } from './canvas-context';
 import { sendToLLM } from './llm-client';
 import { normalizeVoiceTranscript } from '../voice-input/normalize-transcript';
 import { isComplexDrawingRequest, selectToolsForRequest, PLANNING_TOOLS, RENDER_TOOLS } from './llm-tool-selector';
@@ -310,6 +310,8 @@ export class ConversationManager {
       totalSteps: number;
       stepLabel: string;
       stepDescription: string;
+      completedSteps: CompletedStepContext[];
+      planSteps: PlanStepContext[];
     },
     canvasContext: CanvasContext,
   ): Promise<LLMResponse> {
@@ -323,6 +325,8 @@ export class ConversationManager {
       totalSteps: params.totalSteps,
       stepLabel: params.stepLabel,
       stepDescription: params.stepDescription,
+      completedSteps: params.completedSteps,
+      planSteps: params.planSteps,
     });
 
     this.messages.push({ role: 'user', content: renderPrompt });

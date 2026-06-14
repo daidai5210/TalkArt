@@ -16,6 +16,13 @@ interface CanvasContext {
   element_types?: string[];
   selected_element?: unknown | null;
   selected_id?: string | null;
+  completed_steps?: Array<{
+    stepIndex: number;
+    label: string;
+    bounds: { minX: number; minY: number; maxX: number; maxY: number };
+    summary: string;
+  }>;
+  plan_steps?: Array<{ index: number; label: string; description: string }>;
 }
 
 interface ChatMessage {
@@ -58,11 +65,22 @@ function buildSystemPrompt(canvasContext?: CanvasContext): string {
   const elementsSummary =
     elementCount > 0 ? `${elementCount} 个元素${typeSummary}` : '空画布';
 
+  const completedStepsSummary =
+    canvasContext?.completed_steps?.length
+      ? canvasContext.completed_steps
+          .map(
+            (s) =>
+              `步骤${s.stepIndex + 1}「${s.label}」: ${s.summary}；包围盒(${Math.round(s.bounds.minX)},${Math.round(s.bounds.minY)})-(${Math.round(s.bounds.maxX)},${Math.round(s.bounds.maxY)})`,
+          )
+          .join('\n')
+      : undefined;
+
   return buildDrawingSystemPrompt({
     width,
     height,
     elementCount,
     elementsSummary: `选中:${selectedElement}；${elementsSummary}`,
+    completedStepsSummary,
   });
 }
 
