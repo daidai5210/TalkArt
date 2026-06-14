@@ -58,21 +58,27 @@ export function scoreSpatialAlignment(stepLayouts, canvas) {
 
   if (body && head) {
     const g = gapBetween(body.bounds, head.bounds);
+    const verticalGap = body.bounds.minY - head.bounds.maxY;
     const hc = center(head.bounds);
     const bc = center(body.bounds);
     details.headBodyGap = Math.round(g);
+    details.headBodyVerticalGap = Math.round(verticalGap);
     details.headAboveBody = hc.y < bc.y;
+    details.headOverlapsBody = head.bounds.maxY >= body.bounds.minY - 5;
 
-    if (g > 80) {
-      score -= 25;
-      issues.push(`头身间距过大: ${Math.round(g)}px`);
-    } else if (g > 40) {
-      score -= 12;
+    if (g > 25) {
+      score -= 30;
+      issues.push(`头身分离: 间距 ${Math.round(g)}px`);
+    } else if (g > 10) {
+      score -= 18;
       issues.push(`头身间距偏大: ${Math.round(g)}px`);
+    } else if (verticalGap > 8) {
+      score -= 15;
+      issues.push(`头未贴合身体: 垂直空隙 ${Math.round(verticalGap)}px`);
     }
 
     if (!details.headAboveBody) {
-      score -= 20;
+      score -= 25;
       issues.push('头部不在身体上方');
     }
   } else {
@@ -96,16 +102,21 @@ export function scoreSpatialAlignment(stepLayouts, canvas) {
 
   if (body && legs.length) {
     let legOk = 0;
+    const bodyH = body.bounds.maxY - body.bounds.minY;
     for (const leg of legs) {
       const lc = center(leg.bounds);
-      const bc = center(body.bounds);
-      const below = lc.y >= body.bounds.minY - 20;
+      const attachGap = leg.bounds.minY - body.bounds.maxY;
+      const legH = leg.bounds.maxY - leg.bounds.minY;
+      const below = attachGap >= -5 && attachGap <= 20;
       const horizontalOk =
-        lc.x >= body.bounds.minX - 60 && lc.x <= body.bounds.maxX + 60;
-      if (below && horizontalOk) legOk += 1;
+        lc.x >= body.bounds.minX - 40 && lc.x <= body.bounds.maxX + 40;
+      const sizeOk = legH >= bodyH * 0.12;
+      if (below && horizontalOk && sizeOk) legOk += 1;
       else {
-        score -= 6;
-        issues.push(`「${leg.label}」位置不合理 (below=${below}, xOk=${horizontalOk})`);
+        score -= 10;
+        issues.push(
+          `「${leg.label}」未接在身体下方 (gap=${Math.round(attachGap)}px, hOk=${sizeOk})`,
+        );
       }
     }
     details.legsUnderBody = `${legOk}/${legs.length}`;
@@ -113,10 +124,15 @@ export function scoreSpatialAlignment(stepLayouts, canvas) {
 
   if (body && tail) {
     const g = gapBetween(body.bounds, tail.bounds);
+    const attachGap = tail.bounds.minX - body.bounds.maxX;
     details.tailBodyGap = Math.round(g);
-    if (g > 100) {
-      score -= 10;
+    details.tailAttachGap = Math.round(attachGap);
+    if (g > 35) {
+      score -= 15;
       issues.push(`尾巴离身体过远: ${Math.round(g)}px`);
+    } else if (attachGap > 15) {
+      score -= 10;
+      issues.push(`尾巴未接在身体侧面: 横向空隙 ${Math.round(attachGap)}px`);
     }
   }
 
@@ -156,7 +172,12 @@ export function scoreSpatialAlignment(stepLayouts, canvas) {
     issues.push('整体构图过于分散');
   }
 
-  return { score: Math.max(0, Math.round(score)), issues, details };
+  return {
+    score: Math.max(0, Math.round(score)),
+    visualGrade: Math.max(1, Math.min(10, Math.round(score / 10))),
+    issues,
+    details,
+  };
 }
 
 export function leaferJsonToSvg(steps, width, height) {

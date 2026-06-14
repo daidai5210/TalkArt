@@ -245,6 +245,7 @@ const report = {
   prompt: userPrompt,
   planSteps: planData.steps.length,
   spatialScore: spatial.score,
+  visualGrade: spatial.visualGrade,
   spatialIssues: spatial.issues,
   spatialDetails: spatial.details,
   stepLayouts: completedStepLayouts,
@@ -263,7 +264,7 @@ if (iteration > 1 && existsSync(prevPath)) {
 }
 
 console.log('\n=== Spatial Score ===');
-console.log(`Score: ${spatial.score}/100${delta != null ? ` (${delta >= 0 ? '+' : ''}${delta} vs iter ${iteration - 1})` : ''}`);
+console.log(`Score: ${spatial.score}/100 | Visual: ${spatial.visualGrade}/10${delta != null ? ` (${delta >= 0 ? '+' : ''}${delta} vs iter ${iteration - 1})` : ''}`);
 console.log('Details:', spatial.details);
 if (spatial.issues.length) {
   console.log('Issues:');
@@ -274,4 +275,4 @@ if (spatial.issues.length) {
 console.log(`\nOutput: ${outDir}/`);
 console.log(`  report.json, output.svg, plan.json`);
 
-process.exit(spatial.score >= 70 ? 0 : 1);
+process.exit(spatial.visualGrade >= 7 ? 0 : 1);
